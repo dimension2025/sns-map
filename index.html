@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SNS映えスポットMAP</title>
+
+  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --panel: rgba(18, 18, 22, 0.92);
+      --panel-2: rgba(24, 24, 30, 0.95);
+      --line: rgba(255,255,255,0.08);
+      --text: #f5f5f7;
+      --muted: #a8a8b3;
+      --accent: #ffffff;
+      --pink: #ff4da6;
+      --gold: #d5b15b;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .topbar {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 30;
+      display: grid;
+      grid-template-columns: 220px 180px 180px 1fr 120px;
+      gap: 10px;
+      padding: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+    }
+
+    .control,
+    .search {
+      height: 44px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .control option {
+      color: #111;
+    }
+
+    .search::placeholder {
+      color: #8d8d98;
+    }
+
+    .button {
+      height: 44px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #111;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .button.secondary {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+
+    .sidepanel {
+      position: absolute;
+      top: 92px;
+      right: 14px;
+      bottom: 14px;
+      width: 380px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .selected-wrap,
+    .list-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+      overflow: hidden;
+    }
+
+    .selected-wrap {
+      min-height: 280px;
+      max-height: 48%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .selected-wrap.active {
+      display: flex;
+    }
+
+    .selected-header {
+      padding: 14px 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .selected-body {
+      padding: 14px 16px 16px;
+      overflow: auto;
+    }
+
+    .list-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+    }
+
+    .list-head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-body {
+      overflow: auto;
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    .selected-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .thumb {
+      width: 100%;
+      height: 108px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #1b1b21;
+      border: 1px solid var(--line);
+    }
+
+    .hero {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 16px;
+      background: #1b1b21;
+      border: 1px solid var(--line);
+    }
+
+    .name {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .meta, .desc {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      font-size: 12px;
+      line-height: 1;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .link-button, .fav-button, .close-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .link-button {
+      background: #fff;
+      color: #111;
+    }
+
+    .fav-button, .close-button {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+
+    .rating {
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .marker {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #000;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+
+    .marker:hover {
+      transform: scale(1.08);
+    }
+
+    .marker.active {
+      background: var(--pink);
+      box-shadow: 0 0 0 6px rgba(255,77,166,0.18);
+    }
+
+    .empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .brand {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 20;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--muted);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        grid-template-columns: 1fr 1fr;
+      }
+      .sidepanel {
+        width: calc(100% - 28px);
+        left: 14px;
+        right: 14px;
+        top: auto;
+        height: 48%;
+      }
+      .selected-wrap {
+        max-height: 55%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="map"></div>
+
+    <div class="topbar">
+      <select id="regionFilter" class="control">
+        <option value="">地方（すべて）</option>
+      </select>
+
+      <select id="prefFilter" class="control">
+        <option value="">都道府県（すべて）</option>
+      </select>
+
+      <input id="tagFilter" class="search" type="text" placeholder="#夜景 #映え など" />
+      <input id="freewordFilter" class="search" type="text" placeholder="スポット名 / 説明 / ハッシュタグ で検索" />
+
+      <button id="favoritesOnlyBtn" class="button secondary">☆ お気に入り</button>
+    </div>
+
+    <div class="sidepanel">
+      <div id="selectedWrap" class="selected-wrap"></div>
+
+      <div class="list-wrap">
+        <div class="list-head">
+          <div>
+            <div style="font-weight: 700;">表示スポット</div>
+            <div id="listSubTitle" class="small">地図範囲内のおすすめ順</div>
+          </div>
+          <button id="fitAllBtn" class="button secondary" style="height: 36px; padding: 0 12px;">全件表示</button>
+        </div>
+        <div id="listBody" class="list-body"></div>
+      </div>
+    </div>
+
+    <div class="brand">SNS映えスポットMAP</div>
+  </div>
+
+  <script>
+    const STATE = {
+      spots: [],
+      filteredSpots: [],
+      visibleSpots: [],
+      selectedSpotId: null,
+      favoritesOnly: false,
+      favorites: new Set(JSON.parse(localStorage.getItem('spotFavorites') || '[]')),
+      map: null,
+      markers: new Map(),
+    };
+
+    const els = {
+      regionFilter: document.getElementById('regionFilter'),
+      prefFilter: document.getElementById('prefFilter'),
+      tagFilter: document.getElementById('tagFilter'),
+      freewordFilter: document.getElementById('freewordFilter'),
+      favoritesOnlyBtn: document.getElementById('favoritesOnlyBtn'),
+      fitAllBtn: document.getElementById('fitAllBtn'),
+      selectedWrap: document.getElementById('selectedWrap'),
+      listBody: document.getElementById('listBody'),
+      listSubTitle: document.getElementById('listSubTitle'),
+    };
+
+    function saveFavorites() {
+      localStorage.setItem('spotFavorites', JSON.stringify([...STATE.favorites]));
+    }
+
+    function toggleFavorite(id) {
+      if (STATE.favorites.has(id)) {
+        STATE.favorites.delete(id);
+      } else {
+        STATE.favorites.add(id);
+      }
+      saveFavorites();
+      renderSelected();
+      updateVisibleCards();
+      updateMarkerStyles();
+    }
+
+    function ratingStars(value) {
+      const n = Math.max(0, Math.min(5, Number(value || 0)));
+      return '★'.repeat(n) + '☆'.repeat(5 - n);
+    }
+
+    function getDriveFileId(url) {
+      if (!url) return null;
+      const m = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);
+      return m ? m[1] : null;
+    }
+
+    function toImageUrl(url) {
+      if (!url) return '';
+      if (url.includes('drive.google.com')) {
+        const id = getDriveFileId(url);
+        if (!id) return url;
+        return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;
+      }
+      return url;
+    }
+
+    function normalizeText(s) {
+      return String(s || '').toLowerCase();
+    }
+
+    function spotSearchText(spot) {
+      return normalizeText([
+        spot.name,
+        spot.description,
+        spot.prefecture,
+        spot.region,
+        spot.hours,
+        spot.fee,
+        ...(spot.hashtags || [])
+      ].join(' '));
+    }
+
+    function parseTags(input) {
+      return String(input || '')
+        .split(/\\s+/)
+        .map(v => v.trim())
+        .filter(Boolean)
+        .map(v => v.startsWith('#') ? v : `#${v}`);
+    }
+
+    function currentFilters() {
+      return {
+        region: els.regionFilter.value,
+        pref: els.prefFilter.value,
+        tags: parseTags(els.tagFilter.value),
+        freeword: normalizeText(els.freewordFilter.value.trim()),
+        favoritesOnly: STATE.favoritesOnly,
+      };
+    }
+
+    function applyFilters() {
+      const { region, pref, tags, freeword, favoritesOnly } = currentFilters();
+
+      STATE.filteredSpots = STATE.spots.filter(spot => {
+        if (region && spot.region !== region) return false;
+        if (pref && spot.prefecture !== pref) return false;
+        if (favoritesOnly && !STATE.favorites.has(spot.id)) return false;
+
+        const tagOk = tags.length === 0 || tags.every(t => (spot.hashtags || []).includes(t));
+        if (!tagOk) return false;
+
+        if (freeword) {
+          const target = spotSearchText(spot);
+          if (!target.includes(freeword)) return false;
+        }
+        return true;
+      });
+
+      updateMarkerVisibility();
+      fitToFilteredIfNeeded();
+      updateVisibleCards();
+    }
+
+    function updateMarkerVisibility() {
+      const visibleIds = new Set(STATE.filteredSpots.map(s => s.id));
+      STATE.markers.forEach((m, id) => {
+        const el = m.getElement();
+        el.style.display = visibleIds.has(id) ? 'block' : 'none';
+      });
+      updateMarkerStyles();
+    }
+
+    function updateMarkerStyles() {
+      STATE.markers.forEach((m, id) => {
+        const el = m.getElement();
+        const isSelected = STATE.selectedSpotId === id;
+        el.classList.toggle('active', isSelected);
+      });
+    }
+
+    function fitToFilteredIfNeeded() {
+      if (!STATE.map || STATE.filteredSpots.length === 0) return;
+
+      if (STATE.filteredSpots.length === 1) {
+        const s = STATE.filteredSpots[0];
+        STATE.map.flyTo({ center: [s.lng, s.lat], zoom: 14, essential: true });
+        return;
+      }
+
+      const bounds = new maplibregl.LngLatBounds();
+      STATE.filteredSpots.forEach(s => bounds.extend([s.lng, s.lat]));
+      STATE.map.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 700 });
+    }
+
+    function getVisibleSpotsInViewport() {
+      const bounds = STATE.map.getBounds();
+      return STATE.filteredSpots
+        .filter(s => bounds.contains([s.lng, s.lat]))
+        .sort((a, b) => (b.recommendation || 0) - (a.recommendation || 0));
+    }
+
+    function selectSpot(id, fly = true) {
+      STATE.selectedSpotId = id;
+      updateMarkerStyles();
+      renderSelected();
+      updateVisibleCards();
+
+      const spot = STATE.spots.find(s => s.id === id);
+      if (spot && fly) {
+        STATE.map.flyTo({ center: [spot.lng, spot.lat], zoom: Math.max(14, STATE.map.getZoom()), essential: true });
+      }
+    }
+
+    function clearSelection() {
+      STATE.selectedSpotId = null;
+      updateMarkerStyles();
+      renderSelected();
+      updateVisibleCards();
+    }
+
+    function renderSelected() {
+      const spot = STATE.spots.find(s => s.id === STATE.selectedSpotId);
+      if (!spot) {
+        els.selectedWrap.classList.remove('active');
+        els.selectedWrap.innerHTML = '';
+        return;
+      }
+
+      const isFav = STATE.favorites.has(spot.id);
+      const hero = toImageUrl((spot.images && spot.images[0]) || '');
+
+      els.selectedWrap.classList.add('active');
+      els.selectedWrap.innerHTML = `
+        <div class="selected-header">
+          <div>
+            <div class="small">${spot.region} / ${spot.prefecture}</div>
+            <h2 class="name" style="font-size: 20px; margin-top: 4px;">${escapeHtml(spot.name)}</h2>
+          </div>
+          <button class="close-button" id="closeSelectedBtn">閉じる</button>
+        </div>
+        <div class="selected-body">
+          <div class="selected-card">
+            ${hero ? `<img class="hero" src="${hero}" alt="${escapeHtml(spot.name)}endation)}</span>　おすすめ度 ${spot.recommendation || 0}/5</div>
+              ${spot.hours ? `<div>営業時間：${escapeHtml(spot.hours)}</div>` : ''}
+              ${spot.fee ? `<div>料金：${escapeHtml(spot.fee)}</div>` : ''}
+            </div>
+            ${spot.description ? `<div class="desc">${escapeHtml(spot.description)}</div>` : ''}
+            <div class="chips">
+              ${(spot.hashtags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <div class="actions">
+              <a class="link-button" href="${spot.googleMapsUrl}" target="_blank" rel="noopener noreferrertedBtn">${isFav ? '★ お気に入り済み' : '☆ お気に入り'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('closeSelectedBtn').onclick = clearSelection;
+      document.getElementById('favSelectedBtn').onclick = () => toggleFavorite(spot.id);
+    }
+
+    function updateVisibleCards() {
+      if (!STATE.map) return;
+
+      STATE.visibleSpots = getVisibleSpotsInViewport();
+      const selectedExists = !!STATE.selectedSpotId;
+      const sourceList = selectedExists ? STATE.visibleSpots : STATE.visibleSpots;
+
+      els.listSubTitle.textContent = selectedExists
+        ? '地図範囲内のスポット'
+        : '地図範囲内のおすすめ順';
+
+      if (sourceList.length === 0) {
+        els.listBody.innerHTML = `<div class="empty">条件に合うスポットがありません。</div>`;
+        return;
+      }
+
+      els.listBody.innerHTML = sourceList.map(spot => {
+        const img = toImageUrl((spot.images && spot.images[0]) || '');
+        const isFav = STATE.favorites.has(spot.id);
+
+        return `
+          <div class="card" data-id="${spot.id}">
+            ${img ? `<img class="thumb" src="${img}" alt="${escapeHtml(spot.name)}          <div class="small">${escapeHtml(spot.prefecture)} / ${escapeHtml(spot.region)}</div>
+              <h3 class="name">${escapeHtml(spot.name)}</h3>
+              <div class="meta">
+                <div><span class="rating">${ratingStars(spot.recommendation)}</span>　${spot.recommendation || 0}/5 ${isFav ? '　★' : ''}</div>
+                ${spot.description ? `<div>${escapeHtml(shorten(spot.description, 56))}</div>` : ''}
+              </div>
+              <div class="chips">
+                ${(spot.hashtags || []).slice(0, 4).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      els.listBody.querySelectorAll('.card').forEach(card => {
+        card.onclick = () => selectSpot(card.dataset.id, true);
+      });
+    }
+
+    function shorten(str, len) {
+      const s = String(str || '');
+      return s.length > len ? s.slice(0, len) + '…' : s;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function buildFilterOptions() {
+      const regions = [...new Set(STATE.spots.map(s => s.region).filter(Boolean))].sort();
+      const prefs = [...new Set(STATE.spots.map(s => s.prefecture).filter(Boolean))].sort();
+
+      els.regionFilter.innerHTML = `<option value="">地方（すべて）</option>` +
+        regions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+
+      els.prefFilter.innerHTML = `<option value="">都道府県（すべて）</option>` +
+        prefs.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+    }
+
+    function createMarker(spot) {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.title = spot.name;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectSpot(spot.id, false);
+      });
+
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+        .setLngLat([spot.lng, spot.lat])
+        .addTo(STATE.map);
+
+      STATE.markers.set(spot.id, marker);
+    }
+
+    function setupMap() {
+      STATE.map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: [139.76, 35.67],
+        zoom: 10.7,
+        attributionControl: true
+      });
+
+      STATE.map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+
+      STATE.map.on('load', () => {
+        STATE.spots.forEach(createMarker);
+        applyFilters();
+      });
+
+      STATE.map.on('moveend', () => {
+        updateVisibleCards();
+      });
+
+      STATE.map.on('click', () => {
+        clearSelection();
+      });
+    }
+
+    async function loadSpots() {
+      const res = await fetch('./spots.json');
+      const data = await res.json();
+      STATE.spots = data;
+      buildFilterOptions();
+      setupMap();
+    }
+
+    function setupEvents() {
+      els.regionFilter.addEventListener('change', applyFilters);
+      els.prefFilter.addEventListener('change', applyFilters);
+
+      let t1 = null;
+      let t2 = null;
+
+      els.tagFilter.addEventListener('input', () => {
+        clearTimeout(t1);
+        t1 = setTimeout(applyFilters, 250);
+      });
+
+      els.freewordFilter.addEventListener('input', () => {
+        clearTimeout(t2);
+        t2 = setTimeout(applyFilters, 250);
+      });
+
+      els.favoritesOnlyBtn.addEventListener('click', () => {
+        STATE.favoritesOnly = !STATE.favoritesOnly;
+        els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? '★ お気に入りのみ' : '☆ お気に入り';
+        els.favoritesOnlyBtn.classList.toggle('button');
+        applyFilters();
+      });
+
+      els.fitAllBtn.addEventListener('click', () => {
+        clearSelection();
+        const targets = STATE.filteredSpots.length ? STATE.filteredSpots : STATE.spots;
+        if (!targets.length) return;
+
+        if (targets.length === 1) {
+          STATE.map.flyTo({ center: [targets[0].lng, targets[0].lat], zoom: 14 });
+          return;
+        }
+
+        const bounds = new maplibregl.LngLatBounds();
+        targets.forEach(s => bounds.extend([s.lng, s.lat]));
+        STATE.map.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 700 });
+      });
+    }
+
+    setupEvents();
+    loadSpots().catch(err => {
+      console.error(err);
+      document.getElementById('app').innerHTML = `<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>`;
+    });
+  </script>
+</body>
+</html>
