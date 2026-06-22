@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SNS映えスポットMAP</title>
 
-  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link
+    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
 
   <style>
@@ -34,9 +37,9 @@
     }
 
     #app {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
     }
 
     #map {
@@ -49,9 +52,9 @@
       top: 14px;
       left: 14px;
       right: 14px;
-      z-index: 30;
+      z-index: 20;
       display: grid;
-      grid-template-columns: 220px 180px 180px 1fr 140px;
+      grid-template-columns: 180px 180px 180px 1fr 140px;
       gap: 10px;
       padding: 12px;
       background: var(--panel);
@@ -62,32 +65,25 @@
     }
 
     .control,
-    .search {
+    .search,
+    .button {
       height: 44px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
       border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
       padding: 0 12px;
       outline: none;
+      font-size: 14px;
     }
 
     .control option {
       color: #111;
     }
 
-    .search::placeholder {
-      color: #8d8d98;
-    }
-
     .button {
-      height: 44px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.05);
-      color: var(--text);
-      border-radius: 12px;
-      font-weight: 700;
       cursor: pointer;
+      font-weight: 700;
     }
 
     .sidepanel {
@@ -100,63 +96,48 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      pointer-events: none;
     }
 
-    .selected-wrap,
-    .list-wrap {
+    .panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 22px;
       backdrop-filter: blur(14px);
       box-shadow: var(--shadow);
-      pointer-events: auto;
       overflow: hidden;
     }
 
-    .selected-wrap {
-      min-height: 280px;
-      max-height: 48%;
+    #selectedPanel {
       display: none;
-      flex-direction: column;
+      min-height: 220px;
+      max-height: 45%;
     }
 
-    .selected-wrap.active {
-      display: flex;
+    #selectedPanel.active {
+      display: block;
     }
 
-    .selected-header {
-      padding: 14px 16px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      gap: 8px;
-    }
-
-    .selected-body {
-      padding: 14px 16px 16px;
+    #selectedBody {
+      padding: 16px;
       overflow: auto;
     }
 
-    .list-wrap {
+    #listPanel {
       flex: 1;
       display: flex;
       flex-direction: column;
       min-height: 220px;
     }
 
-    .list-head {
+    #listHead {
       padding: 14px 16px 10px;
       border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
+      font-weight: 700;
     }
 
-    .list-body {
-      overflow: auto;
+    #listBody {
       padding: 10px;
+      overflow: auto;
       display: grid;
       gap: 10px;
     }
@@ -165,17 +146,11 @@
       display: grid;
       grid-template-columns: 108px 1fr;
       gap: 12px;
-      background: rgba(255,255,255,0.03);
+      padding: 10px;
       border: 1px solid var(--line);
       border-radius: 16px;
-      padding: 10px;
+      background: rgba(255,255,255,0.03);
       cursor: pointer;
-      transition: transform 0.12s ease, border-color 0.12s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.16);
     }
 
     .thumb {
@@ -194,6 +169,7 @@
       border-radius: 16px;
       background: #1b1b21;
       border: 1px solid var(--line);
+      margin-bottom: 12px;
     }
 
     .name {
@@ -203,10 +179,17 @@
       font-weight: 700;
     }
 
-    .meta, .desc {
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .desc {
       color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
+      margin-top: 8px;
     }
 
     .chips {
@@ -218,8 +201,7 @@
 
     .chip {
       font-size: 12px;
-      line-height: 1;
-      padding: 7px 10px;
+      padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
       color: var(--muted);
@@ -228,20 +210,22 @@
 
     .actions {
       display: flex;
-      flex-wrap: wrap;
       gap: 8px;
+      flex-wrap: wrap;
       margin-top: 12px;
     }
 
-    .link-button, .fav-button, .close-button {
+    .link-button,
+    .fav-button,
+    .close-button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       min-height: 40px;
       padding: 0 14px;
       border-radius: 12px;
-      text-decoration: none;
       border: 1px solid var(--line);
+      text-decoration: none;
       cursor: pointer;
       font-weight: 700;
       background: rgba(255,255,255,0.05);
@@ -256,12 +240,6 @@
     .rating {
       color: var(--gold);
       font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
-    .small {
-      font-size: 12px;
-      color: var(--muted);
     }
 
     .marker {
@@ -272,11 +250,6 @@
       border: 2px solid #000;
       box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
       cursor: pointer;
-      transition: transform 0.12s ease, background 0.12s ease;
-    }
-
-    .marker:hover {
-      transform: scale(1.08);
     }
 
     .marker.active {
@@ -290,35 +263,20 @@
       font-size: 14px;
     }
 
-    .brand {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      z-index: 20;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
-      color: var(--muted);
-      backdrop-filter: blur(10px);
-      pointer-events: none;
-      font-size: 12px;
-    }
-
     @media (max-width: 980px) {
       .topbar {
         grid-template-columns: 1fr 1fr;
       }
 
       .sidepanel {
-        width: calc(100% - 28px);
         left: 14px;
         right: 14px;
+        width: auto;
         top: auto;
         height: 48%;
       }
 
-      .selected-wrap {
+      #selectedPanel {
         max-height: 55%;
       }
     }
@@ -344,21 +302,15 @@
     </div>
 
     <div class="sidepanel">
-      <div id="selectedWrap" class="selected-wrap"></div>
+      <div id="selectedPanel" class="panel">
+        <div id="selectedBody"></div>
+      </div>
 
-      <div class="list-wrap">
-        <div class="list-head">
-          <div>
-            <div style="font-weight: 700;">表示スポット</div>
-            <div id="listSubTitle" class="small">地図範囲内のおすすめ順</div>
-          </div>
-          <button id="fitAllBtn" class="button" style="height: 36px; padding: 0 12px;">全件表示</button>
-        </div>
-        <div id="listBody" class="list-body"></div>
+      <div id="listPanel" class="panel">
+        <div id="listHead">地図範囲内のおすすめ順</div>
+        <div id="listBody"></div>
       </div>
     </div>
-
-    <div class="brand">SNS映えスポットMAP</div>
   </div>
 
   <script>
@@ -368,25 +320,44 @@
       visibleSpots: [],
       selectedSpotId: null,
       favoritesOnly: false,
-      favorites: new Set(JSON.parse(localStorage.getItem('spotFavorites') || '[]')),
+      favorites: new Set(JSON.parse(localStorage.getItem("spotFavorites") || "[]")),
       map: null,
       markers: new Map()
     };
 
     const els = {
-      regionFilter: document.getElementById('regionFilter'),
-      prefFilter: document.getElementById('prefFilter'),
-      tagFilter: document.getElementById('tagFilter'),
-      freewordFilter: document.getElementById('freewordFilter'),
-      favoritesOnlyBtn: document.getElementById('favoritesOnlyBtn'),
-      fitAllBtn: document.getElementById('fitAllBtn'),
-      selectedWrap: document.getElementById('selectedWrap'),
-      listBody: document.getElementById('listBody'),
-      listSubTitle: document.getElementById('listSubTitle')
+      regionFilter: document.getElementById("regionFilter"),
+      prefFilter: document.getElementById("prefFilter"),
+      tagFilter: document.getElementById("tagFilter"),
+      freewordFilter: document.getElementById("freewordFilter"),
+      favoritesOnlyBtn: document.getElementById("favoritesOnlyBtn"),
+      selectedPanel: document.getElementById("selectedPanel"),
+      selectedBody: document.getElementById("selectedBody"),
+      listHead: document.getElementById("listHead"),
+      listBody: document.getElementById("listBody")
     };
 
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function shorten(str, len) {
+      const s = String(str || "");
+      return s.length > len ? s.slice(0, len) + "…" : s;
+    }
+
+    function ratingStars(value) {
+      const n = Math.max(0, Math.min(5, Number(value || 0)));
+      return "★".repeat(n) + "☆".repeat(5 - n);
+    }
+
     function saveFavorites() {
-      localStorage.setItem('spotFavorites', JSON.stringify([...STATE.favorites]));
+      localStorage.setItem("spotFavorites", JSON.stringify(Array.from(STATE.favorites)));
     }
 
     function toggleFavorite(id) {
@@ -401,11 +372,6 @@
       updateMarkerStyles();
     }
 
-    function ratingStars(value) {
-      const n = Math.max(0, Math.min(5, Number(value || 0)));
-      return '★'.repeat(n) + '☆'.repeat(5 - n);
-    }
-
     function getDriveFileId(url) {
       if (!url) return null;
       const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -413,37 +379,61 @@
     }
 
     function toImageUrl(url) {
-      if (!url) return '';
-      if (url.includes('drive.google.com')) {
+      if (!url) return "";
+      if (url.indexOf("drive.google.com") !== -1) {
         const id = getDriveFileId(url);
         if (!id) return url;
-        return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1600';
+        return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1600";
       }
       return url;
     }
 
-    function normalizeText(s) {
-      return String(s || '').toLowerCase();
+    function parseTags(input) {
+      return String(input || "")
+        .split(/\s+/)
+        .map(function(v) { return v.trim(); })
+        .filter(function(v) { return v.length > 0; })
+        .map(function(v) {
+          return v.startsWith("#") ? v : "#" + v;
+        });
     }
 
-    function spotSearchText(spot) {
-      return normalizeText([
+    function normalizeText(s) {
+      return String(s || "").toLowerCase();
+    }
+
+    function getSearchText(spot) {
+      const parts = [
         spot.name,
         spot.description,
         spot.prefecture,
         spot.region,
         spot.hours,
-        spot.fee,
-        ...(spot.hashtags || [])
-      ].join(' '));
+        spot.fee
+      ].concat(spot.hashtags || []);
+      return normalizeText(parts.join(" "));
     }
 
-    function parseTags(input) {
-      return String(input || '')
-        .split(/\s+/)
-        .map(v => v.trim())
-        .filter(Boolean)
-        .map(v => v.startsWith('#') ? v : '#' + v);
+    function buildFilterOptions() {
+      const regions = Array.from(new Set(
+        STATE.spots.map(function(s) { return s.region; }).filter(Boolean)
+      )).sort();
+
+      const prefs = Array.from(new Set(
+        STATE.spots.map(function(s) { return s.prefecture; }).filter(Boolean)
+      )).sort();
+
+      els.regionFilter.innerHTML =
+        '<option value="">地方（すべて）</option>' +
+        regions.map(function(v) {
+          return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
+        }).join("");
+
+      els.prefFilter.innerHTML =
+        '<option value="">都道府県（すべて）</option>' +
+        prefs.map(function(v) {
+          return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
+        }).join("");
     }
 
     function currentFilters() {
@@ -459,48 +449,33 @@
     function applyFilters() {
       const filters = currentFilters();
 
-      STATE.filteredSpots = STATE.spots.filter(spot => {
+      STATE.filteredSpots = STATE.spots.filter(function(spot) {
         if (filters.region && spot.region !== filters.region) return false;
         if (filters.pref && spot.prefecture !== filters.pref) return false;
         if (filters.favoritesOnly && !STATE.favorites.has(spot.id)) return false;
 
-        const tagOk =
-          filters.tags.length === 0 ||
-          filters.tags.every(tag => (spot.hashtags || []).includes(tag));
-
-        if (!tagOk) return false;
+        if (filters.tags.length > 0) {
+          const tags = spot.hashtags || [];
+          const ok = filters.tags.every(function(t) {
+            return tags.indexOf(t) !== -1;
+          });
+          if (!ok) return false;
+        }
 
         if (filters.freeword) {
-          const target = spotSearchText(spot);
-          if (!target.includes(filters.freeword)) return false;
+          const text = getSearchText(spot);
+          if (text.indexOf(filters.freeword) === -1) return false;
         }
 
         return true;
       });
 
       updateMarkerVisibility();
-      fitToFilteredIfNeeded();
+      fitToFiltered();
       updateVisibleCards();
     }
 
-    function updateMarkerVisibility() {
-      const visibleIds = new Set(STATE.filteredSpots.map(s => s.id));
-      STATE.markers.forEach((marker, id) => {
-        const el = marker.getElement();
-        el.style.display = visibleIds.has(id) ? 'block' : 'none';
-      });
-      updateMarkerStyles();
-    }
-
-    function updateMarkerStyles() {
-      STATE.markers.forEach((marker, id) => {
-        const el = marker.getElement();
-        const isSelected = STATE.selectedSpotId === id;
-        el.classList.toggle('active', isSelected);
-      });
-    }
-
-    function fitToFilteredIfNeeded() {
+    function fitToFiltered() {
       if (!STATE.map || STATE.filteredSpots.length === 0) return;
 
       if (STATE.filteredSpots.length === 1) {
@@ -514,7 +489,10 @@
       }
 
       const bounds = new maplibregl.LngLatBounds();
-      STATE.filteredSpots.forEach(s => bounds.extend([s.lng, s.lat]));
+      STATE.filteredSpots.forEach(function(s) {
+        bounds.extend([s.lng, s.lat]);
+      });
+
       STATE.map.fitBounds(bounds, {
         padding: 80,
         maxZoom: 14,
@@ -522,11 +500,54 @@
       });
     }
 
+    function createMarker(spot) {
+      const el = document.createElement("div");
+      el.className = "marker";
+      el.title = spot.name;
+
+      el.addEventListener("click", function(e) {
+        e.stopPropagation();
+        selectSpot(spot.id, false);
+      });
+
+      const marker = new maplibregl.Marker({
+        element: el,
+        anchor: "center"
+      })
+        .setLngLat([spot.lng, spot.lat])
+        .addTo(STATE.map);
+
+      STATE.markers.set(spot.id, marker);
+    }
+
+    function updateMarkerVisibility() {
+      const visibleIds = new Set(
+        STATE.filteredSpots.map(function(s) { return s.id; })
+      );
+
+      STATE.markers.forEach(function(marker, id) {
+        const el = marker.getElement();
+        el.style.display = visibleIds.has(id) ? "block" : "none";
+      });
+
+      updateMarkerStyles();
+    }
+
+    function updateMarkerStyles() {
+      STATE.markers.forEach(function(marker, id) {
+        marker.getElement().classList.toggle("active", STATE.selectedSpotId === id);
+      });
+    }
+
     function getVisibleSpotsInViewport() {
       const bounds = STATE.map.getBounds();
       return STATE.filteredSpots
-        .filter(s => bounds.contains([s.lng, s.lat]))
-        .sort((a, b) => (b.recommendation || 0) - (a.recommendation || 0));
+        .filter(function(s) {
+          return bounds.contains([s.lng, s.lat]);
+        })
+        .sort(function(a, b) {
+          return (b.recommendation || 0) - (a.recommendation || 0);
+        });
     }
 
     function selectSpot(id, fly) {
@@ -535,7 +556,7 @@
       renderSelected();
       updateVisibleCards();
 
-      const spot = STATE.spots.find(s => s.id === id);
+      const spot = STATE.spots.find(function(s) { return s.id === id; });
       if (spot && fly) {
         STATE.map.flyTo({
           center: [spot.lng, spot.lat],
@@ -552,61 +573,71 @@
       updateVisibleCards();
     }
 
-    function shorten(str, len) {
-      const s = String(str || '');
-      return s.length > len ? s.slice(0, len) + '…' : s;
-    }
-
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
     function renderSelected() {
-      const spot = STATE.spots.find(s => s.id === STATE.selectedSpotId);
+      const spot = STATE.spots.find(function(s) {
+        return s.id === STATE.selectedSpotId;
+      });
 
       if (!spot) {
-        els.selectedWrap.classList.remove('active');
-        els.selectedWrap.innerHTML = '';
+        els.selectedPanel.classList.remove("active");
+        els.selectedBody.innerHTML = "";
         return;
       }
 
+      const hero = toImageUrl((spot.images && spot.images[0]) || "");
       const isFav = STATE.favorites.has(spot.id);
-      const hero = toImageUrl((spot.images && spot.images[0]) || '');
 
-      els.selectedWrap.classList.add('active');
-      els.selectedWrap.innerHTML = `
-        <div class="selected-header">
-          <div>
-            <div class="small">${escapeHtml(spot.region || '')} / ${escapeHtml(spot.prefecture || '')}</div>
-            <h2 class="name" style="font-size: 20px; margin-top: 4px;">${escapeHtml(spot.name)}</h2>
-          </div>
-          <button class="close-button" id="closeSelectedBtn">閉じる</button>
-        </div>
-        <div class="selected-body">
-          <div>
-            ${hero ? `<img class="hero" src="${hero}" alt="${escapeHtml(spot.name)}>${ratingStars(spot.recommendation)}</span> おすすめ度 ${spot.recommendation || 0}/5</div>
-              ${spot.hours ? `<div>営業時間：${escapeHtml(spot.hours)}</div>` : ''}
-              ${spot.fee ? `<div>料金：${escapeHtml(spot.fee)}</div>` : ''}
-            </div>
-            ${spot.description ? `<div class="desc" style="margin-top:10px;">${escapeHtml(spot.description)}</div>` : ''}
-            <div class="chips">
-              ${(spot.hashtags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
-            </div>
-            <div class="actions">
-              <a class="link-button" href="${spot.googleMapsUrl}" target="_blank" rel="noopener noreferrertedBtn">${isFav ? '★ お気に入り済み' : '☆ お気に入り'}</button>
-            </div>
-          </div>
-        </div>
-      `;
+      let html = "";
 
-      document.getElementById('closeSelectedBtn').onclick = clearSelection;
-      document.getElementById('favSelectedBtn').onclick = function () {
+      if (hero) {
+        html += '<img class="hero" src="' + hero + '" alt="' + escapeHtml(spot.name) + '">';
+      }
+
+      html += '<div class="small">' +
+        escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") +
+        '</div>';
+
+      html += '<h2 class="name" style="font-size:20px;margin-top:4px;">' +
+        escapeHtml(spot.name) +
+        '</h2>';
+
+      html += '<div class="small" style="margin-top:8px;"><span class="rating">' +
+        ratingStars(spot.recommendation) +
+        '</span> おすすめ度 ' + (spot.recommendation || 0) + '/5</div>';
+
+      if (spot.hours) {
+        html += '<div class="small">営業時間：' + escapeHtml(spot.hours) + '</div>';
+      }
+
+      if (spot.fee) {
+        html += '<div class="small">料金：' + escapeHtml(spot.fee) + '</div>';
+      }
+
+      if (spot.description) {
+        html += '<div class="desc">' + escapeHtml(spot.description) + '</div>';
+      }
+
+      html += '<div class="chips">';
+      (spot.hashtags || []).forEach(function(tag) {
+        html += '<span class="chip">' + escapeHtml(tag) + '</span>';
+      });
+      html += '</div>';
+
+      html += '<div class="actions">';
+      html += '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
+      html += '<button class="fav-button" id="favSelectedBtn">' + (isFav ? "★ お気に入り済み" : "☆ お気に入り") + '</button>';
+      html += '<button class="close-button" id="closeSelectedBtn">閉じる</button>';
+      html += '</div>';
+
+      els.selectedBody.innerHTML = html;
+      els.selectedPanel.classList.add("active");
+
+      document.getElementById("favSelectedBtn").onclick = function() {
         toggleFavorite(spot.id);
+      };
+
+      document.getElementById("closeSelectedBtn").onclick = function() {
+        clearSelection();
       };
     }
 
@@ -615,162 +646,123 @@
 
       STATE.visibleSpots = getVisibleSpotsInViewport();
 
-      els.listSubTitle.textContent = STATE.selectedSpotId
-        ? '地図範囲内のスポット'
-        : '地図範囲内のおすすめ順';
+      els.listHead.textContent = STATE.selectedSpotId
+        ? "地図範囲内のスポット"
+        : "地図範囲内のおすすめ順";
 
       if (STATE.visibleSpots.length === 0) {
         els.listBody.innerHTML = '<div class="empty">条件に合うスポットがありません。</div>';
         return;
       }
 
-      els.listBody.innerHTML = STATE.visibleSpots.map(spot => {
-        const img = toImageUrl((spot.images && spot.images[0]) || '');
+      let html = "";
+
+      STATE.visibleSpots.forEach(function(spot) {
+        const img = toImageUrl((spot.images && spot.images[0]) || "");
         const isFav = STATE.favorites.has(spot.id);
 
-        return `
-          <div class="card" data-id="${spot.id}">
-            ${img ? `<img class="thumb" src="${img}" alt="${escapeHtml(spot.name)}          <div class="small">${escapeHtml(spot.prefecture || '')} / ${escapeHtml(spot.region || '')}</div>
-              <h3 class="name">${escapeHtml(spot.name)}</h3>
-              <div class="meta">
-                <div><span class="rating">${ratingStars(spot.recommendation)}</span> ${spot.recommendation || 0}/5 ${isFav ? ' ★' : ''}</div>
-                ${spot.description ? `<div>${escapeHtml(shorten(spot.description, 56))}</div>` : ''}
-              </div>
-              <div class="chips">
-                ${(spot.hashtags || []).slice(0, 4).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+        html += '<div class="card" data-id="' + spot.id + '">';
 
-      els.listBody.querySelectorAll('.card').forEach(card => {
-        card.onclick = function () {
+        if (img) {
+          html += '<img class="thumb" src="' + img + '" alt="' + escapeHtml(spot.name) + '">';
+        } else {
+          html += '<div class="thumb"></div>';
+        }
+
+        html += '<div>';
+        html += '<div class="small">' + escapeHtml(spot.prefecture || "") + ' / ' + escapeHtml(spot.region || "") + '</div>';
+        html += '<h3 class="name">' + escapeHtml(spot.name) + '</h3>';
+        html += '<div class="small"><span class="rating">' + ratingStars(spot.recommendation) + '</span> ' + (spot.recommendation || 0) + '/5 ' + (isFav ? '★' : '') + '</div>';
+
+        if (spot.description) {
+          html += '<div class="desc">' + escapeHtml(shorten(spot.description, 56)) + '</div>';
+        }
+
+        html += '<div class="chips">';
+        (spot.hashtags || []).slice(0, 4).forEach(function(tag) {
+          html += '<span class="chip">' + escapeHtml(tag) + '</span>';
+        });
+        html += '</div>';
+
+        html += '</div>';
+        html += '</div>';
+      });
+
+      els.listBody.innerHTML = html;
+
+      Array.from(els.listBody.querySelectorAll(".card")).forEach(function(card) {
+        card.onclick = function() {
           selectSpot(card.dataset.id, true);
         };
       });
     }
 
-    function buildFilterOptions() {
-      const regions = [...new Set(STATE.spots.map(s => s.region).filter(Boolean))].sort();
-      const prefs = [...new Set(STATE.spots.map(s => s.prefecture).filter(Boolean))].sort();
-
-      els.regionFilter.innerHTML =
-        '<option value="">地方（すべて）</option>' +
-        regions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-
-      els.prefFilter.innerHTML =
-        '<option value="">都道府県（すべて）</option>' +
-        prefs.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-    }
-
-    function createMarker(spot) {
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.title = spot.name;
-
-      el.addEventListener('click', function (e) {
-        e.stopPropagation();
-        selectSpot(spot.id, false);
-      });
-
-      const marker = new maplibregl.Marker({
-        element: el,
-        anchor: 'center'
-      })
-        .setLngLat([spot.lng, spot.lat])
-        .addTo(STATE.map);
-
-      STATE.markers.set(spot.id, marker);
-    }
-
     function setupMap() {
       STATE.map = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
+        container: "map",
+        style: "https://demotiles.maplibre.org/style.json",
         center: [139.76, 35.67],
         zoom: 10.7,
         attributionControl: true
       });
 
-      STATE.map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+      STATE.map.addControl(new maplibregl.NavigationControl(), "bottom-left");
 
-      STATE.map.on('load', function () {
+      STATE.map.on("load", function() {
         STATE.spots.forEach(createMarker);
         applyFilters();
       });
 
-      STATE.map.on('moveend', function () {
+      STATE.map.on("moveend", function() {
         updateVisibleCards();
       });
 
-      STATE.map.on('click', function () {
+      STATE.map.on("click", function() {
         clearSelection();
       });
     }
 
-    async function loadSpots() {
-      const res = await fetch('./spots.json');
-      const data = await res.json();
-      STATE.spots = data;
-      buildFilterOptions();
-      setupMap();
-    }
-
     function setupEvents() {
-      els.regionFilter.addEventListener('change', applyFilters);
-      els.prefFilter.addEventListener('change', applyFilters);
+      els.regionFilter.addEventListener("change", applyFilters);
+      els.prefFilter.addEventListener("change", applyFilters);
 
       let t1 = null;
       let t2 = null;
 
-      els.tagFilter.addEventListener('input', function () {
+      els.tagFilter.addEventListener("input", function() {
         clearTimeout(t1);
         t1 = setTimeout(applyFilters, 250);
       });
 
-      els.freewordFilter.addEventListener('input', function () {
+      els.freewordFilter.addEventListener("input", function() {
         clearTimeout(t2);
         t2 = setTimeout(applyFilters, 250);
       });
 
-      els.favoritesOnlyBtn.addEventListener('click', function () {
+      els.favoritesOnlyBtn.addEventListener("click", function() {
         STATE.favoritesOnly = !STATE.favoritesOnly;
-        els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? '★ お気に入りのみ' : '☆ お気に入り';
+        els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
         applyFilters();
-      });
-
-      els.fitAllBtn.addEventListener('click', function () {
-        clearSelection();
-
-        const targets = STATE.filteredSpots.length ? STATE.filteredSpots : STATE.spots;
-        if (!targets.length) return;
-
-        if (targets.length === 1) {
-          STATE.map.flyTo({
-            center: [targets[0].lng, targets[0].lat],
-            zoom: 14
-          });
-          return;
-        }
-
-        const bounds = new maplibregl.LngLatBounds();
-        targets.forEach(s => bounds.extend([s.lng, s.lat]));
-        STATE.map.fitBounds(bounds, {
-          padding: 80,
-          maxZoom: 14,
-          duration: 700
-        });
       });
     }
 
-    setupEvents();
+    function loadSpots() {
+      fetch("./spots.json")
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          STATE.spots = data;
+          buildFilterOptions();
+          setupMap();
+        })
+        .catch(function(err) {
+          console.error(err);
+          document.getElementById("app").innerHTML =
+            '<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>';
+        });
+    }
 
-    loadSpots().catch(function (err) {
-      console.error(err);
-      document.getElementById('app').innerHTML =
-        '<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>';
-    });
+    setupEvents();
+    loadSpots();
   </script>
 </body>
 </html>
