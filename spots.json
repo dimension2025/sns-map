@@ -1,0 +1,224 @@
+[
+  {
+    "id": "art-aquarium",
+    "name": "アートアクアリウム",
+    "lat": 35.67102560284623,
+    "lng": 139.76608091349286,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/sQahHCCvjAMZ2fXY6",
+    "images": [
+      "https://drive.google.com/file/d/1-vKLg0AuxVM8YFkXs4zN2PJJi5aWVeyW/view?usp=drivesdk"
+    ],
+    "description": "幻想的な光と水槽演出が魅力の映えスポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#屋内", "#アート", "#デート", "#映え"],
+    "recommendation": 5
+  },
+  {
+    "id": "kawasaki-city-hall-observatory",
+    "name": "川崎市役所 展望ロビー",
+    "lat": 35.531053844218874,
+    "lng": 139.70286258465714,
+    "region": "関東",
+    "prefecture": "神奈川県",
+    "googleMapsUrl": "https://maps.app.goo.gl/spC9LRjLNdGWWNq4A",
+    "images": [
+      "https://drive.google.com/file/d/1O0Ak9yCq8gqyFVfuiEzmalSLpQdST4Y6/view?usp=drivesdk"
+    ],
+    "description": "開放感のある展望ロビー。夕景〜夜景の撮影候補。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#展望", "#夜景", "#無料", "#駅近"],
+    "recommendation": 4
+  },
+  {
+    "id": "sensoji",
+    "name": "浅草寺",
+    "lat": 35.714934966214024,
+    "lng": 139.7966553,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/X9spST63ic5j9JtK8",
+    "images": [
+      "https://drive.google.com/file/d/1d6ulBvZDwCQ6QxvuN4EaEtdrg9debAIE/view?usp=drivesdk"
+    ],
+    "description": "定番の東京観光スポット。和風・街歩き・夜のライトアップも強い。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#和風", "#観光", "#東京", "#夜景"],
+    "recommendation": 5
+  },
+  {
+    "id": "shibuya-sky",
+    "name": "SHIBUYA SKY",
+    "lat": 35.65885060290267,
+    "lng": 139.7019311558214,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/vcqNinFqdjR6tJgT6",
+    "images": [
+      "https://drive.google.com/file/d/1uaAGZL0WK7iwFRff3JwOdzbo_J3WxW2t/view?usp=drivesdk",
+      "https://drive.google.com/file/d/1s2xnxjwY8Pr17uyy0VvPbR3dM-Brq4tX/view?usp=drivesdk"
+    ],
+    "description": "渋谷上空の定番絶景スポット。夕景・夜景ともに人気。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#夜景", "#展望", "#渋谷", "#定番"],
+    "recommendation": 5
+  },
+  {
+    "id": "the-soho",
+    "name": "the SOHO",
+    "lat": 35.61818256391152,
+    "lng": 139.77508707116428,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/5jpDeRE5TuRKg3q4A",
+    "images": [
+      "https://drive.google.com/file/d/1Hp2tf2uU9XIYqdjPRJVsl9CgMil84lvT/view?usp=drivesdk"
+    ],
+    "description": "近未来感・無機質感のある建築系スポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#建築", "#近未来", "#お台場周辺", "#モダン"],
+    "recommendation": 4
+  },
+  {
+    "id": "caretta-shiodome-sky-view",
+    "name": "カレッタ汐留 SKY VIEW",
+    "lat": 35.66461194022665,
+    "lng": 139.76253302883572,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/LMhqV1fz1rpvsc587",
+    "images": [
+      "https://drive.google.com/file/d/1Lz1wvnzY5uD9nN2iwbfaWr6MFk9pdzvW/view?usp=drivesdk"
+    ],
+    "description": "都心の夜景が見やすい定番ビュー。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#夜景", "#展望", "#汐留", "#無料"],
+    "recommendation": 4
+  },
+  {
+    "id": "maxell-aqua-park-shinagawa",
+    "name": "マクセル アクアパーク 品川",
+    "lat": 35.62851499398817,
+    "lng": 139.73521784232858,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/BWbXu1rhLEusvh4k9",
+    "images": [
+      "https://drive.google.com/file/d/1dasuGOYl4kKCxDsDSN2uiqqeWvuPdEe2/view?usp=drivesdk"
+    ],
+    "description": "光・水・生き物の演出が強い屋内映えスポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#屋内", "#水族館", "#デート", "#映え"],
+    "recommendation": 5
+  },
+  {
+    "id": "pigment-tokyo",
+    "name": "PIGMENT TOKYO",
+    "lat": 35.62152357159187,
+    "lng": 139.7496009576714,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/JL6TdtwRYDmTfaVPA",
+    "images": [
+      "https://drive.google.com/file/d/1knqvkE_qWRY4uogYbg6lhJ0k4d2UWZoP/view?usp=drivesdk"
+    ],
+    "description": "色材・空間演出が美しいアート系スポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#アート", "#屋内", "#カラー", "#ギャラリー"],
+    "recommendation": 4
+  },
+  {
+    "id": "tokyo-international-forum",
+    "name": "東京国際フォーラム",
+    "lat": 35.67699999950352,
+    "lng": 139.76374247116428,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/U187HgcpDp7VgVQJA",
+    "images": [
+      "https://drive.google.com/file/d/1rF58dzdpHWZyg6gKLwodKwnWVYPr1JSN/view?usp=drivesdk"
+    ],
+    "description": "ガラス棟の構造美が映える建築スポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#建築", "#有楽町", "#屋内", "#モダン"],
+    "recommendation": 5
+  },
+  {
+    "id": "ebisu-garden-place",
+    "name": "恵比寿ガーデンプレイス",
+    "lat": 35.64282923991299,
+    "lng": 139.71389887301427,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/TrFbL7K42NgtSK188",
+    "images": [
+      "https://drive.google.com/file/d/1Lc0Kf8WFN9MvCi8rEKeD5BYdL96BmK5o/view?usp=drivesdk"
+    ],
+    "description": "街並み・イルミ・上品な雰囲気が撮りやすいエリア。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#街歩き", "#イルミ", "#デート", "#恵比寿"],
+    "recommendation": 4
+  },
+  {
+    "id": "tokyo-metropolitan-plaza",
+    "name": "東京都庁都民広場",
+    "lat": 35.68993855625288,
+    "lng": 139.69286631534283,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/7piCGBqB2e8EXMbm9",
+    "images": [
+      "https://drive.google.com/file/d/1X1RSM9YLQV1ad_qsGIFkGGmpeNKXgRlS/view?usp=drivesdk"
+    ],
+    "description": "新宿高層ビル群のスケール感が出しやすいスポット。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#新宿", "#建築", "#広場", "#夜景"],
+    "recommendation": 4
+  },
+  {
+    "id": "wadakura-fountain-park",
+    "name": "和田倉噴水公園",
+    "lat": 35.683555005718084,
+    "lng": 139.76091651534284,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/CaGXCpnjfzgGAm7a8",
+    "images": [
+      "https://drive.google.com/file/d/1G2AQ_KI1QiunXCDjq-PwLhYSv61HT3vb/view?usp=drivesdk"
+    ],
+    "description": "噴水・夜のライトアップ・都会感が魅力。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#噴水", "#夜景", "#丸の内", "#散歩"],
+    "recommendation": 4
+  },
+  {
+    "id": "hamamatsucho-takeshiba-deck",
+    "name": "JR浜松町駅と東京ポートシティ竹芝をつなぐ歩行者デッキ",
+    "lat": 35.65646725578621,
+    "lng": 139.75806684232856,
+    "region": "関東",
+    "prefecture": "東京都",
+    "googleMapsUrl": "https://maps.app.goo.gl/h4ykRNnaaxnd8FYu6",
+    "images": [
+      "https://drive.google.com/file/d/1W7mBAZiOYiRbTBspQxfoi5XMCR4gxE-D/view?usp=drivesdk"
+    ],
+    "description": "都市導線の奥行き感が撮りやすい歩行者デッキ。",
+    "hours": "",
+    "fee": "",
+    "hashtags": ["#都市景観", "#デッキ", "#竹芝", "#夜景"],
+    "recommendation": 4
+  }
+]
