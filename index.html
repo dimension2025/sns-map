@@ -1,458 +1,408 @@
 <!DOCTYPE html>
-<html lang="meta charset="UTF-8" /><html lang="ja">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Instagrammable Map</title>
-
-  <link
-    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
-    rel="stylesheet"
- re-gl@5.6.1/dist/maplibre-gl.js<style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #050507;
-      color: #fff;
-    }
-
-    #map {
-      position: absolute;
-      inset: 0;
-    }
-
-    .topbar {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-      padding: 12px;
-      border-radius: 18px;
-      background: rgba(14,14,18,0.82);
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-    }
-
-    .search {
-      flex: 1;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      padding: 0 12px;
-      outline: none;
-    }
-
-    .search::placeholder {
-      color: #999;
-    }
-
-    .panel {
-      position: absolute;
-      top: 88px;
-      right: 16px;
-      width: 360px;
-      max-height: calc(100vh - 104px);
-      overflow: auto;
-      z-index: 10;
-      padding: 16px;
-      border-radius: 20px;
-      background: rgba(14,14,18,0.84);
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(14px);
-      display: none;
-    }
-
-    .panel.active {
-      display: block;
-    }
-
-    .hero {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 14px;
-      display: block;
-      margin-bottom: 12px;
-      background: #222;
-    }
-
-    .title {
-      margin: 0 0 8px 0;
-      font-size: 22px;
-      line-height: 1.4;
-    }
-
-    .meta {
-      color: #bbb;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .desc {
-      margin-top: 10px;
-      color: #ccc;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .chip {
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.05);
-      color: #ddd;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 0 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      text-decoration: none;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .btn.primary {
-      background: #fff;
-      color: #111;
-    }
-
-    .brand {
-      position: absolute;
-      left: 16px;
-      bottom: 16px;
-      z-index: 10;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(14,14,18,0.82);
-      border: 1px solid rgba(255,255,255,0.08);
-      backdrop-filter: blur(12px);
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.03em;
-    }
-
-    .marker {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      border: 2px solid #111;
-      box-shadow: 0 0 0 4px rgba(255,255,255,0.18);
-      cursor: pointer;
-    }
-
-    .marker.active {
-      background: #ff4da6;
-      box-shadow: 0 0 0 8px rgba(255,77,166,0.22);
-    }
-
-    @media (max-width: 820px) {
-      .panel {
-        top: auto;
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        width: auto;
-        max-height: 54vh;
-      }
-
-      .topbar {
-        left: 12px;
-        right: 12px;
-        top: 12px;
-      }
-
-      .brand {
-        left: 12px;
-        bottom: 12px;
-      }
-    }
-  </style>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<title>Instagrammable Map - SNS映えスポットMAP</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#141414; --panel2:#1c1c1c;
+    --text:#f5f5f5; --muted:#9a9a9a; --accent:#e6c36a; --border:#262626;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;}
+  #app{display:grid;grid-template-columns:380px 1fr;height:100vh;}
+  #sidebar{background:var(--panel);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;}
+  #map{height:100vh;background:#000;}
+  .header{padding:14px 16px;border-bottom:1px solid var(--border);}
+  .header h1{margin:0;font-size:16px;letter-spacing:.05em;color:var(--accent);}
+  .header p{margin:4px 0 0;font-size:11px;color:var(--muted);}
+  .search{padding:12px 14px;border-bottom:1px solid var(--border);
+    display:flex;flex-direction:column;gap:8px;}
+  .search input,.search select{
+    width:100%;padding:8px 10px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-size:13px;outline:none;}
+  .search .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .tagrow{display:flex;flex-wrap:wrap;gap:6px;max-height:88px;overflow-y:auto;}
+  .tag{font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:999px;
+    background:var(--panel2);color:var(--muted);cursor:pointer;user-select:none;}
+  .tag.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .list{flex:1;overflow-y:auto;padding:8px;}
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+    margin-bottom:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
+  .card:hover{transform:translateY(-2px);border-color:var(--accent);}
+  .thumbwrap{position:relative;}
+  .thumb{width:100%;height:140px;background:#000 center/cover no-repeat;}
+  .body{padding:10px 12px;}
+  .ttl{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .name{font-size:14px;font-weight:600;}
+  .rate{font-size:12px;color:var(--accent);white-space:nowrap;}
+  .area{font-size:11px;color:var(--muted);margin-top:2px;}
+  .ctags{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
+  .ctags span{font-size:10px;color:var(--muted);background:#222;padding:2px 6px;border-radius:999px;}
+  .fav{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
+    border:none;color:#fff;font-size:14px;width:30px;height:30px;border-radius:50%;cursor:pointer;}
+  .fav.on{color:#ff6b9d;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;
+    align-items:center;justify-content:center;z-index:2000;padding:16px;}
+  .overlay.open{display:flex;}
+  .detail{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    max-width:680px;width:100%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;}
+  .detail .close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.5);
+    border:none;color:#fff;font-size:20px;cursor:pointer;width:34px;height:34px;border-radius:50%;z-index:2;}
+  .images{display:flex;overflow-x:auto;gap:4px;scroll-snap-type:x mandatory;flex-shrink:0;}
+  .images img{height:320px;flex-shrink:0;scroll-snap-align:start;background:#000;}
+  .info{padding:18px 20px;overflow-y:auto;}
+  .info h2{margin:0 0 6px;font-size:20px;}
+  .meta{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  .row2{display:grid;grid-template-columns:90px 1fr;gap:6px 12px;font-size:13px;margin:10px 0;}
+  .row2 dt{color:var(--muted);}
+  .desc{font-size:14px;line-height:1.7;margin:10px 0;}
+  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{padding:10px 14px;border-radius:8px;border:1px solid var(--accent);
+    background:var(--accent);color:#000;font-weight:600;text-decoration:none;font-size:13px;cursor:pointer;}
+  .btn.ghost{background:transparent;color:var(--accent);}
+  .mobile-toggle{display:none;}
+  @media (max-width:768px){
+    #app{grid-template-columns:1fr;}
+    #sidebar{position:fixed;top:0;left:0;bottom:0;z-index:1500;
+      transform:translateX(-100%);transition:transform .25s;width:88%;max-width:380px;}
+    #sidebar.open{transform:translateX(0);}
+    .mobile-toggle{display:flex;position:fixed;top:12px;left:12px;z-index:1400;
+      background:var(--panel);border:1px solid var(--border);color:#fff;
+      width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
+  }
+  .pin{background:var(--accent);width:22px;height:22px;border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);border:2px solid #000;box-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .pin.fav{background:#ff6b9d;}
+  .leaflet-container{background:#000;}
+</style>
 </head>
 <body>
+<button class="mobile-toggle" id="toggleSidebar">☰</button>
+<div id="app">
+  <aside id="sidebar">
+    <div class="header">
+      <h1>📍 Instagrammable Map</h1>
+      <p>SNS映えスポットMAP</p>
+    </div>
+    <div class="search">
+      <input type="text" id="q" placeholder="🔍 フリーワード（名前・説明）">
+      <div class="row">
+        <select id="region"><option value="">全地方</option></select>
+        <select id="pref"><option value="">全都道府県</option></select>
+      </div>
+      <select id="sort">
+        <option value="rating">オススメ順</option>
+        <option value="name">名前順</option>
+        <option value="fav">お気に入りのみ</option>
+      </select>
+      <div class="tagrow" id="tags"></div>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
   <div id="map"></div>
+</div>
+<div class="overlay" id="overlay"><div class="detail" id="detail"></div></div>
 
-  <div class="topbar">
-    <input id="searchBox" class="search" type="text" placeholder="スポット名で検索" />
-  </div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ========= データ =========
+var SPOTS = [
+  { id:1, name:"アートアクアリウム", lat:35.67102560284623, lng:139.76608091349286,
+    mapUrl:"https://maps.app.goo.gl/sQahHCCvjAMZ2fXY6",
+    images:["1-vKLg0AuxVM8YFkXs4zN2PJJi5aWVeyW"],
+    region:"関東", pref:"東京都", area:"中央区",
+    description:"金魚×光×アートの幻想的な屋内アクアリウム。雨の日でも映える。",
+    hours:"10:00-19:00", price:"2,500円〜",
+    tags:["屋内","アート","夜映え","映え","デート"], rating:4.5 },
+  { id:2, name:"川崎市役所 展望ロビー", lat:35.531053844218874, lng:139.70286258465714,
+    mapUrl:"https://maps.app.goo.gl/spC9LRjLNdGWWNq4A",
+    images:["1O0Ak9yCq8gqyFVfuiEzmalSLpQdST4Y6"],
+    region:"関東", pref:"神奈川県", area:"川崎市",
+    description:"無料で楽しめる夜景スポット。穴場的な高所眺望。",
+    hours:"9:00-21:00", price:"無料",
+    tags:["夜景","無料","展望","穴場"], rating:4.2 },
+  { id:3, name:"浅草寺", lat:35.714934966214024, lng:139.7966553,
+    mapUrl:"https://maps.app.goo.gl/X9spST63ic5j9JtK8",
+    images:["1d6ulBvZDwCQ6QxvuN4EaEtdrg9debAIE"],
+    region:"関東", pref:"東京都", area:"台東区",
+    description:"言わずと知れた東京の象徴。夜のライトアップが特に映える。",
+    hours:"24時間（本堂6:00-17:00）", price:"無料",
+    tags:["和風","夜映え","定番","無料","観光"], rating:4.6 },
+  { id:4, name:"SHIBUYA SKY", lat:35.65885060290267, lng:139.7019311558214,
+    mapUrl:"https://maps.app.goo.gl/vcqNinFqdjR6tJgT6",
+    images:["1uaAGZL0WK7iwFRff3JwOdzbo_J3WxW2t","1s2xnxjwY8Pr17uyy0VvPbR3dM-Brq4tX"],
+    region:"関東", pref:"東京都", area:"渋谷区",
+    description:"渋谷スクランブルスクエア屋上の絶景展望。360°の都心パノラマ。",
+    hours:"10:00-22:30", price:"2,500円〜",
+    tags:["夜景","展望","定番","映え","デート"], rating:4.8 },
+  { id:5, name:"the SOHO", lat:35.61818256391152, lng:139.77508707116428,
+    mapUrl:"https://maps.app.goo.gl/5jpDeRE5TuRKg3q4A",
+    images:["1Hp2tf2uU9XIYqdjPRJVsl9CgMil84lvT"],
+    region:"関東", pref:"東京都", area:"江東区",
+    description:"カラフルな吹き抜けが特徴的な建築。デザイナーズオフィスの撮影名所。",
+    hours:"平日昼間推奨", price:"無料",
+    tags:["建築","カラフル","屋内","無料","穴場"], rating:4.3 },
+  { id:6, name:"カレッタ汐留 SKY VIEW", lat:35.66461194022665, lng:139.76253302883572,
+    mapUrl:"https://maps.app.goo.gl/LMhqV1fz1rpvsc587",
+    images:["1Lz1wvnzY5uD9nN2iwbfaWr6MFk9pdzvW"],
+    region:"関東", pref:"東京都", area:"港区",
+    description:"無料展望スペースから望むレインボーブリッジと東京タワー。",
+    hours:"11:00-23:00", price:"無料",
+    tags:["夜景","展望","無料","デート","穴場"], rating:4.4 },
+  { id:7, name:"マクセル アクアパーク 品川", lat:35.62851499398817, lng:139.73521784232858,
+    mapUrl:"https://maps.app.goo.gl/BWbXu1rhLEusvh4k9",
+    images:["1dasuGOYl4kKCxDsDSN2uiqqeWvuPdEe2"],
+    region:"関東", pref:"東京都", area:"港区",
+    description:"光と音の演出が魅せる都市型水族館。イルカショーが圧巻。",
+    hours:"10:00-20:00", price:"2,500円〜",
+    tags:["屋内","水族館","夜映え","デート","アート"], rating:4.4 },
+  { id:8, name:"PIGMENT TOKYO", lat:35.62152357159187, lng:139.7496009576714,
+    mapUrl:"https://maps.app.goo.gl/JL6TdtwRYDmTfaVPA",
+    images:["1knqvkE_qWRY4uogYbg6lhJ0k4d2UWZoP"],
+    region:"関東", pref:"東京都", area:"品川区",
+    description:"4,500色の顔料が並ぶ壁面ラボ。アート好きの聖地。",
+    hours:"11:30-18:00（火-土）", price:"無料",
+    tags:["アート","カラフル","屋内","無料","穴場"], rating:4.5 },
+  { id:9, name:"東京国際フォーラム", lat:35.67699999950352, lng:139.76374247116428,
+    mapUrl:"https://maps.app.goo.gl/U187HgcpDp7VgVQJA",
+    images:["1rF58dzdpHWZyg6gKLwodKwnWVYPr1JSN"],
+    region:"関東", pref:"東京都", area:"千代田区",
+    description:"ガラスのホールの曲線美が圧倒的。建築フォトの名所。",
+    hours:"7:00-23:30", price:"無料",
+    tags:["建築","屋内","無料","アート","定番"], rating:4.5 },
+  { id:10, name:"恵比寿ガーデンプレイス", lat:35.64282923991299, lng:139.71389887301427,
+    mapUrl:"https://maps.app.goo.gl/TrFbL7K42NgtSK188",
+    images:["1Lc0Kf8WFN9MvCi8rEKeD5BYdL96BmK5o"],
+    region:"関東", pref:"東京都", area:"渋谷区",
+    description:"冬のシャンデリアイルミネーションが象徴的。年中映える広場。",
+    hours:"24時間", price:"無料",
+    tags:["夜映え","無料","デート","定番","イルミ"], rating:4.4 },
+  { id:11, name:"東京都庁都民広場", lat:35.68993855625288, lng:139.69286631534283,
+    mapUrl:"https://maps.app.goo.gl/7piCGBqB2e8EXMbm9",
+    images:["1X1RSM9YLQV1ad_qsGIFkGGmpeNKXgRlS"],
+    region:"関東", pref:"東京都", area:"新宿区",
+    description:"夜は都庁プロジェクションマッピング。ギネス認定の大規模演出。",
+    hours:"日没後", price:"無料",
+    tags:["夜映え","無料","建築","定番","アート"], rating:4.3 },
+  { id:12, name:"和田倉噴水公園", lat:35.683555005718084, lng:139.76091651534284,
+    mapUrl:"https://maps.app.goo.gl/CaGXCpnjfzgGAm7a8",
+    images:["1G2AQ_KI1QiunXCDjq-PwLhYSv61HT3vb"],
+    region:"関東", pref:"東京都", area:"千代田区",
+    description:"皇居外苑の噴水公園。夜のライトアップと水鏡が幻想的。",
+    hours:"24時間", price:"無料",
+    tags:["夜映え","無料","水辺","穴場","デート"], rating:4.2 },
+  { id:13, name:"浜松町〜竹芝 歩行者デッキ", lat:35.65646725578621, lng:139.75806684232856,
+    mapUrl:"https://maps.app.goo.gl/h4ykRNnaaxnd8FYu6",
+    images:["1W7mBAZiOYiRbTBspQxfoi5XMCR4gxE-D"],
+    region:"関東", pref:"東京都", area:"港区",
+    description:"未来感のあるデッキから望む東京タワー。新しい都市夜景スポット。",
+    hours:"24時間", price:"無料",
+    tags:["夜景","無料","建築","穴場","デート"], rating:4.3 }
+];
 
-  <div id="detailPanel" class="panel"></div>
+// ========= 共通 =========
+function driveImg(id){ return "https://lh3.googleusercontent.com/d/" + id + "=w1200"; }
 
-  <div class="brand">Instagrammable Map</div>
+var map, markers=[], filtered=[];
+var favs = JSON.parse(localStorage.getItem("favs") || "[]");
+var state = { q:"", region:"", pref:"", sort:"rating", tags:[] };
 
-  <script>
-    const state = {
-      map: null,
-      spots: [],
-      markers: new Map(),
-      selectedId: null
-    };
+// ========= Map =========
+function initMap(){
+  map = L.map('map', { zoomControl:true }).setView([35.68, 139.76], 11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© OpenStreetMap, © CARTO', maxZoom:19
+  }).addTo(map);
+  map.on('moveend', renderList);
+}
 
-    function getDriveFileId(url) {
-      if (!url) return null;
-      const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      return m ? m[1] : null;
-    }
-
-    function toImageUrl(url) {
-      if (!url) return "";
-      if (url.includes("drive.google.com")) {
-        const id = getDriveFileId(url);
-        if (!id) return url;
-        return "https://drive.google.com/thumbnail?id=" + id + "&sz=w1600";
-      }
-      return url;
-    }
-
-    function escapeHtml(str) {
-      return String(str || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    function renderDetail(spot) {
-      const panel = document.getElementById("detailPanel");
-
-      if (!spot) {
-        panel.classList.remove("active");
-        panel.innerHTML = "";
-        return;
-      }
-
-      const img = toImageUrl((spot.images && spot.images[0]) || "");
-
-      let html = "";
-      if (img) {
-        html += '<img class="hero" src="' + img + '" alt="' + escapeHtml(spot.name) + '">';
-      }
-
-      html += '<h2 class="title">' + escapeHtml(spot.name) + '</h2>';
-      html += '<div class="meta">' +
-        escapeHtml(spot.prefecture || "") + " / " + escapeHtml(spot.region || "") +
-        "</div>";
-
-      if (spot.description) {
-        html += '<div class="desc">' + escapeHtml(spot.description) + '</div>';
-      }
-
-      if (spot.hashtags && spot.hashtags.length > 0) {
-        html += '<div class="chips">';
-        spot.hashtags.forEach(function(tag) {
-          html += '<span class="chip">' + escapeHtml(tag) + '</span>';
-        });
-        html += '</div>';
-      }
-
-      html += '<div class="actions">';
-      html += '<a class="btn primary" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
-      html += '<button class="btn" id="closeBtn">閉じる</button>';
-      html += '</div>';
-
-      panel.innerHTML = html;
-      panel.classList.add("active");
-
-      document.getElementById("closeBtn").onclick = function() {
-        clearSelection();
-      };
-    }
-
-    function updateMarkerStyles() {
-      state.markers.forEach(function(marker, id) {
-        marker.getElement().classList.toggle("active", state.selectedId === id);
+function renderMarkers(){
+  for (var i=0;i<markers.length;i++) map.removeLayer(markers[i]);
+  markers = [];
+  for (var j=0;j<filtered.length;j++){
+    (function(s){
+      var isFav = favs.indexOf(s.id) >= 0;
+      var icon = L.divIcon({
+        className:'',
+        html:'<div class="pin' + (isFav?' fav':'') + '"></div>',
+        iconSize:[22,22], iconAnchor:[11,22]
       });
+      var mk = L.marker([s.lat, s.lng], { icon:icon }).addTo(map);
+      mk.on('click', function(){ openDetail(s); });
+      markers.push(mk);
+    })(filtered[j]);
+  }
+}
+
+// ========= Filter =========
+function applyFilters(){
+  var q = state.q.toLowerCase();
+  filtered = SPOTS.filter(function(s){
+    if (state.region && s.region !== state.region) return false;
+    if (state.pref && s.pref !== state.pref) return false;
+    if (state.sort === "fav" && favs.indexOf(s.id) < 0) return false;
+    for (var i=0;i<state.tags.length;i++){
+      if (s.tags.indexOf(state.tags[i]) < 0) return false;
     }
-
-    function selectSpot(id, fly) {
-      state.selectedId = id;
-      updateMarkerStyles();
-
-      const spot = state.spots.find(function(s) {
-        return s.id === id;
-      });
-
-      renderDetail(spot);
-
-      if (spot && fly) {
-        state.map.easeTo({
-          center: [spot.lng, spot.lat],
-          zoom: Math.max(14, state.map.getZoom()),
-          duration: 600
-        });
-      }
+    if (q){
+      var hay = (s.name + " " + (s.description||"") + " " + s.tags.join(" ")).toLowerCase();
+      if (hay.indexOf(q) < 0) return false;
     }
+    return true;
+  });
+  if (state.sort === "name"){
+    filtered.sort(function(a,b){ return a.name.localeCompare(b.name, 'ja'); });
+  } else {
+    filtered.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
+  }
+  renderMarkers();
+  renderList();
+}
 
-    function clearSelection() {
-      state.selectedId = null;
-      updateMarkerStyles();
-      renderDetail(null);
-    }
+// ========= List =========
+function renderList(){
+  if (!map) return;
+  var bounds = map.getBounds();
+  var visible = filtered.filter(function(s){ return bounds.contains([s.lat, s.lng]); });
+  var listEl = document.getElementById('list');
+  if (!visible.length){
+    listEl.innerHTML = '<div style="padding:24px;color:var(--muted);text-align:center;font-size:13px;">表示範囲に該当スポットがありません</div>';
+    return;
+  }
+  var html = "";
+  for (var i=0;i<visible.length;i++){
+    var s = visible[i];
+    var img = s.images[0] ? driveImg(s.images[0]) : '';
+    var isFav = favs.indexOf(s.id) >= 0;
+    var tagHtml = "";
+    var ts = s.tags.slice(0,4);
+    for (var k=0;k<ts.length;k++) tagHtml += '<span>#' + ts[k] + '</span>';
+    html += '<div class="card" data-id="' + s.id + '">' +
+              '<div class="thumbwrap">' +
+                '<div class="thumb" style="background-image:url(' + img + ')"></div>' +
+                '<button class="fav ' + (isFav?'on':'') + '" data-fav="' + s.id + '">' + (isFav?'♥':'♡') + '</button>' +
+              '</div>' +
+              '<div class="body">' +
+                '<div class="ttl"><div class="name">' + s.name + '</div><div class="rate">★ ' + (s.rating||'-') + '</div></div>' +
+                '<div class="area">' + s.pref + ' / ' + s.area + '</div>' +
+                '<div class="ctags">' + tagHtml + '</div>' +
+              '</div>' +
+            '</div>';
+  }
+  listEl.innerHTML = html;
 
-    function createMarker(spot) {
-      const markerEl = document.createElement("div");
-      markerEl.className = "marker";
-
-      markerEl.addEventListener("click", function(e) {
-        e.stopPropagation();
-        selectSpot(spot.id, true);
-      });
-
-      const marker = new maplibregl.Marker({
-        element: markerEl,
-        anchor: "center"
-      })
-        .setLngLat([spot.lng, spot.lat])
-        .addTo(state.map);
-
-      state.markers.set(spot.id, marker);
-    }
-
-    function filterSpots(keyword) {
-      const q = String(keyword || "").toLowerCase().trim();
-
-      state.spots.forEach(function(spot) {
-        const marker = state.markers.get(spot.id);
-        if (!marker) return;
-
-        const target = String(spot.name || "").toLowerCase();
-        const visible = !q || target.includes(q);
-        marker.getElement().style.display = visible ? "block" : "none";
-      });
-    }
-
-    function setupMap() {
-      state.map = new maplibregl.Map({
-        container: "map",
-        style: {
-          version: 8,
-          sources: {
-            "carto-dark": {
-              type: "raster",
-              tiles: [
-                "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-                "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-                "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
-              ],
-              tileSize: 256,
-              attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-            }
-          },
-          layers: [
-            {
-              id: "carto-dark-layer",
-              type: "raster",
-              source: "carto-dark"
-            }
-          ]
-        },
-        center: [139.76, 35.67],
-        zoom: 11.2,
-        bearing: 0,
-        pitch: 0,
-        dragRotate: false,
-        pitchWithRotate: false,
-        maxPitch: 0,
-        attributionControl: true
-      });
-
-      state.map.addControl(
-        new maplibregl.NavigationControl({
-          showCompass: false,
-          visualizePitch: false
-        }),
-        "bottom-left"
-      );
-
-      state.map.dragRotate.disable();
-
-      if (state.map.touchZoomRotate && state.map.touchZoomRotate.disableRotation) {
-        state.map.touchZoomRotate.disableRotation();
-      }
-
-      if (state.map.touchPitch && state.map.touchPitch.disable) {
-        state.map.touchPitch.disable();
-      }
-
-      state.map.on("load", function() {
-        state.spots.forEach(createMarker);
-
-        if (state.spots.length > 0) {
-          const bounds = new maplibregl.LngLatBounds();
-          state.spots.forEach(function(s) {
-            bounds.extend([s.lng, s.lat]);
-          });
-
-          state.map.fitBounds(bounds, {
-            padding: {
-              top: 90,
-              right: 420,
-              bottom: 90,
-              left: 50
-            },
-            maxZoom: 13.5,
-            duration: 900
-          });
-        }
-      });
-
-      state.map.on("click", function() {
-        clearSelection();
-      });
-    }
-
-    function loadSpots() {
-      fetch("./spots.json")
-        .then(function(res) {
-          return res.json();
-        })
-        .then(function(data) {
-          state.spots = data;
-          setupMap();
-        })
-        .catch(function(err) {
-          console.error(err);
-          document.body.innerHTML = '<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>';
-        });
-    }
-
-    document.getElementById("searchBox").addEventListener("input", function() {
-      filterSpots(this.value);
+  var cards = listEl.querySelectorAll('.card');
+  for (var c=0;c<cards.length;c++){
+    cards[c].addEventListener('click', function(e){
+      if (e.target.getAttribute && e.target.getAttribute('data-fav')) return;
+      var id = parseInt(this.getAttribute('data-id'), 10);
+      var sp = null;
+      for (var x=0;x<SPOTS.length;x++) if (SPOTS[x].id === id) { sp = SPOTS[x]; break; }
+      if (sp){ map.flyTo([sp.lat, sp.lng], 16, { duration:.6 }); openDetail(sp); }
     });
+  }
+  var favBtns = listEl.querySelectorAll('[data-fav]');
+  for (var f=0;f<favBtns.length;f++){
+    favBtns[f].addEventListener('click', function(e){
+      e.stopPropagation();
+      var id = parseInt(this.getAttribute('data-fav'), 10);
+      var idx = favs.indexOf(id);
+      if (idx >= 0) favs.splice(idx,1); else favs.push(id);
+      localStorage.setItem('favs', JSON.stringify(favs));
+      applyFilters();
+    });
+  }
+}
 
-    loadSpots();
-  </script>
+// ========= Detail =========
+function openDetail(s){
+  var imgs = "";
+  for (var i=0;i<s.images.length;i++) imgs += '<img src="' + driveImg(s.images[i]) + '" alt="">';
+  var tagsHtml = "";
+  for (var j=0;j<s.tags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + s.tags[j] + '</span> ';
+  var isFav = favs.indexOf(s.id) >= 0;
+  document.getElementById('detail').innerHTML =
+    '<button class="close" id="closeBtn">×</button>' +
+    '<div class="images">' + imgs + '</div>' +
+    '<div class="info">' +
+      '<h2>' + s.name + '</h2>' +
+      '<div class="meta">' + s.pref + ' / ' + s.area + ' ・ ★ ' + (s.rating||'-') + '</div>' +
+      '<div class="desc">' + (s.description||'') + '</div>' +
+      '<dl class="row2">' +
+        '<dt>営業時間</dt><dd>' + (s.hours||'-') + '</dd>' +
+        '<dt>料金</dt><dd>' + (s.price||'-') + '</dd>' +
+      '</dl>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;">' + tagsHtml + '</div>' +
+      '<div class="actions">' +
+        '<a class="btn" href="' + s.mapUrl + '" target="_blank" rel="noopener">📍 Google Mapで開く</a>' +
+        '<button class="btn ghost" id="favBtn">' + (isFav?'♥ 解除':'♡ お気に入り') + '</button>' +
+      '</div>' +
+    '</div>';
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeBtn').onclick = closeDetail;
+  document.getElementById('favBtn').onclick = function(){
+    var idx = favs.indexOf(s.id);
+    if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
+    localStorage.setItem('favs', JSON.stringify(favs));
+    openDetail(s); applyFilters();
+  };
+}
+function closeDetail(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', function(e){
+  if (e.target.id === 'overlay') closeDetail();
+});
+
+// ========= UI =========
+function initFilters(){
+  var regions = {}, prefs = {}, tagSet = {};
+  for (var i=0;i<SPOTS.length;i++){
+    var s = SPOTS[i];
+    regions[s.region] = 1; prefs[s.pref] = 1;
+    for (var k=0;k<s.tags.length;k++) tagSet[s.tags[k]] = (tagSet[s.tags[k]]||0) + 1;
+  }
+  var regionEl = document.getElementById('region');
+  var rk = Object.keys(regions);
+  for (var r=0;r<rk.length;r++){
+    var o = document.createElement('option'); o.value = rk[r]; o.textContent = rk[r]; regionEl.appendChild(o);
+  }
+  var prefEl = document.getElementById('pref');
+  var pk = Object.keys(prefs);
+  for (var p=0;p<pk.length;p++){
+    var o2 = document.createElement('option'); o2.value = pk[p]; o2.textContent = pk[p]; prefEl.appendChild(o2);
+  }
+  var tagEl = document.getElementById('tags');
+  var tk = Object.keys(tagSet).sort(function(a,b){ return tagSet[b]-tagSet[a]; });
+  for (var t=0;t<tk.length;t++){
+    (function(tag){
+      var el = document.createElement('span');
+      el.className = 'tag'; el.textContent = '#' + tag;
+      el.addEventListener('click', function(){
+        var idx = state.tags.indexOf(tag);
+        if (idx >= 0){ state.tags.splice(idx,1); el.classList.remove('active'); }
+        else { state.tags.push(tag); el.classList.add('active'); }
+        applyFilters();
+      });
+      tagEl.appendChild(el);
+    })(tk[t]);
+  }
+  document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value; applyFilters(); });
+  regionEl.addEventListener('change', function(e){ state.region = e.target.value; applyFilters(); });
+  prefEl.addEventListener('change', function(e){ state.pref = e.target.value; applyFilters(); });
+  document.getElementById('sort').addEventListener('change', function(e){ state.sort = e.target.value; applyFilters(); });
+}
+
+document.getElementById('toggleSidebar').addEventListener('click', function(){
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+initMap();
+initFilters();
+applyFilters();
+</script>
 </body>
 </html>
-
-<head>
