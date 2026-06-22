@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SNS映えMAP</title>
+  <title>SNS映えスポットMAP</title>
 
   <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
@@ -12,21 +12,23 @@
     :root {
       --bg: #0b0b0d;
       --panel: rgba(18, 18, 22, 0.92);
-      --panel-2: rgba(24, 24, 30, 0.95);
       --line: rgba(255,255,255,0.08);
       --text: #f5f5f7;
       --muted: #a8a8b3;
-      --accent: #ffffff;
       --pink: #ff4da6;
       --gold: #d5b15b;
       --shadow: 0 10px 30px rgba(0,0,0,0.35);
-      --radius: 18px;
     }
 
     * { box-sizing: border-box; }
+
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background: var(--bg); color: var(--text);
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
       overflow: hidden;
     }
@@ -49,7 +51,7 @@
       right: 14px;
       z-index: 30;
       display: grid;
-      grid-template-columns: 220px 180px 180px 1fr 120px;
+      grid-template-columns: 220px 180px 180px 1fr 140px;
       gap: 10px;
       padding: 12px;
       background: var(--panel);
@@ -81,16 +83,11 @@
     .button {
       height: 44px;
       border: 1px solid var(--line);
-      background: #fff;
-      color: #111;
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
       border-radius: 12px;
       font-weight: 700;
       cursor: pointer;
-    }
-
-    .button.secondary {
-      background: rgba(255,255,255,0.05);
-      color: var(--text);
     }
 
     .sidepanel {
@@ -181,12 +178,6 @@
       border-color: rgba(255,255,255,0.16);
     }
 
-    .selected-card {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
     .thumb {
       width: 100%;
       height: 108px;
@@ -253,16 +244,13 @@
       border: 1px solid var(--line);
       cursor: pointer;
       font-weight: 700;
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
     }
 
     .link-button {
       background: #fff;
       color: #111;
-    }
-
-    .fav-button, .close-button {
-      background: rgba(255,255,255,0.05);
-      color: var(--text);
     }
 
     .rating {
@@ -321,6 +309,7 @@
       .topbar {
         grid-template-columns: 1fr 1fr;
       }
+
       .sidepanel {
         width: calc(100% - 28px);
         left: 14px;
@@ -328,6 +317,7 @@
         top: auto;
         height: 48%;
       }
+
       .selected-wrap {
         max-height: 55%;
       }
@@ -348,9 +338,9 @@
       </select>
 
       <input id="tagFilter" class="search" type="text" placeholder="#夜景 #映え など" />
-      <input id="freewordFilter" class="search" type="text" placeholder="スポット名 / 説明 / ハッシュタグ で検索" />
+      <input id="freewordFilter" class="search" type="text" placeholder="スポット名 / 説明 / ハッシュタグで検索" />
 
-      <button id="favoritesOnlyBtn" class="button secondary">☆ お気に入り</button>
+      <button id="favoritesOnlyBtn" class="button">☆ お気に入り</button>
     </div>
 
     <div class="sidepanel">
@@ -362,7 +352,7 @@
             <div style="font-weight: 700;">表示スポット</div>
             <div id="listSubTitle" class="small">地図範囲内のおすすめ順</div>
           </div>
-          <button id="fitAllBtn" class="button secondary" style="height: 36px; padding: 0 12px;">全件表示</button>
+          <button id="fitAllBtn" class="button" style="height: 36px; padding: 0 12px;">全件表示</button>
         </div>
         <div id="listBody" class="list-body"></div>
       </div>
@@ -380,7 +370,7 @@
       favoritesOnly: false,
       favorites: new Set(JSON.parse(localStorage.getItem('spotFavorites') || '[]')),
       map: null,
-      markers: new Map(),
+      markers: new Map()
     };
 
     const els = {
@@ -392,7 +382,7 @@
       fitAllBtn: document.getElementById('fitAllBtn'),
       selectedWrap: document.getElementById('selectedWrap'),
       listBody: document.getElementById('listBody'),
-      listSubTitle: document.getElementById('listSubTitle'),
+      listSubTitle: document.getElementById('listSubTitle')
     };
 
     function saveFavorites() {
@@ -422,13 +412,13 @@
       return m ? m[1] : null;
     }
 
-    function parseTags(input) {
-      return String(input || '')
-        .split(/\s+/)
-        .map(v => v.trim())
-        .filter(Boolean)
-        .map(v => v.startsWith('#') ? v : `#${v}`);
-    }
+    function toImageUrl(url) {
+      if (!url) return '';
+      if (url.includes('drive.google.com')) {
+        const id = getDriveFileId(url);
+        if (!id) return url;
+        return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1600';
+      }
       return url;
     }
 
@@ -453,7 +443,7 @@
         .split(/\s+/)
         .map(v => v.trim())
         .filter(Boolean)
-        .map(v => v.startsWith('#') ? v : `#${v}`);
+        .map(v => v.startsWith('#') ? v : '#' + v);
     }
 
     function currentFilters() {
@@ -462,25 +452,29 @@
         pref: els.prefFilter.value,
         tags: parseTags(els.tagFilter.value),
         freeword: normalizeText(els.freewordFilter.value.trim()),
-        favoritesOnly: STATE.favoritesOnly,
+        favoritesOnly: STATE.favoritesOnly
       };
     }
 
     function applyFilters() {
-      const { region, pref, tags, freeword, favoritesOnly } = currentFilters();
+      const filters = currentFilters();
 
       STATE.filteredSpots = STATE.spots.filter(spot => {
-        if (region && spot.region !== region) return false;
-        if (pref && spot.prefecture !== pref) return false;
-        if (favoritesOnly && !STATE.favorites.has(spot.id)) return false;
+        if (filters.region && spot.region !== filters.region) return false;
+        if (filters.pref && spot.prefecture !== filters.pref) return false;
+        if (filters.favoritesOnly && !STATE.favorites.has(spot.id)) return false;
 
-        const tagOk = tags.length === 0 || tags.every(t => (spot.hashtags || []).includes(t));
+        const tagOk =
+          filters.tags.length === 0 ||
+          filters.tags.every(tag => (spot.hashtags || []).includes(tag));
+
         if (!tagOk) return false;
 
-        if (freeword) {
+        if (filters.freeword) {
           const target = spotSearchText(spot);
-          if (!target.includes(freeword)) return false;
+          if (!target.includes(filters.freeword)) return false;
         }
+
         return true;
       });
 
@@ -491,16 +485,16 @@
 
     function updateMarkerVisibility() {
       const visibleIds = new Set(STATE.filteredSpots.map(s => s.id));
-      STATE.markers.forEach((m, id) => {
-        const el = m.getElement();
+      STATE.markers.forEach((marker, id) => {
+        const el = marker.getElement();
         el.style.display = visibleIds.has(id) ? 'block' : 'none';
       });
       updateMarkerStyles();
     }
 
     function updateMarkerStyles() {
-      STATE.markers.forEach((m, id) => {
-        const el = m.getElement();
+      STATE.markers.forEach((marker, id) => {
+        const el = marker.getElement();
         const isSelected = STATE.selectedSpotId === id;
         el.classList.toggle('active', isSelected);
       });
@@ -511,13 +505,21 @@
 
       if (STATE.filteredSpots.length === 1) {
         const s = STATE.filteredSpots[0];
-        STATE.map.flyTo({ center: [s.lng, s.lat], zoom: 14, essential: true });
+        STATE.map.flyTo({
+          center: [s.lng, s.lat],
+          zoom: 14,
+          essential: true
+        });
         return;
       }
 
       const bounds = new maplibregl.LngLatBounds();
       STATE.filteredSpots.forEach(s => bounds.extend([s.lng, s.lat]));
-      STATE.map.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 700 });
+      STATE.map.fitBounds(bounds, {
+        padding: 80,
+        maxZoom: 14,
+        duration: 700
+      });
     }
 
     function getVisibleSpotsInViewport() {
@@ -527,7 +529,7 @@
         .sort((a, b) => (b.recommendation || 0) - (a.recommendation || 0));
     }
 
-    function selectSpot(id, fly = true) {
+    function selectSpot(id, fly) {
       STATE.selectedSpotId = id;
       updateMarkerStyles();
       renderSelected();
@@ -535,7 +537,11 @@
 
       const spot = STATE.spots.find(s => s.id === id);
       if (spot && fly) {
-        STATE.map.flyTo({ center: [spot.lng, spot.lat], zoom: Math.max(14, STATE.map.getZoom()), essential: true });
+        STATE.map.flyTo({
+          center: [spot.lng, spot.lat],
+          zoom: Math.max(14, STATE.map.getZoom()),
+          essential: true
+        });
       }
     }
 
@@ -544,88 +550,6 @@
       updateMarkerStyles();
       renderSelected();
       updateVisibleCards();
-    }
-
-    function renderSelected() {
-      const spot = STATE.spots.find(s => s.id === STATE.selectedSpotId);
-      if (!spot) {
-        els.selectedWrap.classList.remove('active');
-        els.selectedWrap.innerHTML = '';
-        return;
-      }
-
-      const isFav = STATE.favorites.has(spot.id);
-      const hero = toImageUrl((spot.images && spot.images[0]) || '');
-
-      els.selectedWrap.classList.add('active');
-      els.selectedWrap.innerHTML = `
-        <div class="selected-header">
-          <div>
-            <div class="small">${spot.region} / ${spot.prefecture}</div>
-            <h2 class="name" style="font-size: 20px; margin-top: 4px;">${escapeHtml(spot.name)}</h2>
-          </div>
-          <button class="close-button" id="closeSelectedBtn">閉じる</button>
-        </div>
-        <div class="selected-body">
-          <div class="selected-card">
-            ${hero ? `<img class="hero" src="${hero}" alt="${escapeHtml(spot.name)}endation)}</span>　おすすめ度 ${spot.recommendation || 0}/5</div>
-              ${spot.hours ? `<div>営業時間：${escapeHtml(spot.hours)}</div>` : ''}
-              ${spot.fee ? `<div>料金：${escapeHtml(spot.fee)}</div>` : ''}
-            </div>
-            ${spot.description ? `<div class="desc">${escapeHtml(spot.description)}</div>` : ''}
-            <div class="chips">
-              ${(spot.hashtags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
-            </div>
-            <div class="actions">
-              <a class="link-button" href="${spot.googleMapsUrl}" target="_blank" rel="noopener noreferrertedBtn">${isFav ? '★ お気に入り済み' : '☆ お気に入り'}</button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('closeSelectedBtn').onclick = clearSelection;
-      document.getElementById('favSelectedBtn').onclick = () => toggleFavorite(spot.id);
-    }
-
-    function updateVisibleCards() {
-      if (!STATE.map) return;
-
-      STATE.visibleSpots = getVisibleSpotsInViewport();
-      const selectedExists = !!STATE.selectedSpotId;
-      const sourceList = selectedExists ? STATE.visibleSpots : STATE.visibleSpots;
-
-      els.listSubTitle.textContent = selectedExists
-        ? '地図範囲内のスポット'
-        : '地図範囲内のおすすめ順';
-
-      if (sourceList.length === 0) {
-        els.listBody.innerHTML = `<div class="empty">条件に合うスポットがありません。</div>`;
-        return;
-      }
-
-      els.listBody.innerHTML = sourceList.map(spot => {
-        const img = toImageUrl((spot.images && spot.images[0]) || '');
-        const isFav = STATE.favorites.has(spot.id);
-
-        return `
-          <div class="card" data-id="${spot.id}">
-            ${img ? `<img class="thumb" src="${img}" alt="${escapeHtml(spot.name)}          <div class="small">${escapeHtml(spot.prefecture)} / ${escapeHtml(spot.region)}</div>
-              <h3 class="name">${escapeHtml(spot.name)}</h3>
-              <div class="meta">
-                <div><span class="rating">${ratingStars(spot.recommendation)}</span>　${spot.recommendation || 0}/5 ${isFav ? '　★' : ''}</div>
-                ${spot.description ? `<div>${escapeHtml(shorten(spot.description, 56))}</div>` : ''}
-              </div>
-              <div class="chips">
-                ${(spot.hashtags || []).slice(0, 4).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      els.listBody.querySelectorAll('.card').forEach(card => {
-        card.onclick = () => selectSpot(card.dataset.id, true);
-      });
     }
 
     function shorten(str, len) {
@@ -642,14 +566,101 @@
         .replace(/'/g, '&#39;');
     }
 
+    function renderSelected() {
+      const spot = STATE.spots.find(s => s.id === STATE.selectedSpotId);
+
+      if (!spot) {
+        els.selectedWrap.classList.remove('active');
+        els.selectedWrap.innerHTML = '';
+        return;
+      }
+
+      const isFav = STATE.favorites.has(spot.id);
+      const hero = toImageUrl((spot.images && spot.images[0]) || '');
+
+      els.selectedWrap.classList.add('active');
+      els.selectedWrap.innerHTML = `
+        <div class="selected-header">
+          <div>
+            <div class="small">${escapeHtml(spot.region || '')} / ${escapeHtml(spot.prefecture || '')}</div>
+            <h2 class="name" style="font-size: 20px; margin-top: 4px;">${escapeHtml(spot.name)}</h2>
+          </div>
+          <button class="close-button" id="closeSelectedBtn">閉じる</button>
+        </div>
+        <div class="selected-body">
+          <div>
+            ${hero ? `<img class="hero" src="${hero}" alt="${escapeHtml(spot.name)}>${ratingStars(spot.recommendation)}</span> おすすめ度 ${spot.recommendation || 0}/5</div>
+              ${spot.hours ? `<div>営業時間：${escapeHtml(spot.hours)}</div>` : ''}
+              ${spot.fee ? `<div>料金：${escapeHtml(spot.fee)}</div>` : ''}
+            </div>
+            ${spot.description ? `<div class="desc" style="margin-top:10px;">${escapeHtml(spot.description)}</div>` : ''}
+            <div class="chips">
+              ${(spot.hashtags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <div class="actions">
+              <a class="link-button" href="${spot.googleMapsUrl}" target="_blank" rel="noopener noreferrertedBtn">${isFav ? '★ お気に入り済み' : '☆ お気に入り'}</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('closeSelectedBtn').onclick = clearSelection;
+      document.getElementById('favSelectedBtn').onclick = function () {
+        toggleFavorite(spot.id);
+      };
+    }
+
+    function updateVisibleCards() {
+      if (!STATE.map) return;
+
+      STATE.visibleSpots = getVisibleSpotsInViewport();
+
+      els.listSubTitle.textContent = STATE.selectedSpotId
+        ? '地図範囲内のスポット'
+        : '地図範囲内のおすすめ順';
+
+      if (STATE.visibleSpots.length === 0) {
+        els.listBody.innerHTML = '<div class="empty">条件に合うスポットがありません。</div>';
+        return;
+      }
+
+      els.listBody.innerHTML = STATE.visibleSpots.map(spot => {
+        const img = toImageUrl((spot.images && spot.images[0]) || '');
+        const isFav = STATE.favorites.has(spot.id);
+
+        return `
+          <div class="card" data-id="${spot.id}">
+            ${img ? `<img class="thumb" src="${img}" alt="${escapeHtml(spot.name)}          <div class="small">${escapeHtml(spot.prefecture || '')} / ${escapeHtml(spot.region || '')}</div>
+              <h3 class="name">${escapeHtml(spot.name)}</h3>
+              <div class="meta">
+                <div><span class="rating">${ratingStars(spot.recommendation)}</span> ${spot.recommendation || 0}/5 ${isFav ? ' ★' : ''}</div>
+                ${spot.description ? `<div>${escapeHtml(shorten(spot.description, 56))}</div>` : ''}
+              </div>
+              <div class="chips">
+                ${(spot.hashtags || []).slice(0, 4).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      els.listBody.querySelectorAll('.card').forEach(card => {
+        card.onclick = function () {
+          selectSpot(card.dataset.id, true);
+        };
+      });
+    }
+
     function buildFilterOptions() {
       const regions = [...new Set(STATE.spots.map(s => s.region).filter(Boolean))].sort();
       const prefs = [...new Set(STATE.spots.map(s => s.prefecture).filter(Boolean))].sort();
 
-      els.regionFilter.innerHTML = `<option value="">地方（すべて）</option>` +
+      els.regionFilter.innerHTML =
+        '<option value="">地方（すべて）</option>' +
         regions.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
 
-      els.prefFilter.innerHTML = `<option value="">都道府県（すべて）</option>` +
+      els.prefFilter.innerHTML =
+        '<option value="">都道府県（すべて）</option>' +
         prefs.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
     }
 
@@ -657,12 +668,16 @@
       const el = document.createElement('div');
       el.className = 'marker';
       el.title = spot.name;
-      el.addEventListener('click', (e) => {
+
+      el.addEventListener('click', function (e) {
         e.stopPropagation();
         selectSpot(spot.id, false);
       });
 
-      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+      const marker = new maplibregl.Marker({
+        element: el,
+        anchor: 'center'
+      })
         .setLngLat([spot.lng, spot.lat])
         .addTo(STATE.map);
 
@@ -672,7 +687,7 @@
     function setupMap() {
       STATE.map = new maplibregl.Map({
         container: 'map',
-        style: 'https://tiles.openfreemap.org/styles/liberty',
+        style: 'https://demotiles.maplibre.org/style.json',
         center: [139.76, 35.67],
         zoom: 10.7,
         attributionControl: true
@@ -680,16 +695,16 @@
 
       STATE.map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
 
-      STATE.map.on('load', () => {
+      STATE.map.on('load', function () {
         STATE.spots.forEach(createMarker);
         applyFilters();
       });
 
-      STATE.map.on('moveend', () => {
+      STATE.map.on('moveend', function () {
         updateVisibleCards();
       });
 
-      STATE.map.on('click', () => {
+      STATE.map.on('click', function () {
         clearSelection();
       });
     }
@@ -709,43 +724,52 @@
       let t1 = null;
       let t2 = null;
 
-      els.tagFilter.addEventListener('input', () => {
+      els.tagFilter.addEventListener('input', function () {
         clearTimeout(t1);
         t1 = setTimeout(applyFilters, 250);
       });
 
-      els.freewordFilter.addEventListener('input', () => {
+      els.freewordFilter.addEventListener('input', function () {
         clearTimeout(t2);
         t2 = setTimeout(applyFilters, 250);
       });
 
-      els.favoritesOnlyBtn.addEventListener('click', () => {
+      els.favoritesOnlyBtn.addEventListener('click', function () {
         STATE.favoritesOnly = !STATE.favoritesOnly;
         els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? '★ お気に入りのみ' : '☆ お気に入り';
-        els.favoritesOnlyBtn.classList.toggle('button');
         applyFilters();
       });
 
-      els.fitAllBtn.addEventListener('click', () => {
+      els.fitAllBtn.addEventListener('click', function () {
         clearSelection();
+
         const targets = STATE.filteredSpots.length ? STATE.filteredSpots : STATE.spots;
         if (!targets.length) return;
 
         if (targets.length === 1) {
-          STATE.map.flyTo({ center: [targets[0].lng, targets[0].lat], zoom: 14 });
+          STATE.map.flyTo({
+            center: [targets[0].lng, targets[0].lat],
+            zoom: 14
+          });
           return;
         }
 
         const bounds = new maplibregl.LngLatBounds();
         targets.forEach(s => bounds.extend([s.lng, s.lat]));
-        STATE.map.fitBounds(bounds, { padding: 80, maxZoom: 14, duration: 700 });
+        STATE.map.fitBounds(bounds, {
+          padding: 80,
+          maxZoom: 14,
+          duration: 700
+        });
       });
     }
 
     setupEvents();
-    loadSpots().catch(err => {
+
+    loadSpots().catch(function (err) {
       console.error(err);
-      document.getElementById('app').innerHTML = `<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>`;
+      document.getElementById('app').innerHTML =
+        '<div style="padding:24px;color:white;">spots.json の読み込みに失敗しました。</div>';
     });
   </script>
 </body>
