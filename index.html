@@ -5,26 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagrammable Map | SNS映えスポットMAP</title>
 
-  <link
-    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
-    rel="stylesheet"
-  />
+  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
 
   <style>
     :root {
       --bg: #050507;
-      --panel: rgba(14, 14, 18, 0.78);
-      --panel-strong: rgba(12, 12, 16, 0.95);
-      --line: rgba(255,255,255,0.09);
-      --line-strong: rgba(255,255,255,0.15);
+      --panel: rgba(14,14,18,0.82);
+      --line: rgba(255,255,255,0.10);
       --text: #f7f7fb;
       --muted: #a7a7b3;
-      --muted-2: #8d8d98;
       --pink: #ff4da6;
-      --pink-soft: rgba(255,77,166,0.2);
+      --pink-soft: rgba(255,77,166,0.18);
       --gold: #d8b76a;
-      --shadow: 0 16px 40px rgba(0,0,0,0.38);
+      --shadow: 0 16px 40px rgba(0,0,0,0.35);
       --radius-xl: 24px;
       --radius-lg: 18px;
       --radius-md: 14px;
@@ -32,9 +26,7 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -45,23 +37,9 @@
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
-      overscroll-behavior: none;
     }
 
-    body {
-      touch-action: manipulation;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button,
-    input,
-    select {
-      font: inherit;
-    }
+    body { touch-action: manipulation; }
 
     #app {
       position: relative;
@@ -80,29 +58,29 @@
       height: 100%;
     }
 
-    .map-overlay-top {
+    .overlay-top {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 180px;
-      background: linear-gradient(to bottom, rgba(5,5,7,0.60), rgba(5,5,7,0.16), transparent);
+      height: 160px;
       pointer-events: none;
+      background: linear-gradient(to bottom, rgba(5,5,7,0.55), rgba(5,5,7,0.12), transparent);
       z-index: 4;
     }
 
-    .map-overlay-bottom {
+    .overlay-bottom {
       position: absolute;
       left: 0;
       right: 0;
       bottom: 0;
-      height: 180px;
-      background: linear-gradient(to top, rgba(5,5,7,0.54), rgba(5,5,7,0.12), transparent);
+      height: 160px;
       pointer-events: none;
+      background: linear-gradient(to top, rgba(5,5,7,0.50), rgba(5,5,7,0.10), transparent);
       z-index: 4;
     }
 
-    /* ===== desktop ===== */
+    /* desktop topbar */
     .topbar {
       position: absolute;
       top: calc(16px + var(--safe-top));
@@ -124,8 +102,8 @@
     .control,
     .search,
     .button,
-    .icon-button,
-    .mini-button {
+    .mini-button,
+    .icon-button {
       height: 46px;
       border-radius: var(--radius-md);
       border: 1px solid rgba(255,255,255,0.08);
@@ -134,38 +112,23 @@
       outline: none;
       padding: 0 12px;
       font-size: 14px;
-      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
     }
 
-    .control:focus,
-    .search:focus,
-    .button:focus,
-    .icon-button:focus,
-    .mini-button:focus {
-      border-color: rgba(255,255,255,0.20);
-    }
-
-    .control option {
-      color: #111;
-    }
-
-    .search::placeholder {
-      color: var(--muted-2);
-    }
+    .control option { color: #111; }
+    .search::placeholder { color: #8d8d98; }
 
     .button,
-    .icon-button,
-    .mini-button {
+    .mini-button,
+    .icon-button {
       cursor: pointer;
       font-weight: 700;
       background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
     }
 
-    .button:hover,
-    .icon-button:hover,
-    .mini-button:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.16);
+    .mini-button {
+      min-height: 34px;
+      height: 34px;
+      font-size: 12px;
     }
 
     .sidepanel {
@@ -173,7 +136,7 @@
       top: calc(96px + var(--safe-top));
       right: 16px;
       bottom: calc(16px + var(--safe-bottom));
-      width: 410px;
+      width: 400px;
       z-index: 20;
       display: flex;
       flex-direction: column;
@@ -193,7 +156,7 @@
     #selectedPanel {
       display: none;
       min-height: 240px;
-      max-height: 47%;
+      max-height: 46%;
     }
 
     #selectedPanel.active {
@@ -203,7 +166,7 @@
     #selectedBody {
       padding: 16px;
       overflow: auto;
-      max-height: calc(47vh - 16px);
+      max-height: calc(46vh - 20px);
     }
 
     #listPanel {
@@ -242,28 +205,20 @@
       gap: 10px;
     }
 
-    /* ===== shared cards ===== */
     .card {
       display: grid;
-      grid-template-columns: 124px 1fr;
+      grid-template-columns: 120px 1fr;
       gap: 12px;
       padding: 12px;
       border: 1px solid rgba(255,255,255,0.07);
       border-radius: var(--radius-lg);
       background: rgba(255,255,255,0.04);
       cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.06);
     }
 
     .thumb {
       width: 100%;
-      height: 140px;
+      height: 132px;
       object-fit: cover;
       border-radius: 14px;
       background: #1b1b21;
@@ -273,7 +228,7 @@
 
     .hero {
       width: 100%;
-      height: 220px;
+      height: 210px;
       object-fit: cover;
       border-radius: 18px;
       background: #1b1b21;
@@ -308,7 +263,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 9px;
+      margin-top: 8px;
     }
 
     .chip {
@@ -316,8 +271,8 @@
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      color: #d9d9e3;
       background: rgba(255,255,255,0.04);
+      color: #d9d9e3;
       white-space: nowrap;
     }
 
@@ -338,31 +293,17 @@
       padding: 0 14px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.08);
-      text-decoration: none;
       cursor: pointer;
       font-weight: 700;
       font-size: 13px;
       background: rgba(255,255,255,0.05);
       color: var(--text);
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .link-button:hover,
-    .fav-button:hover,
-    .close-button:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.16);
+      text-decoration: none;
     }
 
     .link-button {
-      background: #fff;
-      color: #111;
-    }
-
-    .mini-button {
-      min-height: 34px;
-      padding: 0 12px;
-      font-size: 12px;
+      background: #ffffff;
+      color: #111111;
     }
 
     .rating {
@@ -376,24 +317,6 @@
       color: var(--muted);
       font-size: 14px;
       line-height: 1.7;
-    }
-
-    .muted-divider {
-      width: 100%;
-      height: 1px;
-      background: var(--line);
-      margin: 12px 0;
-    }
-
-    .selected-topline {
-      margin-bottom: 8px;
-    }
-
-    .selected-actions-top {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      margin-top: 10px;
     }
 
     .brand-badge {
@@ -415,13 +338,12 @@
       pointer-events: none;
     }
 
-    /* ===== markers ===== */
+    /* marker */
     .marker {
       width: 20px;
       height: 20px;
       position: relative;
       cursor: pointer;
-      pointer-events: auto;
     }
 
     .marker-core {
@@ -431,7 +353,6 @@
       background: #ffffff;
       border: 2px solid #0d0d10;
       box-shadow: 0 0 0 4px rgba(255,255,255,0.16);
-      transition: all 0.15s ease;
     }
 
     .marker-icon {
@@ -442,8 +363,7 @@
       justify-content: center;
       font-size: 11px;
       line-height: 1;
-      z-index: 2;
-      color: #111;
+      color: #111111;
       pointer-events: none;
     }
 
@@ -464,7 +384,7 @@
       box-shadow: 0 0 0 8px var(--pink-soft);
     }
 
-    /* ===== map controls ===== */
+    /* map controls */
     .maplibregl-ctrl-group {
       background: rgba(18,18,22,0.78) !important;
       border: 1px solid rgba(255,255,255,0.08) !important;
@@ -487,21 +407,11 @@
       bottom: 78px !important;
     }
 
-    /* ===== mobile ===== */
+    /* mobile */
     .mobile-topbar,
     .mobile-filter-drawer,
     .mobile-sheet {
       display: none;
-    }
-
-    @media (max-width: 1180px) {
-      .topbar {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .sidepanel {
-        width: 360px;
-      }
     }
 
     @media (max-width: 820px) {
@@ -530,7 +440,7 @@
         justify-content: center;
         padding: 0 14px;
         border-radius: 999px;
-        background: rgba(14, 14, 18, 0.74);
+        background: rgba(14,14,18,0.74);
         border: 1px solid rgba(255,255,255,0.09);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -551,10 +461,6 @@
         align-items: center;
         justify-content: center;
         border-radius: 14px;
-        background: rgba(14, 14, 18, 0.78);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        box-shadow: var(--shadow);
       }
 
       .hamburger {
@@ -584,7 +490,7 @@
         right: 12px;
         z-index: 29;
         padding: 12px;
-        background: rgba(14, 14, 18, 0.92);
+        background: rgba(14,14,18,0.92);
         border: 1px solid rgba(255,255,255,0.09);
         border-radius: 20px;
         backdrop-filter: blur(18px);
@@ -622,7 +528,7 @@
         z-index: 31;
         display: flex;
         flex-direction: column;
-        background: rgba(12, 12, 16, 0.94);
+        background: rgba(12,12,16,0.94);
         border-top-left-radius: 24px;
         border-top-right-radius: 24px;
         border: 1px solid rgba(255,255,255,0.08);
@@ -636,7 +542,6 @@
 
       .mobile-sheet-handle {
         padding: 10px 14px 10px;
-        flex: 0 0 auto;
         user-select: none;
         touch-action: none;
       }
@@ -712,10 +617,10 @@
 <body>
   <div id="app">
     <div id="map"></div>
-    <div class="map-overlay-top"></div>
-    <div class="map-overlay-bottom"></div>
+    <div class="overlay-top"></div>
+    <div class="overlay-bottom"></div>
 
-    <!-- Desktop -->
+    <!-- desktop -->
     <div class="topbar">
       <select id="regionFilter" class="control">
         <option value="">地方（すべて）</option>
@@ -750,7 +655,7 @@
 
     <div class="brand-badge">Instagrammable Map</div>
 
-    <!-- Mobile -->
+    <!-- mobile -->
     <div class="mobile-topbar">
       <button id="mobileMenuBtn" class="icon-button" aria-label="検索メニューを開く">
         <span class="hamburger" aria-hidden="true">
@@ -806,7 +711,7 @@
     const MOBILE_BREAKPOINT = 820;
     const PHOTO_ICON_ZOOM = 13.5;
 
-    const STATE = {
+    const state = {
       spots: [],
       filteredSpots: [],
       visibleSpots: [],
@@ -819,15 +724,13 @@
       mobileSheetState: "closed"
     };
 
-    const els = {
-      // desktop filters
+    const el = {
       regionFilter: document.getElementById("regionFilter"),
       prefFilter: document.getElementById("prefFilter"),
       tagFilter: document.getElementById("tagFilter"),
       freewordFilter: document.getElementById("freewordFilter"),
       favoritesOnlyBtn: document.getElementById("favoritesOnlyBtn"),
 
-      // desktop panels
       selectedPanel: document.getElementById("selectedPanel"),
       selectedBody: document.getElementById("selectedBody"),
       listHeadTitle: document.getElementById("listHeadTitle"),
@@ -835,20 +738,17 @@
       listBody: document.getElementById("listBody"),
       fitAllBtn: document.getElementById("fitAllBtn"),
 
-      // mobile top
       mobileMenuBtn: document.getElementById("mobileMenuBtn"),
       mobileFitAllBtn: document.getElementById("mobileFitAllBtn"),
-
-      // mobile drawer
       mobileFilterDrawer: document.getElementById("mobileFilterDrawer"),
       mobileCloseDrawerBtn: document.getElementById("mobileCloseDrawerBtn"),
+
       mobileRegionFilter: document.getElementById("mobileRegionFilter"),
       mobilePrefFilter: document.getElementById("mobilePrefFilter"),
       mobileTagFilter: document.getElementById("mobileTagFilter"),
       mobileFreewordFilter: document.getElementById("mobileFreewordFilter"),
       mobileFavoritesOnlyBtn: document.getElementById("mobileFavoritesOnlyBtn"),
 
-      // mobile sheet
       mobileSheet: document.getElementById("mobileSheet"),
       mobileSheetHandle: document.getElementById("mobileSheetHandle"),
       mobileSheetTitle: document.getElementById("mobileSheetTitle"),
@@ -881,23 +781,6 @@
       return "★".repeat(n) + "☆".repeat(5 - n);
     }
 
-    function saveFavorites() {
-      localStorage.setItem("spotFavorites", JSON.stringify(Array.from(STATE.favorites)));
-    }
-
-    function toggleFavorite(id) {
-      if (STATE.favorites.has(id)) {
-        STATE.favorites.delete(id);
-      } else {
-        STATE.favorites.add(id);
-      }
-      saveFavorites();
-      updateFavoriteButtons();
-      renderSelected();
-      updateVisibleCards();
-      updateMarkerStyles();
-    }
-
     function getDriveFileId(url) {
       if (!url) return null;
       const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
@@ -920,7 +803,7 @@
         .map(function(v) { return v.trim(); })
         .filter(function(v) { return v.length > 0; })
         .map(function(v) {
-          return v.startsWith("#") ? v : "#" + v;
+          return v.charAt(0) === "#" ? v : "#" + v;
         });
     }
 
@@ -937,80 +820,71 @@
         spot.hours,
         spot.fee
       ].concat(spot.hashtags || []);
-
       return normalizeText(parts.join(" "));
     }
 
-    function buildFilterOptions() {
-      const regions = Array.from(new Set(
-        STATE.spots.map(function(s) { return s.region; }).filter(Boolean)
-      )).sort();
-
-      const prefs = Array.from(new Set(
-        STATE.spots.map(function(s) { return s.prefecture; }).filter(Boolean)
-      )).sort();
-
-      const regionHtml =
-        '<option value="">地方（すべて）</option>' +
-        regions.map(function(v) {
-          return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
-        }).join("");
-
-      const prefHtml =
-        '<option value="">都道府県（すべて）</option>' +
-        prefs.map(function(v) {
-          return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
-        }).join("");
-
-      els.regionFilter.innerHTML = regionHtml;
-      els.mobileRegionFilter.innerHTML = regionHtml;
-
-      els.prefFilter.innerHTML = prefHtml;
-      els.mobilePrefFilter.innerHTML = prefHtml;
+    function saveFavorites() {
+      localStorage.setItem("spotFavorites", JSON.stringify(Array.from(state.favorites)));
     }
 
     function syncDesktopToMobile() {
-      els.mobileRegionFilter.value = els.regionFilter.value;
-      els.mobilePrefFilter.value = els.prefFilter.value;
-      els.mobileTagFilter.value = els.tagFilter.value;
-      els.mobileFreewordFilter.value = els.freewordFilter.value;
+      el.mobileRegionFilter.value = el.regionFilter.value;
+      el.mobilePrefFilter.value = el.prefFilter.value;
+      el.mobileTagFilter.value = el.tagFilter.value;
+      el.mobileFreewordFilter.value = el.freewordFilter.value;
     }
 
     function syncMobileToDesktop() {
-      els.regionFilter.value = els.mobileRegionFilter.value;
-      els.prefFilter.value = els.mobilePrefFilter.value;
-      els.tagFilter.value = els.mobileTagFilter.value;
-      els.freewordFilter.value = els.mobileFreewordFilter.value;
+      el.regionFilter.value = el.mobileRegionFilter.value;
+      el.prefFilter.value = el.mobilePrefFilter.value;
+      el.tagFilter.value = el.mobileTagFilter.value;
+      el.freewordFilter.value = el.mobileFreewordFilter.value;
     }
 
     function updateFavoriteButtons() {
-      const text = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
-      els.favoritesOnlyBtn.textContent = text;
-      els.mobileFavoritesOnlyBtn.textContent = text;
+      const text = state.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
+      el.favoritesOnlyBtn.textContent = text;
+      el.mobileFavoritesOnlyBtn.textContent = text;
+    }
+
+    function buildFilterOptions() {
+      const regions = Array.from(new Set(state.spots.map(function(s) { return s.region; }).filter(Boolean))).sort();
+      const prefs = Array.from(new Set(state.spots.map(function(s) { return s.prefecture; }).filter(Boolean))).sort();
+
+      const regionHtml = '<option value="">地方（すべて）</option>' +
+        regions.map(function(v) { return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>'; }).join("");
+
+      const prefHtml = '<option value="">都道府県（すべて）</option>' +
+        prefs.map(function(v) { return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>'; }).join("");
+
+      el.regionFilter.innerHTML = regionHtml;
+      el.mobileRegionFilter.innerHTML = regionHtml;
+      el.prefFilter.innerHTML = prefHtml;
+      el.mobilePrefFilter.innerHTML = prefHtml;
     }
 
     function currentFilters() {
       return {
-        region: els.regionFilter.value,
-        pref: els.prefFilter.value,
-        tags: parseTags(els.tagFilter.value),
-        freeword: normalizeText(els.freewordFilter.value.trim()),
-        favoritesOnly: STATE.favoritesOnly
+        region: el.regionFilter.value,
+        pref: el.prefFilter.value,
+        tags: parseTags(el.tagFilter.value),
+        freeword: normalizeText(el.freewordFilter.value.trim()),
+        favoritesOnly: state.favoritesOnly
       };
     }
 
     function applyFilters() {
       const filters = currentFilters();
 
-      STATE.filteredSpots = STATE.spots.filter(function(spot) {
+      state.filteredSpots = state.spots.filter(function(spot) {
         if (filters.region && spot.region !== filters.region) return false;
         if (filters.pref && spot.prefecture !== filters.pref) return false;
-        if (filters.favoritesOnly && !STATE.favorites.has(spot.id)) return false;
+        if (filters.favoritesOnly && !state.favorites.has(spot.id)) return false;
 
         if (filters.tags.length > 0) {
           const tags = spot.hashtags || [];
-          const ok = filters.tags.every(function(t) {
-            return tags.indexOf(t) !== -1;
+          const ok = filters.tags.every(function(tag) {
+            return tags.indexOf(tag) !== -1;
           });
           if (!ok) return false;
         }
@@ -1029,27 +903,27 @@
     }
 
     function fitToFiltered() {
-      if (!STATE.map || STATE.filteredSpots.length === 0) return;
+      if (!state.map || state.filteredSpots.length === 0) return;
 
-      if (STATE.filteredSpots.length === 1) {
-        const s = STATE.filteredSpots[0];
-        STATE.map.easeTo({
+      if (state.filteredSpots.length === 1) {
+        const s = state.filteredSpots[0];
+        state.map.easeTo({
           center: [s.lng, s.lat],
-          zoom: Math.max(14, STATE.map.getZoom()),
+          zoom: Math.max(14, state.map.getZoom()),
           duration: 600
         });
         return;
       }
 
       const bounds = new maplibregl.LngLatBounds();
-      STATE.filteredSpots.forEach(function(s) {
+      state.filteredSpots.forEach(function(s) {
         bounds.extend([s.lng, s.lat]);
       });
 
       const rightPadding = isMobile() ? 40 : 440;
       const bottomPadding = isMobile() ? 120 : 100;
 
-      STATE.map.fitBounds(bounds, {
+      state.map.fitBounds(bounds, {
         padding: {
           top: 110,
           right: rightPadding,
@@ -1061,9 +935,47 @@
       });
     }
 
+    function updateMarkerZoomAppearance() {
+      if (!state.map) return;
+      const zoom = state.map.getZoom();
+      const showPhoto = zoom >= PHOTO_ICON_ZOOM;
+
+      state.markers.forEach(function(marker) {
+        marker.getElement().classList.toggle("show-photo", showPhoto);
+      });
+    }
+
+    function updateMarkerStyles() {
+      state.markers.forEach(function(marker, id) {
+        marker.getElement().classList.toggle("active", state.selectedSpotId === id);
+      });
+    }
+
+    function updateMarkerVisibility() {
+      const visibleIds = new Set(state.filteredSpots.map(function(s) { return s.id; }));
+
+      state.markers.forEach(function(marker, id) {
+        marker.getElement().style.display = visibleIds.has(id) ? "block" : "none";
+      });
+
+      updateMarkerStyles();
+      updateMarkerZoomAppearance();
+    }
+
+    function getVisibleSpotsInViewport() {
+      if (!state.map) return [];
+      const bounds = state.map.getBounds();
+
+      return state.filteredSpots.filter(function(s) {
+        return bounds.contains([s.lng, s.lat]);
+      }).sort(function(a, b) {
+        return (b.recommendation || 0) - (a.recommendation || 0);
+      });
+    }
+
     function createMarker(spot) {
-      const el = document.createElement("div");
-      el.className = "marker";
+      const markerEl = document.createElement("div");
+      markerEl.className = "marker";
 
       const core = document.createElement("div");
       core.className = "marker-core";
@@ -1072,13 +984,12 @@
       icon.className = "marker-icon";
       icon.textContent = "📷";
 
-      el.appendChild(core);
-      el.appendChild(icon);
+      markerEl.appendChild(core);
+      markerEl.appendChild(icon);
 
-      el.addEventListener("click", function(e) {
+      markerEl.addEventListener("click", function(e) {
         e.stopPropagation();
         selectSpot(spot.id, true);
-
         if (isMobile()) {
           setMobileSheetState("peek");
           closeMobileDrawer();
@@ -1086,93 +997,23 @@
       });
 
       const marker = new maplibregl.Marker({
-        element: el,
+        element: markerEl,
         anchor: "center"
       })
         .setLngLat([spot.lng, spot.lat])
-        .addTo(STATE.map);
+        .addTo(state.map);
 
-      STATE.markers.set(spot.id, marker);
-    }
-
-    function updateMarkerVisibility() {
-      const visibleIds = new Set(
-        STATE.filteredSpots.map(function(s) { return s.id; })
-      );
-
-      STATE.markers.forEach(function(marker, id) {
-        const el = marker.getElement();
-        el.style.display = visibleIds.has(id) ? "block" : "none";
-      });
-
-      updateMarkerStyles();
-      updateMarkerZoomAppearance();
-    }
-
-    function updateMarkerStyles() {
-      STATE.markers.forEach(function(marker, id) {
-        marker.getElement().classList.toggle("active", STATE.selectedSpotId === id);
-      });
-    }
-
-    function updateMarkerZoomAppearance() {
-      if (!STATE.map) return;
-      const zoom = STATE.map.getZoom();
-      const showPhoto = zoom >= PHOTO_ICON_ZOOM;
-
-      STATE.markers.forEach(function(marker) {
-        marker.getElement().classList.toggle("show-photo", showPhoto);
-      });
-    }
-
-    function getVisibleSpotsInViewport() {
-      if (!STATE.map) return [];
-      const bounds = STATE.map.getBounds();
-
-      return STATE.filteredSpots.filter(function(s) {
-        return bounds.contains([s.lng, s.lat]);
-      }).sort(function(a, b) {
-        return (b.recommendation || 0) - (a.recommendation || 0);
-      });
-    }
-
-    function selectSpot(id, fly) {
-      STATE.selectedSpotId = id;
-      updateMarkerStyles();
-      renderSelected();
-      updateVisibleCards();
-
-      const spot = STATE.spots.find(function(s) { return s.id === id; });
-      if (spot && fly && STATE.map) {
-        STATE.map.easeTo({
-          center: [spot.lng, spot.lat],
-          zoom: Math.max(14, STATE.map.getZoom()),
-          duration: 600
-        });
-      }
-    }
-
-    function clearSelection() {
-      STATE.selectedSpotId = null;
-      updateMarkerStyles();
-      renderSelected();
-      updateVisibleCards();
-
-      if (isMobile()) {
-        setMobileSheetState("closed");
-      }
+      state.markers.set(spot.id, marker);
     }
 
     function makeSelectedHtml(spot) {
       const hero = toImageUrl((spot.images && spot.images[0]) || "");
-      const isFav = STATE.favorites.has(spot.id);
+      const isFav = state.favorites.has(spot.id);
 
       let html = "";
 
-      html += '<div class="selected-topline">';
-      html +=   '<div class="small">' + escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") + '</div>';
-      html +=   '<h2 class="name" style="font-size:22px; margin-top:4px;">' + escapeHtml(spot.name) + '</h2>';
-      html += '</div>';
+      html += '<div class="small">' + escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") + '</div>';
+      html += '<h2 class="name" style="font-size:22px; margin-top:4px;">' + escapeHtml(spot.name) + '</h2>';
 
       if (hero) {
         html += '<img class="hero" src="' + hero + '" alt="' + escapeHtml(spot.name) + '">';
@@ -1200,52 +1041,47 @@
         html += '</div>';
       }
 
-      html += '<div class="selected-actions-top">';
-      html +=   '<button class="close-button" data-action="close-selection += '<div class="actions">';
-      html +=   '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
-      html +=   '<button class="fav-button" data-action="toggle-favorite" data-spot-id="' + spot.id +/div>';
-
-      return html;
+      html += '<div class="actions">';
+      html += '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
+      html += '<button class="fav-button" data-action="favorite" data-id="' + spot.id +e    return html;
     }
 
     function renderSelected() {
-      const spot = STATE.spots.find(function(s) {
-        return s.id === STATE.selectedSpotId;
-      });
+      const spot = state.spots.find(function(s) { return s.id === state.selectedSpotId; });
 
       if (!spot) {
-        els.selectedPanel.classList.remove("active");
-        els.selectedBody.innerHTML = "";
-        els.mobileSelectedWrap.classList.remove("active");
-        els.mobileSelectedWrap.innerHTML = "";
+        el.selectedPanel.classList.remove("active");
+        el.selectedBody.innerHTML = "";
+        el.mobileSelectedWrap.classList.remove("active");
+        el.mobileSelectedWrap.innerHTML = "";
         return;
       }
 
       const html = makeSelectedHtml(spot);
 
-      els.selectedBody.innerHTML = html;
-      els.selectedPanel.classList.add("active");
+      el.selectedBody.innerHTML = html;
+      el.selectedPanel.classList.add("active");
 
-      els.mobileSelectedWrap.innerHTML = html;
-      els.mobileSelectedWrap.classList.add("active");
+      el.mobileSelectedWrap.innerHTML = html;
+      el.mobileSelectedWrap.classList.add("active");
     }
 
-    function makeListHtml(spots) {
+    function makeListHtml(list) {
       let html = "";
 
-      spots.forEach(function(spot) {
+      list.forEach(function(spot) {
         const img = toImageUrl((spot.images && spot.images[0]) || "");
-        const isFav = STATE.favorites.has(spot.id);
+        const isFav = state.favorites.has(spot.id);
 
-        html += '<div class="card" data-action="select-spot" data-spot-id="' + spot.id + 'rc="' + img + '" alt="' + escapeHtml(spot.name) + '">';
+        html += '<div class="card" data-action="select" data-id="' + spot.id + 'mb" src="' + img + '" alt="' + escapeHtml(spot.name) + '">';
         } else {
           html += '<div class="thumb"></div>';
         }
 
         html += '<div>';
-        html +=   '<div class="small">' + escapeHtml(spot.prefecture || "") + ' / ' + escapeHtml(spot.region || "") + '</div>';
-        html +=   '<h3 class="name">' + escapeHtml(spot.name) + '</h3>';
-        html +=   '<div class="small" style="margin-top:4px;"><span class="rating">' + ratingStars(spot.recommendation) + '</span> ' + (spot.recommendation || 0) + '/5 ' + (isFav ? '★' : '') + '</div>';
+        html += '<div class="small">' + escapeHtml(spot.prefecture || "") + ' / ' + escapeHtml(spot.region || "") + '</div>';
+        html += '<h3 class="name">' + escapeHtml(spot.name) + '</h3>';
+        html += '<div class="small" style="margin-top:4px;"><span class="rating">' + ratingStars(spot.recommendation) + '</span> ' + (spot.recommendation || 0) + '/5 ' + (isFav ? '★' : '') + '</div>';
 
         if (spot.description) {
           html += '<div class="desc">' + escapeHtml(shorten(spot.description, 64)) + '</div>';
@@ -1267,77 +1103,111 @@
     }
 
     function updateVisibleCards() {
-      if (!STATE.map) return;
+      if (!state.map) return;
 
-      STATE.visibleSpots = getVisibleSpotsInViewport();
+      state.visibleSpots = getVisibleSpotsInViewport();
 
-      const title = STATE.selectedSpotId ? "地図範囲内のスポット" : "地図範囲内のおすすめ順";
-      const sub = STATE.visibleSpots.length + "件を表示中";
+      const title = state.selectedSpotId ? "地図範囲内のスポット" : "地図範囲内のおすすめ順";
+      const sub = state.visibleSpots.length + "件を表示中";
 
-      els.listHeadTitle.textContent = title;
-      els.listHeadSub.textContent = sub;
+      el.listHeadTitle.textContent = title;
+      el.listHeadSub.textContent = sub;
+      el.mobileSheetTitle.textContent = state.selectedSpotId ? "スポット詳細 / 一覧" : "スポット一覧";
+      el.mobileSheetSub.textContent = state.mobileSheetState === "closed" ? "上にスワイプして表示" : sub;
 
-      els.mobileSheetTitle.textContent = STATE.selectedSpotId ? "スポット詳細 / 一覧" : "スポット一覧";
-      els.mobileSheetSub.textContent = STATE.mobileSheetState === "closed"
-        ? "上にスワイプして表示"
-        : sub;
-
-      if (STATE.visibleSpots.length === 0) {
+      if (state.visibleSpots.length === 0) {
         const emptyHtml = '<div class="empty">条件に合うスポットがありません。検索条件を変えるか、地図を移動してみてください。</div>';
-        els.listBody.innerHTML = emptyHtml;
-        els.mobileListWrap.innerHTML = emptyHtml;
+        el.listBody.innerHTML = emptyHtml;
+        el.mobileListWrap.innerHTML = emptyHtml;
         return;
       }
 
-      const html = makeListHtml(STATE.visibleSpots);
-      els.listBody.innerHTML = html;
-      els.mobileListWrap.innerHTML = html;
+      const html = makeListHtml(state.visibleSpots);
+      el.listBody.innerHTML = html;
+      el.mobileListWrap.innerHTML = html;
     }
 
-    function bindDelegatedActions(container) {
-      container.addEventListener("click", function(e) {
-        const actionEl = e.target.closest("[data-action]");
-        if (!actionEl) return;
+    function toggleFavorite(id) {
+      if (state.favorites.has(id)) {
+        state.favorites.delete(id);
+      } else {
+        state.favorites.add(id);
+      }
+      saveFavorites();
+      updateFavoriteButtons();
+      renderSelected();
+      updateVisibleCards();
+      updateMarkerStyles();
+    }
 
-        const action = actionEl.dataset.action;
-        const spotId = actionEl.dataset.spotId;
+    function selectSpot(id, fly) {
+      state.selectedSpotId = id;
+      updateMarkerStyles();
+      renderSelected();
+      updateVisibleCards();
 
-        if (action === "toggle-favorite" && spotId) {
-          e.preventDefault();
-          e.stopPropagation();
-          toggleFavorite(spotId);
-          return;
+      const spot = state.spots.find(function(s) { return s.id === id; });
+      if (spot && fly && state.map) {
+        state.map.easeTo({
+          center: [spot.lng, spot.lat],
+          zoom: Math.max(14, state.map.getZoom()),
+          duration: 600
+        });
+      }
+    }
+
+    function clearSelection() {
+      state.selectedSpotId = null;
+      updateMarkerStyles();
+      renderSelected();
+      updateVisibleCards();
+      if (isMobile()) {
+        setMobileSheetState("closed");
+      }
+    }
+
+    function handleAction(e) {
+      const target = e.target.closest("[data-action]");
+      if (!target) return;
+
+      const action = target.getAttribute("data-action");
+      const id = target.getAttribute("data-id");
+
+      if (action === "favorite" && id) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(id);
+        return;
+      }
+
+      if (action === "close") {
+        e.preventDefault();
+        e.stopPropagation();
+        clearSelection();
+        return;
+      }
+
+      if (action === "select" && id) {
+        e.preventDefault();
+        selectSpot(id, true);
+        if (isMobile()) {
+          setMobileSheetState("peek");
         }
-
-        if (action === "close-selection") {
-          e.preventDefault();
-          e.stopPropagation();
-          clearSelection();
-          return;
-        }
-
-        if (action === "select-spot" && spotId) {
-          e.preventDefault();
-          selectSpot(spotId, true);
-          if (isMobile()) {
-            setMobileSheetState("peek");
-          }
-        }
-      });
+      }
     }
 
     function openMobileDrawer() {
-      STATE.mobileDrawerOpen = true;
-      els.mobileFilterDrawer.classList.add("open");
+      state.mobileDrawerOpen = true;
+      el.mobileFilterDrawer.classList.add("open");
     }
 
     function closeMobileDrawer() {
-      STATE.mobileDrawerOpen = false;
-      els.mobileFilterDrawer.classList.remove("open");
+      state.mobileDrawerOpen = false;
+      el.mobileFilterDrawer.classList.remove("open");
     }
 
     function toggleMobileDrawer() {
-      if (STATE.mobileDrawerOpen) {
+      if (state.mobileDrawerOpen) {
         closeMobileDrawer();
       } else {
         openMobileDrawer();
@@ -1353,38 +1223,37 @@
       };
     }
 
-    function setMobileSheetState(state) {
-      STATE.mobileSheetState = state;
+    function setMobileSheetState(mode) {
+      state.mobileSheetState = mode;
       const heights = getMobileSheetHeights();
-      const height = heights[state] || heights.closed;
+      const height = heights[mode] || heights.closed;
+      el.mobileSheet.style.height = height + "px";
 
-      els.mobileSheet.style.height = height + "px";
-
-      if (state === "closed") {
-        els.mobileSheetToggleBtn.textContent = "開く";
-      } else if (state === "peek") {
-        els.mobileSheetToggleBtn.textContent = "拡大";
+      if (mode === "closed") {
+        el.mobileSheetToggleBtn.textContent = "開く";
+      } else if (mode === "peek") {
+        el.mobileSheetToggleBtn.textContent = "拡大";
       } else {
-        els.mobileSheetToggleBtn.textContent = "閉じる";
+        el.mobileSheetToggleBtn.textContent = "閉じる";
       }
 
-      els.mobileSheetSub.textContent = state === "closed"
+      el.mobileSheetSub.textContent = mode === "closed"
         ? "上にスワイプして表示"
-        : (STATE.visibleSpots.length + "件を表示中");
+        : (state.visibleSpots.length + "件を表示中");
     }
 
     function stepOpenMobileSheet() {
-      if (STATE.mobileSheetState === "closed") {
+      if (state.mobileSheetState === "closed") {
         setMobileSheetState("peek");
-      } else if (STATE.mobileSheetState === "peek") {
+      } else if (state.mobileSheetState === "peek") {
         setMobileSheetState("open");
       }
     }
 
     function stepCloseMobileSheet() {
-      if (STATE.mobileSheetState === "open") {
+      if (state.mobileSheetState === "open") {
         setMobileSheetState("peek");
-      } else if (STATE.mobileSheetState === "peek") {
+      } else if (state.mobileSheetState === "peek") {
         setMobileSheetState("closed");
       }
     }
@@ -1400,7 +1269,7 @@
     }
 
     function setupMap() {
-      STATE.map = new maplibregl.Map({
+      state.map = new maplibregl.Map({
         container: "map",
         style: {
           version: 8,
@@ -1434,37 +1303,37 @@
         attributionControl: true
       });
 
-      STATE.map.addControl(
+      state.map.addControl(
         new maplibregl.NavigationControl({
-          visualizePitch: false,
-          showCompass: false
+          showCompass: false,
+          visualizePitch: false
         }),
         "bottom-left"
       );
 
-      STATE.map.dragRotate.disable();
+      state.map.dragRotate.disable();
 
-      if (STATE.map.touchZoomRotate && STATE.map.touchZoomRotate.disableRotation) {
-        STATE.map.touchZoomRotate.disableRotation();
+      if (state.map.touchZoomRotate && state.map.touchZoomRotate.disableRotation) {
+        state.map.touchZoomRotate.disableRotation();
       }
 
-      if (STATE.map.touchPitch && STATE.map.touchPitch.disable) {
-        STATE.map.touchPitch.disable();
+      if (state.map.touchPitch && state.map.touchPitch.disable) {
+        state.map.touchPitch.disable();
       }
 
-      STATE.map.on("load", function() {
-        STATE.spots.forEach(createMarker);
+      state.map.on("load", function() {
+        state.spots.forEach(createMarker);
 
-        if (STATE.spots.length > 0) {
+        if (state.spots.length > 0) {
           const bounds = new maplibregl.LngLatBounds();
-          STATE.spots.forEach(function(s) {
+          state.spots.forEach(function(s) {
             bounds.extend([s.lng, s.lat]);
           });
 
           const rightPadding = isMobile() ? 40 : 460;
           const bottomPadding = isMobile() ? 120 : 100;
 
-          STATE.map.fitBounds(bounds, {
+          state.map.fitBounds(bounds, {
             padding: {
               top: 110,
               right: rightPadding,
@@ -1484,90 +1353,90 @@
         }
       });
 
-      STATE.map.on("moveend", function() {
+      state.map.on("moveend", function() {
         updateVisibleCards();
       });
 
-      STATE.map.on("zoom", function() {
+      state.map.on("zoom", function() {
         updateMarkerZoomAppearance();
       });
 
-      STATE.map.on("click", function() {
+      state.map.on("click", function() {
         clearSelection();
       });
     }
 
-    function setupDesktopEvents() {
-      els.regionFilter.addEventListener("change", applyDesktopFilters);
-      els.prefFilter.addEventListener("change", applyDesktopFilters);
+    function setupEvents() {
+      // desktop
+      el.regionFilter.addEventListener("change", applyDesktopFilters);
+      el.prefFilter.addEventListener("change", applyDesktopFilters);
 
-      let t1 = null;
-      let t2 = null;
+      let desktopTagTimer = null;
+      let desktopWordTimer = null;
 
-      els.tagFilter.addEventListener("input", function() {
-        clearTimeout(t1);
-        t1 = setTimeout(applyDesktopFilters, 250);
+      el.tagFilter.addEventListener("input", function() {
+        clearTimeout(desktopTagTimer);
+        desktopTagTimer = setTimeout(applyDesktopFilters, 250);
       });
 
-      els.freewordFilter.addEventListener("input", function() {
-        clearTimeout(t2);
-        t2 = setTimeout(applyDesktopFilters, 250);
+      el.freewordFilter.addEventListener("input", function() {
+        clearTimeout(desktopWordTimer);
+        desktopWordTimer = setTimeout(applyDesktopFilters, 250);
       });
 
-      els.favoritesOnlyBtn.addEventListener("click", function() {
-        STATE.favoritesOnly = !STATE.favoritesOnly;
+      el.favoritesOnlyBtn.addEventListener("click", function() {
+        state.favoritesOnly = !state.favoritesOnly;
         updateFavoriteButtons();
         applyDesktopFilters();
       });
 
-      els.fitAllBtn.addEventListener("click", function() {
+      el.fitAllBtn.addEventListener("click", function() {
         clearSelection();
         fitToFiltered();
       });
-    }
 
-    function setupMobileEvents() {
-      els.mobileRegionFilter.addEventListener("change", applyMobileFilters);
-      els.mobilePrefFilter.addEventListener("change", applyMobileFilters);
+      // mobile
+      el.mobileRegionFilter.addEventListener("change", applyMobileFilters);
+      el.mobilePrefFilter.addEventListener("change", applyMobileFilters);
 
-      let t1 = null;
-      let t2 = null;
+      let mobileTagTimer = null;
+      let mobileWordTimer = null;
 
-      els.mobileTagFilter.addEventListener("input", function() {
-        clearTimeout(t1);
-        t1 = setTimeout(applyMobileFilters, 250);
+      el.mobileTagFilter.addEventListener("input", function() {
+        clearTimeout(mobileTagTimer);
+        mobileTagTimer = setTimeout(applyMobileFilters, 250);
       });
 
-      els.mobileFreewordFilter.addEventListener("input", function() {
-        clearTimeout(t2);
-        t2 = setTimeout(applyMobileFilters, 250);
+      el.mobileFreewordFilter.addEventListener("input", function() {
+        clearTimeout(mobileWordTimer);
+        mobileWordTimer = setTimeout(applyMobileFilters, 250);
       });
 
-      els.mobileFavoritesOnlyBtn.addEventListener("click", function() {
-        STATE.favoritesOnly = !STATE.favoritesOnly;
+      el.mobileFavoritesOnlyBtn.addEventListener("click", function() {
+        state.favoritesOnly = !state.favoritesOnly;
         updateFavoriteButtons();
         applyMobileFilters();
       });
 
-      els.mobileMenuBtn.addEventListener("click", function(e) {
+      el.mobileMenuBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         toggleMobileDrawer();
       });
 
-      els.mobileCloseDrawerBtn.addEventListener("click", function() {
+      el.mobileCloseDrawerBtn.addEventListener("click", function() {
         closeMobileDrawer();
       });
 
-      els.mobileFitAllBtn.addEventListener("click", function() {
+      el.mobileFitAllBtn.addEventListener("click", function() {
         closeMobileDrawer();
         clearSelection();
         fitToFiltered();
       });
 
-      els.mobileSheetToggleBtn.addEventListener("click", function() {
-        if (STATE.mobileSheetState === "closed") {
+      el.mobileSheetToggleBtn.addEventListener("click", function() {
+        if (state.mobileSheetState === "closed") {
           setMobileSheetState("peek");
-        } else if (STATE.mobileSheetState === "peek") {
+        } else if (state.mobileSheetState === "peek") {
           setMobileSheetState("open");
         } else {
           setMobileSheetState("closed");
@@ -1576,11 +1445,9 @@
 
       document.addEventListener("click", function(e) {
         if (!isMobile()) return;
-
-        const drawerClicked = e.target.closest("#mobileFilterDrawer");
-        const menuClicked = e.target.closest("#mobileMenuBtn");
-
-        if (!drawerClicked && !menuClicked && STATE.mobileDrawerOpen) {
+        const inDrawer = e.target.closest("#mobileFilterDrawer");
+        const inMenu = e.target.closest("#mobileMenuBtn");
+        if (!inDrawer && !inMenu && state.mobileDrawerOpen) {
           closeMobileDrawer();
         }
       });
@@ -1589,21 +1456,21 @@
       let currentY = 0;
       let dragging = false;
 
-      function onTouchStart(e) {
-        if (!isMobile()) return;
+      el.mobileSheetHandle.addEventListener("touchstart", function(e) {
         dragging = true;
         startY = e.touches[0].clientY;
         currentY = startY;
-      }
+      }, { passive: true });
 
-      function onTouchMove(e) {
+      el.mobileSheetHandle.addEventListener("touchmove", function(e) {
         if (!dragging) return;
         currentY = e.touches[0].clientY;
-      }
+      }, { passive: true });
 
-      function onTouchEnd() {
+      el.mobileSheetHandle.addEventListener("touchend", function() {
         if (!dragging) return;
         dragging = false;
+
         const delta = currentY - startY;
 
         if (delta < -40) {
@@ -1611,41 +1478,32 @@
         } else if (delta > 40) {
           stepCloseMobileSheet();
         }
-      }
+      });
 
-      els.mobileSheetHandle.addEventListener("touchstart", onTouchStart, { passive: true });
-      els.mobileSheetHandle.addEventListener("touchmove", onTouchMove, { passive: true });
-      els.mobileSheetHandle.addEventListener("touchend", onTouchEnd);
-    }
-
-    function setupCommonEvents() {
-      bindDelegatedActions(els.selectedBody);
-      bindDelegatedActions(els.listBody);
-      bindDelegatedActions(els.mobileSelectedWrap);
-      bindDelegatedActions(els.mobileListWrap);
+      // delegated click
+      el.selectedBody.addEventListener("click", handleAction);
+      el.listBody.addEventListener("click", handleAction);
+      el.mobileSelectedWrap.addEventListener("click", handleAction);
+      el.mobileListWrap.addEventListener("click", handleAction);
 
       window.addEventListener("resize", function() {
         syncDesktopToMobile();
         syncMobileToDesktop();
-
-        if (STATE.map) {
-          STATE.map.resize();
+        if (state.map) {
+          state.map.resize();
           updateMarkerZoomAppearance();
         }
-
         if (isMobile()) {
-          setMobileSheetState(STATE.mobileSheetState);
+          setMobileSheetState(state.mobileSheetState);
         }
       });
     }
 
     function loadSpots() {
       fetch("./spots.json")
-        .then(function(res) {
-          return res.json();
-        })
+        .then(function(res) { return res.json(); })
         .then(function(data) {
-          STATE.spots = data;
+          state.spots = data;
           buildFilterOptions();
           updateFavoriteButtons();
           syncDesktopToMobile();
@@ -1658,9 +1516,7 @@
         });
     }
 
-    setupDesktopEvents();
-    setupMobileEvents();
-    setupCommonEvents();
+    setupEvents();
     loadSpots();
   </script>
 </body>
