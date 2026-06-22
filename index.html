@@ -3,27 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SNS映えスポットMAP</title>
+  <title>Instagrammable Map | SNS映えスポットMAP</title>
 
-  <link
-    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
-    rel="stylesheet"
-  />
+  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
 
   <style>
     :root {
-      --bg: #0b0b0d;
-      --panel: rgba(18, 18, 22, 0.92);
-      --line: rgba(255,255,255,0.08);
-      --text: #f5f5f7;
-      --muted: #a8a8b3;
+      --bg: #050507;
+      --panel: rgba(14, 14, 18, 0.72);
+      --panel-strong: rgba(12, 12, 16, 0.92);
+      --line: rgba(255, 255, 255, 0.09);
+      --line-strong: rgba(255, 255, 255, 0.15);
+      --text: #f7f7fb;
+      --muted: #a7a7b3;
+      --muted-2: #8d8d98;
       --pink: #ff4da6;
-      --gold: #d5b15b;
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --pink-soft: rgba(255, 77, 166, 0.18);
+      --gold: #d8b76a;
+      --shadow: 0 16px 40px rgba(0,0,0,0.38);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
@@ -36,62 +42,111 @@
       overflow: hidden;
     }
 
+    a {
+      color: inherit;
+    }
+
     #app {
       position: relative;
       width: 100%;
       height: 100%;
+      background: radial-gradient(circle at top left, rgba(255,77,166,0.08), transparent 28%),
+                  radial-gradient(circle at bottom right, rgba(255,255,255,0.04), transparent 20%),
+                  var(--bg);
     }
 
     #map {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
     }
 
+    .map-overlay-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(5,5,7,0.60), rgba(5,5,7,0.18), transparent);
+      z-index: 5;
+    }
+
+    .map-overlay-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 180px;
+      pointer-events: none;
+      background: linear-gradient(to top, rgba(5,5,7,0.55), rgba(5,5,7,0.12), transparent);
+      z-index: 5;
+    }
+
     .topbar {
       position: absolute;
-      top: 14px;
-      left: 14px;
-      right: 14px;
+      top: 16px;
+      left: 16px;
+      right: 16px;
       z-index: 20;
       display: grid;
-      grid-template-columns: 180px 180px 180px 1fr 140px;
+      grid-template-columns: 170px 170px 190px 1fr 140px;
       gap: 10px;
-      padding: 12px;
+      padding: 14px;
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      backdrop-filter: blur(12px);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       box-shadow: var(--shadow);
     }
 
     .control,
     .search,
     .button {
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.04);
+      height: 46px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
       color: var(--text);
       padding: 0 12px;
       outline: none;
       font-size: 14px;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+
+    .control:focus,
+    .search:focus,
+    .button:focus {
+      border-color: rgba(255,255,255,0.20);
     }
 
     .control option {
       color: #111;
     }
 
+    .search::placeholder {
+      color: var(--muted-2);
+    }
+
     .button {
       cursor: pointer;
       font-weight: 700;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.16);
     }
 
     .sidepanel {
       position: absolute;
-      top: 92px;
-      right: 14px;
-      bottom: 14px;
-      width: 380px;
+      top: 96px;
+      right: 16px;
+      bottom: 16px;
+      width: 410px;
       z-index: 20;
       display: flex;
       flex-direction: column;
@@ -101,16 +156,17 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 22px;
-      backdrop-filter: blur(14px);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       box-shadow: var(--shadow);
       overflow: hidden;
     }
 
     #selectedPanel {
       display: none;
-      min-height: 220px;
-      max-height: 45%;
+      min-height: 240px;
+      max-height: 47%;
     }
 
     #selectedPanel.active {
@@ -120,6 +176,7 @@
     #selectedBody {
       padding: 16px;
       overflow: auto;
+      max-height: calc(47vh - 16px);
     }
 
     #listPanel {
@@ -130,9 +187,25 @@
     }
 
     #listHead {
-      padding: 14px 16px 10px;
+      padding: 14px 16px 8px;
       border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .list-head-title {
+      font-size: 15px;
       font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .list-head-sub {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 2px;
     }
 
     #listBody {
@@ -144,59 +217,70 @@
 
     .card {
       display: grid;
-      grid-template-columns: 108px 1fr;
+      grid-template-columns: 124px 1fr;
       gap: 12px;
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.04);
       cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
     }
 
     .thumb {
       width: 100%;
-      height: 108px;
+      height: 140px;
       object-fit: cover;
-      border-radius: 12px;
+      border-radius: 14px;
       background: #1b1b21;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: block;
     }
 
     .hero {
       width: 100%;
-      height: 200px;
+      height: 220px;
       object-fit: cover;
-      border-radius: 16px;
+      border-radius: 18px;
       background: #1b1b21;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.06);
       margin-bottom: 12px;
+      display: block;
     }
 
     .name {
       margin: 0;
       font-size: 16px;
-      line-height: 1.4;
+      line-height: 1.45;
       font-weight: 700;
+      word-break: break-word;
     }
 
     .small {
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .desc {
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.7;
       margin-top: 8px;
+      word-break: break-word;
     }
 
     .chips {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 9px;
     }
 
     .chip {
@@ -204,8 +288,9 @@
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      color: var(--muted);
-      background: rgba(255,255,255,0.03);
+      color: #d9d9e3;
+      background: rgba(255,255,255,0.04);
+      white-space: nowrap;
     }
 
     .actions {
@@ -217,19 +302,30 @@
 
     .link-button,
     .fav-button,
-    .close-button {
+    .close-button,
+    .mini-button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       min-height: 40px;
       padding: 0 14px;
       border-radius: 12px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255,255,255,0.08);
       text-decoration: none;
       cursor: pointer;
       font-weight: 700;
+      font-size: 13px;
       background: rgba(255,255,255,0.05);
       color: var(--text);
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .link-button:hover,
+    .fav-button:hover,
+    .close-button:hover,
+    .mini-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.16);
     }
 
     .link-button {
@@ -237,47 +333,197 @@
       color: #111;
     }
 
+    .mini-button {
+      min-height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
     .rating {
       color: var(--gold);
       font-weight: 700;
+      letter-spacing: 0.03em;
     }
 
     .marker {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: #fff;
-      border: 2px solid #000;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+      background: #ffffff;
+      border: 2px solid #0d0d10;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.16);
       cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      position: relative;
+    }
+
+    .marker:hover {
+      transform: scale(1.08);
     }
 
     .marker.active {
       background: var(--pink);
-      box-shadow: 0 0 0 6px rgba(255,77,166,0.18);
+      box-shadow: 0 0 0 8px var(--pink-soft);
+    }
+
+    .marker.active::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,77,166,0.35);
+      animation: pulseRing 1.8s infinite ease-out;
+    }
+
+    @keyframes pulseRing {
+      0% {
+        transform: scale(0.85);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1.35);
+        opacity: 0;
+      }
+    }
+
+    .brand-badge {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      z-index: 22;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(15,15,20,0.72);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: #f7f7fb;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.32);
+      pointer-events: none;
     }
 
     .empty {
       padding: 18px;
       color: var(--muted);
       font-size: 14px;
+      line-height: 1.7;
     }
 
-    @media (max-width: 980px) {
+    .muted-divider {
+      width: 100%;
+      height: 1px;
+      background: var(--line);
+      margin: 12px 0;
+    }
+
+    .selected-topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .selected-actions-top {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .maplibregl-ctrl-group {
+      background: rgba(18,18,22,0.78) !important;
+      border: 1px solid rgba(255,255,255,0.08) !important;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.30);
+      overflow: hidden;
+    }
+
+    .maplibregl-ctrl button {
+      background-color: transparent !important;
+    }
+
+    .maplibregl-ctrl button span {
+      filter: invert(1);
+    }
+
+    .maplibregl-ctrl-bottom-left {
+      left: 16px !important;
+      bottom: 72px !important;
+    }
+
+    @media (max-width: 1180px) {
       .topbar {
         grid-template-columns: 1fr 1fr;
       }
 
       .sidepanel {
-        left: 14px;
-        right: 14px;
+        left: 16px;
+        right: 16px;
         width: auto;
         top: auto;
-        height: 48%;
+        height: 50%;
       }
 
       #selectedPanel {
-        max-height: 55%;
+        max-height: 52%;
+      }
+
+      #selectedBody {
+        max-height: calc(52vh - 16px);
+      }
+
+      .brand-badge {
+        bottom: calc(50% + 24px);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        padding: 12px;
+        gap: 8px;
+      }
+
+      .sidepanel {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        height: 54%;
+      }
+
+      .panel {
+        border-radius: 20px;
+      }
+
+      .card {
+        grid-template-columns: 1fr;
+      }
+
+      .thumb {
+        height: 170px;
+      }
+
+      .hero {
+        height: 190px;
+      }
+
+      .brand-badge {
+        left: 12px;
+        bottom: calc(54% + 20px);
+        font-size: 13px;
+        padding: 10px 14px;
+      }
+
+      .maplibregl-ctrl-bottom-left {
+        left: 12px !important;
+        bottom: calc(54% + 24px) !important;
       }
     }
   </style>
@@ -285,6 +531,8 @@
 <body>
   <div id="app">
     <div id="map"></div>
+    <div class="map-overlay-top"></div>
+    <div class="map-overlay-bottom"></div>
 
     <div class="topbar">
       <select id="regionFilter" class="control">
@@ -295,8 +543,8 @@
         <option value="">都道府県（すべて）</option>
       </select>
 
-      <input id="tagFilter" class="search" type="text" placeholder="#夜景 #映え など" />
-      <input id="freewordFilter" class="search" type="text" placeholder="スポット名 / 説明 / ハッシュタグで検索" />
+      <input id="tagFilter" class="search" type="text" placeholder="#夜景 #デート #無料 など" />
+      <input id="freewordFilter" class="search" type="text" placeholder="浅草 / 展望 / アート などで検索" />
 
       <button id="favoritesOnlyBtn" class="button">☆ お気に入り</button>
     </div>
@@ -307,10 +555,18 @@
       </div>
 
       <div id="listPanel" class="panel">
-        <div id="listHead">地図範囲内のおすすめ順</div>
+        <div id="listHead">
+          <div>
+            <div class="list-head-title" id="listHeadTitle">地図範囲内のおすすめ順</div>
+            <div class="list-head-sub" id="listHeadSub">表示中のスポットからおすすめ度順に表示しています</div>
+          </div>
+          <button id="fitAllBtn" class="mini-button">全体表示</button>
+        </div>
         <div id="listBody"></div>
       </div>
     </div>
+
+    <div class="brand-badge">Instagrammable Map</div>
   </div>
 
   <script>
@@ -333,8 +589,10 @@
       favoritesOnlyBtn: document.getElementById("favoritesOnlyBtn"),
       selectedPanel: document.getElementById("selectedPanel"),
       selectedBody: document.getElementById("selectedBody"),
-      listHead: document.getElementById("listHead"),
-      listBody: document.getElementById("listBody")
+      listHeadTitle: document.getElementById("listHeadTitle"),
+      listHeadSub: document.getElementById("listHeadSub"),
+      listBody: document.getElementById("listBody"),
+      fitAllBtn: document.getElementById("fitAllBtn")
     };
 
     function escapeHtml(str) {
@@ -493,9 +751,16 @@
         bounds.extend([s.lng, s.lat]);
       });
 
+      const rightPadding = window.innerWidth > 1180 ? 440 : 40;
+
       STATE.map.fitBounds(bounds, {
-        padding: 80,
-        maxZoom: 14,
+        padding: {
+          top: 120,
+          right: rightPadding,
+          bottom: 100,
+          left: 50
+        },
+        maxZoom: 13.5,
         duration: 700
       });
     }
@@ -540,7 +805,9 @@
     }
 
     function getVisibleSpotsInViewport() {
+      if (!STATE.map) return [];
       const bounds = STATE.map.getBounds();
+
       return STATE.filteredSpots
         .filter(function(s) {
           return bounds.contains([s.lng, s.lat]);
@@ -589,44 +856,48 @@
 
       let html = "";
 
+      html += '<div class="selected-topline">';
+      html +=   '<div>';
+      html +=     '<div class="small">' + escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") + '</div>';
+      html +=     '<h2 class="name" style="font-size:22px; margin-top:4px;">' + escapeHtml(spot.name) + '</h2>';
+      html +=   '</div>';
+      html += '</div>';
+
       if (hero) {
         html += '<img class="hero" src="' + hero + '" alt="' + escapeHtml(spot.name) + '">';
       }
 
-      html += '<div class="small">' +
-        escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") +
-        '</div>';
-
-      html += '<h2 class="name" style="font-size:20px;margin-top:4px;">' +
-        escapeHtml(spot.name) +
-        '</h2>';
-
-      html += '<div class="small" style="margin-top:8px;"><span class="rating">' +
-        ratingStars(spot.recommendation) +
-        '</span> おすすめ度 ' + (spot.recommendation || 0) + '/5</div>';
+      html += '<div class="small"><span class="rating">' + ratingStars(spot.recommendation) + '</span> おすすめ度 ' + (spot.recommendation || 0) + '/5</div>';
 
       if (spot.hours) {
-        html += '<div class="small">営業時間：' + escapeHtml(spot.hours) + '</div>';
+        html += '<div class="small" style="margin-top:4px;">営業時間：' + escapeHtml(spot.hours) + '</div>';
       }
 
       if (spot.fee) {
-        html += '<div class="small">料金：' + escapeHtml(spot.fee) + '</div>';
+        html += '<div class="small" style="margin-top:2px;">料金：' + escapeHtml(spot.fee) + '</div>';
       }
 
       if (spot.description) {
         html += '<div class="desc">' + escapeHtml(spot.description) + '</div>';
       }
 
-      html += '<div class="chips">';
-      (spot.hashtags || []).forEach(function(tag) {
-        html += '<span class="chip">' + escapeHtml(tag) + '</span>';
-      });
+      if ((spot.hashtags || []).length > 0) {
+        html += '<div class="chips">';
+        (spot.hashtags || []).forEach(function(tag) {
+          html += '<span class="chip">' + escapeHtml(tag) + '</span>';
+        });
+        html += '</div>';
+      }
+
+      html += '<div class="selected-actions-top">';
+      html +=   '<button class="close-button" id="closeSelectedBtn">閉じる</button>';
       html += '</div>';
 
+      html += '<div class="muted-divider"></div>';
+
       html += '<div class="actions">';
-      html += '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
-      html += '<button class="fav-button" id="favSelectedBtn">' + (isFav ? "★ お気に入り済み" : "☆ お気に入り") + '</button>';
-      html += '<button class="close-button" id="closeSelectedBtn">閉じる</button>';
+      html +=   '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
+      html +=   '<button class="fav-button" id="favSelectedBtn">' + (isFav ? "★ お気に入り済み" : "☆ お気に入り") + '</button>';
       html += '</div>';
 
       els.selectedBody.innerHTML = html;
@@ -646,12 +917,16 @@
 
       STATE.visibleSpots = getVisibleSpotsInViewport();
 
-      els.listHead.textContent = STATE.selectedSpotId
-        ? "地図範囲内のスポット"
-        : "地図範囲内のおすすめ順";
+      if (STATE.selectedSpotId) {
+        els.listHeadTitle.textContent = "地図範囲内のスポット";
+        els.listHeadSub.textContent = STATE.visibleSpots.length + "件を表示中";
+      } else {
+        els.listHeadTitle.textContent = "地図範囲内のおすすめ順";
+        els.listHeadSub.textContent = STATE.visibleSpots.length + "件を表示中";
+      }
 
       if (STATE.visibleSpots.length === 0) {
-        els.listBody.innerHTML = '<div class="empty">条件に合うスポットがありません。</div>';
+        els.listBody.innerHTML = '<div class="empty">条件に合うスポットがありません。検索条件を変えるか、地図を移動してみてください。</div>';
         return;
       }
 
@@ -670,19 +945,21 @@
         }
 
         html += '<div>';
-        html += '<div class="small">' + escapeHtml(spot.prefecture || "") + ' / ' + escapeHtml(spot.region || "") + '</div>';
-        html += '<h3 class="name">' + escapeHtml(spot.name) + '</h3>';
-        html += '<div class="small"><span class="rating">' + ratingStars(spot.recommendation) + '</span> ' + (spot.recommendation || 0) + '/5 ' + (isFav ? '★' : '') + '</div>';
+        html +=   '<div class="small">' + escapeHtml(spot.prefecture || "") + ' / ' + escapeHtml(spot.region || "") + '</div>';
+        html +=   '<h3 class="name">' + escapeHtml(spot.name) + '</h3>';
+        html +=   '<div class="small" style="margin-top:4px;"><span class="rating">' + ratingStars(spot.recommendation) + '</span> ' + (spot.recommendation || 0) + '/5 ' + (isFav ? '★' : '') + '</div>';
 
         if (spot.description) {
-          html += '<div class="desc">' + escapeHtml(shorten(spot.description, 56)) + '</div>';
+          html += '<div class="desc">' + escapeHtml(shorten(spot.description, 64)) + '</div>';
         }
 
-        html += '<div class="chips">';
-        (spot.hashtags || []).slice(0, 4).forEach(function(tag) {
-          html += '<span class="chip">' + escapeHtml(tag) + '</span>';
-        });
-        html += '</div>';
+        if ((spot.hashtags || []).length > 0) {
+          html += '<div class="chips">';
+          (spot.hashtags || []).slice(0, 4).forEach(function(tag) {
+            html += '<span class="chip">' + escapeHtml(tag) + '</span>';
+          });
+          html += '</div>';
+        }
 
         html += '</div>';
         html += '</div>';
@@ -700,9 +977,30 @@
     function setupMap() {
       STATE.map = new maplibregl.Map({
         container: "map",
-        style: "https://demotiles.maplibre.org/style.json",
+        style: {
+          version: 8,
+          sources: {
+            "carto-dark": {
+              type: "raster",
+              tiles: [
+                "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+                "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+              ],
+              tileSize: 256,
+              attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
+            }
+          },
+          layers: [
+            {
+              id: "carto-dark-layer",
+              type: "raster",
+              source: "carto-dark"
+            }
+          ]
+        },
         center: [139.76, 35.67],
-        zoom: 10.7,
+        zoom: 11.2,
         attributionControl: true
       });
 
@@ -710,6 +1008,27 @@
 
       STATE.map.on("load", function() {
         STATE.spots.forEach(createMarker);
+
+        if (STATE.spots.length > 0) {
+          const bounds = new maplibregl.LngLatBounds();
+          STATE.spots.forEach(function(s) {
+            bounds.extend([s.lng, s.lat]);
+          });
+
+          const rightPadding = window.innerWidth > 1180 ? 460 : 40;
+
+          STATE.map.fitBounds(bounds, {
+            padding: {
+              top: 120,
+              right: rightPadding,
+              bottom: 100,
+              left: 50
+            },
+            maxZoom: 13.5,
+            duration: 900
+          });
+        }
+
         applyFilters();
       });
 
@@ -743,6 +1062,19 @@
         STATE.favoritesOnly = !STATE.favoritesOnly;
         els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
         applyFilters();
+      });
+
+      els.fitAllBtn.addEventListener("click", function() {
+        clearSelection();
+        fitToFiltered();
+      });
+
+      window.addEventListener("resize", function() {
+        if (STATE.map && STATE.filteredSpots.length > 0) {
+          setTimeout(function() {
+            fitToFiltered();
+          }, 120);
+        }
       });
     }
 
