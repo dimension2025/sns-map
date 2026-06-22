@@ -450,7 +450,7 @@
 
     function parseTags(input) {
       return String(input || '')
-        .split(/\\s+/)
+        .split(/\s+/)
         .map(v => v.trim())
         .filter(Boolean)
         .map(v => v.startsWith('#') ? v : `#${v}`);
