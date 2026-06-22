@@ -5,21 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Instagrammable Map | SNS映えスポットMAP</title>
 
-  <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link
+    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
   <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
 
   <style>
     :root {
       --bg: #050507;
-      --panel: rgba(14, 14, 18, 0.72);
-      --panel-strong: rgba(12, 12, 16, 0.94);
-      --line: rgba(255, 255, 255, 0.09);
-      --line-strong: rgba(255, 255, 255, 0.15);
+      --panel: rgba(14, 14, 18, 0.78);
+      --panel-strong: rgba(12, 12, 16, 0.95);
+      --line: rgba(255,255,255,0.09);
+      --line-strong: rgba(255,255,255,0.15);
       --text: #f7f7fb;
       --muted: #a7a7b3;
       --muted-2: #8d8d98;
       --pink: #ff4da6;
-      --pink-soft: rgba(255, 77, 166, 0.18);
+      --pink-soft: rgba(255,77,166,0.2);
       --gold: #d8b76a;
       --shadow: 0 16px 40px rgba(0,0,0,0.38);
       --radius-xl: 24px;
@@ -38,10 +41,10 @@
       padding: 0;
       width: 100%;
       height: 100%;
+      overflow: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
-      overflow: hidden;
       overscroll-behavior: none;
     }
 
@@ -51,6 +54,7 @@
 
     a {
       color: inherit;
+      text-decoration: none;
     }
 
     button,
@@ -81,10 +85,10 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 200px;
+      height: 180px;
+      background: linear-gradient(to bottom, rgba(5,5,7,0.60), rgba(5,5,7,0.16), transparent);
       pointer-events: none;
-      background: linear-gradient(to bottom, rgba(5,5,7,0.62), rgba(5,5,7,0.20), transparent);
-      z-index: 5;
+      z-index: 4;
     }
 
     .map-overlay-bottom {
@@ -92,13 +96,13 @@
       left: 0;
       right: 0;
       bottom: 0;
-      height: 190px;
+      height: 180px;
+      background: linear-gradient(to top, rgba(5,5,7,0.54), rgba(5,5,7,0.12), transparent);
       pointer-events: none;
-      background: linear-gradient(to top, rgba(5,5,7,0.58), rgba(5,5,7,0.14), transparent);
-      z-index: 5;
+      z-index: 4;
     }
 
-    /* ===== Desktop Topbar ===== */
+    /* ===== desktop ===== */
     .topbar {
       position: absolute;
       top: calc(16px + var(--safe-top));
@@ -120,15 +124,15 @@
     .control,
     .search,
     .button,
-    .drawer-button,
+    .icon-button,
     .mini-button {
       height: 46px;
       border-radius: var(--radius-md);
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.05);
       color: var(--text);
-      padding: 0 12px;
       outline: none;
+      padding: 0 12px;
       font-size: 14px;
       transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
     }
@@ -136,7 +140,7 @@
     .control:focus,
     .search:focus,
     .button:focus,
-    .drawer-button:focus,
+    .icon-button:focus,
     .mini-button:focus {
       border-color: rgba(255,255,255,0.20);
     }
@@ -150,7 +154,7 @@
     }
 
     .button,
-    .drawer-button,
+    .icon-button,
     .mini-button {
       cursor: pointer;
       font-weight: 700;
@@ -158,13 +162,12 @@
     }
 
     .button:hover,
-    .drawer-button:hover,
+    .icon-button:hover,
     .mini-button:hover {
       transform: translateY(-1px);
       border-color: rgba(255,255,255,0.16);
     }
 
-    /* ===== Desktop Side Panel ===== */
     .sidepanel {
       position: absolute;
       top: calc(96px + var(--safe-top));
@@ -187,23 +190,23 @@
       overflow: hidden;
     }
 
-    #desktopSelectedPanel {
+    #selectedPanel {
       display: none;
       min-height: 240px;
       max-height: 47%;
     }
 
-    #desktopSelectedPanel.active {
+    #selectedPanel.active {
       display: block;
     }
 
-    #desktopSelectedBody {
+    #selectedBody {
       padding: 16px;
       overflow: auto;
       max-height: calc(47vh - 16px);
     }
 
-    #desktopListPanel {
+    #listPanel {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -239,7 +242,7 @@
       gap: 10px;
     }
 
-    /* ===== Cards ===== */
+    /* ===== shared cards ===== */
     .card {
       display: grid;
       grid-template-columns: 124px 1fr;
@@ -356,6 +359,12 @@
       color: #111;
     }
 
+    .mini-button {
+      min-height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
     .rating {
       color: var(--gold);
       font-weight: 700;
@@ -377,10 +386,6 @@
     }
 
     .selected-topline {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
       margin-bottom: 8px;
     }
 
@@ -391,7 +396,6 @@
       margin-top: 10px;
     }
 
-    /* ===== Brand ===== */
     .brand-badge {
       position: absolute;
       left: 20px;
@@ -411,14 +415,13 @@
       pointer-events: none;
     }
 
-    /* ===== Marker ===== */
+    /* ===== markers ===== */
     .marker {
       width: 20px;
       height: 20px;
-      transform-origin: center center;
       position: relative;
-      pointer-events: auto;
       cursor: pointer;
+      pointer-events: auto;
     }
 
     .marker-core {
@@ -429,7 +432,6 @@
       border: 2px solid #0d0d10;
       box-shadow: 0 0 0 4px rgba(255,255,255,0.16);
       transition: all 0.15s ease;
-      position: relative;
     }
 
     .marker-icon {
@@ -438,10 +440,11 @@
       display: none;
       align-items: center;
       justify-content: center;
-      color: #111;
       font-size: 11px;
-      font-weight: 700;
+      line-height: 1;
       z-index: 2;
+      color: #111;
+      pointer-events: none;
     }
 
     .marker.show-photo .marker-icon {
@@ -449,12 +452,11 @@
     }
 
     .marker.show-photo .marker-core {
-      background: #ffffff;
-      border-radius: 12px;
       width: 24px;
       height: 24px;
       margin-left: -2px;
       margin-top: -2px;
+      border-radius: 12px;
     }
 
     .marker.active .marker-core {
@@ -462,32 +464,7 @@
       box-shadow: 0 0 0 8px var(--pink-soft);
     }
 
-    .marker.active .marker-icon {
-      color: #111;
-    }
-
-    .marker.active::after {
-      content: "";
-      position: absolute;
-      inset: -8px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,77,166,0.35);
-      animation: pulseRing 1.8s infinite ease-out;
-      pointer-events: none;
-    }
-
-    @keyframes pulseRing {
-      0% {
-        transform: scale(0.90);
-        opacity: 0.9;
-      }
-      100% {
-        transform: scale(1.35);
-        opacity: 0;
-      }
-    }
-
-    /* ===== Map controls ===== */
+    /* ===== map controls ===== */
     .maplibregl-ctrl-group {
       background: rgba(18,18,22,0.78) !important;
       border: 1px solid rgba(255,255,255,0.08) !important;
@@ -510,20 +487,13 @@
       bottom: 78px !important;
     }
 
-    /* ===== Mobile UI ===== */
-    .mobile-topbar {
-      display: none;
-    }
-
-    .mobile-filter-drawer {
-      display: none;
-    }
-
+    /* ===== mobile ===== */
+    .mobile-topbar,
+    .mobile-filter-drawer,
     .mobile-sheet {
       display: none;
     }
 
-    /* ===== Responsive ===== */
     @media (max-width: 1180px) {
       .topbar {
         grid-template-columns: 1fr 1fr;
@@ -553,10 +523,11 @@
         z-index: 30;
       }
 
-      .mobile-topbar .title-chip {
+      .title-chip {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         padding: 0 14px;
         border-radius: 999px;
         background: rgba(14, 14, 18, 0.74);
@@ -568,12 +539,17 @@
         font-size: 13px;
         letter-spacing: 0.03em;
         white-space: nowrap;
+        flex: 1;
+        max-width: calc(100% - 112px);
       }
 
-      .drawer-button {
-        min-width: 46px;
+      .icon-button {
         width: 46px;
+        min-width: 46px;
         padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 14px;
         background: rgba(14, 14, 18, 0.78);
         backdrop-filter: blur(16px);
@@ -595,7 +571,6 @@
         height: 2px;
         border-radius: 999px;
         background: #fff;
-        transition: 0.2s ease;
       }
 
       .hamburger span:nth-child(1) { top: 0; }
@@ -603,19 +578,19 @@
       .hamburger span:nth-child(3) { top: 12px; }
 
       .mobile-filter-drawer {
-        display: block;
         position: absolute;
         top: calc(64px + var(--safe-top));
         left: 12px;
         right: 12px;
         z-index: 29;
         padding: 12px;
-        background: rgba(14, 14, 18, 0.90);
+        background: rgba(14, 14, 18, 0.92);
         border: 1px solid rgba(255,255,255,0.09);
         border-radius: 20px;
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
         box-shadow: var(--shadow);
+        display: block;
         transform: translateY(-10px);
         opacity: 0;
         pointer-events: none;
@@ -633,12 +608,6 @@
         gap: 10px;
       }
 
-      .mobile-filter-drawer .control,
-      .mobile-filter-drawer .search,
-      .mobile-filter-drawer .button {
-        width: 100%;
-      }
-
       .mobile-filter-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -646,32 +615,30 @@
       }
 
       .mobile-sheet {
-        display: flex;
-        flex-direction: column;
         position: absolute;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 31;
-        background: rgba(12, 12, 16, 0.92);
+        display: flex;
+        flex-direction: column;
+        background: rgba(12, 12, 16, 0.94);
         border-top-left-radius: 24px;
         border-top-right-radius: 24px;
         border: 1px solid rgba(255,255,255,0.08);
         box-shadow: 0 -8px 30px rgba(0,0,0,0.30);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
-        transition: height 0.22s ease, transform 0.22s ease;
         overflow: hidden;
         padding-bottom: var(--safe-bottom);
+        transition: height 0.18s ease;
       }
 
       .mobile-sheet-handle {
-        position: relative;
+        padding: 10px 14px 10px;
         flex: 0 0 auto;
-        padding: 10px 16px 10px;
-        touch-action: none;
-        cursor: grab;
         user-select: none;
+        touch-action: none;
       }
 
       .mobile-sheet-grabber {
@@ -721,8 +688,10 @@
       .mobile-list-wrap {
         flex: 1 1 auto;
         min-height: 0;
-        padding: 0 12px 12px;
         overflow: auto;
+        padding: 0 12px 12px;
+        display: grid;
+        gap: 10px;
       }
 
       .mobile-list-wrap .card {
@@ -763,19 +732,19 @@
     </div>
 
     <div class="sidepanel">
-      <div id="desktopSelectedPanel" class="panel">
-        <div id="desktopSelectedBody"></div>
+      <div id="selectedPanel" class="panel">
+        <div id="selectedBody"></div>
       </div>
 
-      <div id="desktopListPanel" class="panel">
+      <div id="listPanel" class="panel">
         <div class="list-head">
           <div>
-            <div class="list-head-title" id="desktopListHeadTitle">地図範囲内のおすすめ順</div>
-            <div class="list-head-sub" id="desktopListHeadSub">表示中のスポットからおすすめ度順に表示しています</div>
+            <div id="listHeadTitle" class="list-head-title">地図範囲内のおすすめ順</div>
+            <div id="listHeadSub" class="list-head-sub">表示中のスポットからおすすめ度順に表示しています</div>
           </div>
-          <button id="desktopFitAllBtn" class="mini-button">全体表示</button>
+          <button id="fitAllBtn" class="mini-button">全体表示</button>
         </div>
-        <div id="desktopListBody" class="list-body"></div>
+        <div id="listBody" class="list-body"></div>
       </div>
     </div>
 
@@ -783,13 +752,15 @@
 
     <!-- Mobile -->
     <div class="mobile-topbar">
-      <button id="mobileMenuBtn" class="drawer-button" aria-label="検索メニューを開く">
+      <button id="mobileMenuBtn" class="icon-button" aria-label="検索メニューを開く">
         <span class="hamburger" aria-hidden="true">
           <span></span><span></span><span></span>
         </span>
       </button>
+
       <div class="title-chip">Instagrammable Map</div>
-      <button id="mobileFitAllBtn" class="drawer-button" aria-label="全体表示">⌖</button>
+
+      <button id="mobileFitAllBtn" class="icon-button" aria-label="全体表示">⌖</button>
     </div>
 
     <div id="mobileFilterDrawer" class="mobile-filter-drawer">
@@ -812,7 +783,7 @@
       </div>
     </div>
 
-    <div id="mobileSheet" class="mobile-sheet" aria-label="スポット一覧">
+    <div id="mobileSheet" class="mobile-sheet">
       <div id="mobileSheetHandle" class="mobile-sheet-handle">
         <div class="mobile-sheet-grabber"></div>
         <div class="mobile-sheet-head">
@@ -823,6 +794,7 @@
           <button id="mobileSheetToggleBtn" class="mini-button">開く</button>
         </div>
       </div>
+
       <div class="mobile-sheet-content">
         <div id="mobileSelectedWrap" class="mobile-selected-wrap"></div>
         <div id="mobileListWrap" class="mobile-list-wrap"></div>
@@ -844,40 +816,39 @@
       map: null,
       markers: new Map(),
       mobileDrawerOpen: false,
-      mobileSheetState: "closed", // closed | peek | open
-      mobileSheetManuallyOpened: false
+      mobileSheetState: "closed"
     };
 
     const els = {
-      // Desktop filters
+      // desktop filters
       regionFilter: document.getElementById("regionFilter"),
       prefFilter: document.getElementById("prefFilter"),
       tagFilter: document.getElementById("tagFilter"),
       freewordFilter: document.getElementById("freewordFilter"),
       favoritesOnlyBtn: document.getElementById("favoritesOnlyBtn"),
 
-      // Desktop panels
-      desktopSelectedPanel: document.getElementById("desktopSelectedPanel"),
-      desktopSelectedBody: document.getElementById("desktopSelectedBody"),
-      desktopListHeadTitle: document.getElementById("desktopListHeadTitle"),
-      desktopListHeadSub: document.getElementById("desktopListHeadSub"),
-      desktopListBody: document.getElementById("desktopListBody"),
-      desktopFitAllBtn: document.getElementById("desktopFitAllBtn"),
+      // desktop panels
+      selectedPanel: document.getElementById("selectedPanel"),
+      selectedBody: document.getElementById("selectedBody"),
+      listHeadTitle: document.getElementById("listHeadTitle"),
+      listHeadSub: document.getElementById("listHeadSub"),
+      listBody: document.getElementById("listBody"),
+      fitAllBtn: document.getElementById("fitAllBtn"),
 
-      // Mobile top
+      // mobile top
       mobileMenuBtn: document.getElementById("mobileMenuBtn"),
       mobileFitAllBtn: document.getElementById("mobileFitAllBtn"),
+
+      // mobile drawer
       mobileFilterDrawer: document.getElementById("mobileFilterDrawer"),
       mobileCloseDrawerBtn: document.getElementById("mobileCloseDrawerBtn"),
-
-      // Mobile filters
       mobileRegionFilter: document.getElementById("mobileRegionFilter"),
       mobilePrefFilter: document.getElementById("mobilePrefFilter"),
       mobileTagFilter: document.getElementById("mobileTagFilter"),
       mobileFreewordFilter: document.getElementById("mobileFreewordFilter"),
       mobileFavoritesOnlyBtn: document.getElementById("mobileFavoritesOnlyBtn"),
 
-      // Mobile sheet
+      // mobile sheet
       mobileSheet: document.getElementById("mobileSheet"),
       mobileSheetHandle: document.getElementById("mobileSheetHandle"),
       mobileSheetTitle: document.getElementById("mobileSheetTitle"),
@@ -966,23 +937,8 @@
         spot.hours,
         spot.fee
       ].concat(spot.hashtags || []);
+
       return normalizeText(parts.join(" "));
-    }
-
-    function syncFiltersToMobile() {
-      els.mobileRegionFilter.value = els.regionFilter.value;
-      els.mobilePrefFilter.value = els.prefFilter.value;
-      els.mobileTagFilter.value = els.tagFilter.value;
-      els.mobileFreewordFilter.value = els.freewordFilter.value;
-      els.mobileFavoritesOnlyBtn.textContent = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
-    }
-
-    function syncFiltersToDesktop() {
-      els.regionFilter.value = els.mobileRegionFilter.value;
-      els.prefFilter.value = els.mobilePrefFilter.value;
-      els.tagFilter.value = els.mobileTagFilter.value;
-      els.freewordFilter.value = els.mobileFreewordFilter.value;
-      els.favoritesOnlyBtn.textContent = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
     }
 
     function buildFilterOptions() {
@@ -1011,6 +967,26 @@
 
       els.prefFilter.innerHTML = prefHtml;
       els.mobilePrefFilter.innerHTML = prefHtml;
+    }
+
+    function syncDesktopToMobile() {
+      els.mobileRegionFilter.value = els.regionFilter.value;
+      els.mobilePrefFilter.value = els.prefFilter.value;
+      els.mobileTagFilter.value = els.tagFilter.value;
+      els.mobileFreewordFilter.value = els.freewordFilter.value;
+    }
+
+    function syncMobileToDesktop() {
+      els.regionFilter.value = els.mobileRegionFilter.value;
+      els.prefFilter.value = els.mobilePrefFilter.value;
+      els.tagFilter.value = els.mobileTagFilter.value;
+      els.freewordFilter.value = els.mobileFreewordFilter.value;
+    }
+
+    function updateFavoriteButtons() {
+      const text = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
+      els.favoritesOnlyBtn.textContent = text;
+      els.mobileFavoritesOnlyBtn.textContent = text;
     }
 
     function currentFilters() {
@@ -1071,7 +1047,7 @@
       });
 
       const rightPadding = isMobile() ? 40 : 440;
-      const bottomPadding = isMobile() ? 140 : 100;
+      const bottomPadding = isMobile() ? 120 : 100;
 
       STATE.map.fitBounds(bounds, {
         padding: {
@@ -1088,7 +1064,6 @@
     function createMarker(spot) {
       const el = document.createElement("div");
       el.className = "marker";
-      el.dataset.spotId = spot.id;
 
       const core = document.createElement("div");
       core.className = "marker-core";
@@ -1106,7 +1081,6 @@
 
         if (isMobile()) {
           setMobileSheetState("peek");
-          STATE.mobileSheetManuallyOpened = false;
           closeMobileDrawer();
         }
       });
@@ -1155,13 +1129,11 @@
       if (!STATE.map) return [];
       const bounds = STATE.map.getBounds();
 
-      return STATE.filteredSpots
-        .filter(function(s) {
-          return bounds.contains([s.lng, s.lat]);
-        })
-        .sort(function(a, b) {
-          return (b.recommendation || 0) - (a.recommendation || 0);
-        });
+      return STATE.filteredSpots.filter(function(s) {
+        return bounds.contains([s.lng, s.lat]);
+      }).sort(function(a, b) {
+        return (b.recommendation || 0) - (a.recommendation || 0);
+      });
     }
 
     function selectSpot(id, fly) {
@@ -1172,10 +1144,9 @@
 
       const spot = STATE.spots.find(function(s) { return s.id === id; });
       if (spot && fly && STATE.map) {
-        const currentZoom = STATE.map.getZoom();
         STATE.map.easeTo({
           center: [spot.lng, spot.lat],
-          zoom: Math.max(14, currentZoom),
+          zoom: Math.max(14, STATE.map.getZoom()),
           duration: 600
         });
       }
@@ -1187,7 +1158,7 @@
       renderSelected();
       updateVisibleCards();
 
-      if (isMobile() && !STATE.mobileSheetManuallyOpened) {
+      if (isMobile()) {
         setMobileSheetState("closed");
       }
     }
@@ -1199,10 +1170,8 @@
       let html = "";
 
       html += '<div class="selected-topline">';
-      html +=   '<div>';
-      html +=     '<div class="small">' + escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") + '</div>';
-      html +=     '<h2 class="name" style="font-size:22px; margin-top:4px;">' + escapeHtml(spot.name) + '</h2>';
-      html +=   '</div>';
+      html +=   '<div class="small">' + escapeHtml(spot.region || "") + ' / ' + escapeHtml(spot.prefecture || "") + '</div>';
+      html +=   '<h2 class="name" style="font-size:22px; margin-top:4px;">' + escapeHtml(spot.name) + '</h2>';
       html += '</div>';
 
       if (hero) {
@@ -1232,7 +1201,7 @@
       }
 
       html += '<div class="selected-actions-top">';
-      html +=   '<button class="close-button" data-action="close-selection      html += '<div class="actions">';
+      html +=   '<button class="close-button" data-action="close-selection += '<div class="actions">';
       html +=   '<a class="link-button" href="' + spot.googleMapsUrl + '" target="_blank" rel="noopener noreferrer">Google Mapで開く</a>';
       html +=   '<button class="fav-button" data-action="toggle-favorite" data-spot-id="' + spot.id +/div>';
 
@@ -1245,9 +1214,8 @@
       });
 
       if (!spot) {
-        els.desktopSelectedPanel.classList.remove("active");
-        els.desktopSelectedBody.innerHTML = "";
-
+        els.selectedPanel.classList.remove("active");
+        els.selectedBody.innerHTML = "";
         els.mobileSelectedWrap.classList.remove("active");
         els.mobileSelectedWrap.innerHTML = "";
         return;
@@ -1255,8 +1223,8 @@
 
       const html = makeSelectedHtml(spot);
 
-      els.desktopSelectedBody.innerHTML = html;
-      els.desktopSelectedPanel.classList.add("active");
+      els.selectedBody.innerHTML = html;
+      els.selectedPanel.classList.add("active");
 
       els.mobileSelectedWrap.innerHTML = html;
       els.mobileSelectedWrap.classList.add("active");
@@ -1306,30 +1274,24 @@
       const title = STATE.selectedSpotId ? "地図範囲内のスポット" : "地図範囲内のおすすめ順";
       const sub = STATE.visibleSpots.length + "件を表示中";
 
-      els.desktopListHeadTitle.textContent = title;
-      els.desktopListHeadSub.textContent = sub;
+      els.listHeadTitle.textContent = title;
+      els.listHeadSub.textContent = sub;
 
       els.mobileSheetTitle.textContent = STATE.selectedSpotId ? "スポット詳細 / 一覧" : "スポット一覧";
-      els.mobileSheetSub.textContent = STATE.selectedSpotId
-        ? (STATE.visibleSpots.length + "件を表示中")
-        : (STATE.mobileSheetState === "closed" ? "上にスワイプして表示" : (STATE.visibleSpots.length + "件を表示中"));
+      els.mobileSheetSub.textContent = STATE.mobileSheetState === "closed"
+        ? "上にスワイプして表示"
+        : sub;
 
       if (STATE.visibleSpots.length === 0) {
         const emptyHtml = '<div class="empty">条件に合うスポットがありません。検索条件を変えるか、地図を移動してみてください。</div>';
-        els.desktopListBody.innerHTML = emptyHtml;
+        els.listBody.innerHTML = emptyHtml;
         els.mobileListWrap.innerHTML = emptyHtml;
         return;
       }
 
-      const listHtml = makeListHtml(STATE.visibleSpots);
-      els.desktopListBody.innerHTML = listHtml;
-      els.mobileListWrap.innerHTML = listHtml;
-    }
-
-    function updateFavoriteButtons() {
-      const text = STATE.favoritesOnly ? "★ お気に入りのみ" : "☆ お気に入り";
-      els.favoritesOnlyBtn.textContent = text;
-      els.mobileFavoritesOnlyBtn.textContent = text;
+      const html = makeListHtml(STATE.visibleSpots);
+      els.listBody.innerHTML = html;
+      els.mobileListWrap.innerHTML = html;
     }
 
     function bindDelegatedActions(container) {
@@ -1359,7 +1321,6 @@
           selectSpot(spotId, true);
           if (isMobile()) {
             setMobileSheetState("peek");
-            STATE.mobileSheetManuallyOpened = false;
           }
         }
       });
@@ -1385,9 +1346,8 @@
 
     function getMobileSheetHeights() {
       const vh = window.innerHeight;
-      const safeBottom = 16;
       return {
-        closed: 72 + safeBottom,
+        closed: 72,
         peek: Math.round(vh * 0.42),
         open: Math.round(vh * 0.74)
       };
@@ -1402,18 +1362,15 @@
 
       if (state === "closed") {
         els.mobileSheetToggleBtn.textContent = "開く";
-        if (!STATE.selectedSpotId) {
-          els.mobileSelectedWrap.classList.remove("active");
-        }
       } else if (state === "peek") {
         els.mobileSheetToggleBtn.textContent = "拡大";
       } else {
         els.mobileSheetToggleBtn.textContent = "閉じる";
       }
 
-      els.mobileSheetSub.textContent = STATE.selectedSpotId
-        ? (STATE.visibleSpots.length + "件を表示中")
-        : (state === "closed" ? "上にスワイプして表示" : (STATE.visibleSpots.length + "件を表示中"));
+      els.mobileSheetSub.textContent = state === "closed"
+        ? "上にスワイプして表示"
+        : (STATE.visibleSpots.length + "件を表示中");
     }
 
     function stepOpenMobileSheet() {
@@ -1428,21 +1385,17 @@
       if (STATE.mobileSheetState === "open") {
         setMobileSheetState("peek");
       } else if (STATE.mobileSheetState === "peek") {
-        if (STATE.selectedSpotId) {
-          setMobileSheetState("closed");
-        } else {
-          setMobileSheetState("closed");
-        }
+        setMobileSheetState("closed");
       }
     }
 
-    function applyDesktopFiltersFromInputs() {
-      syncFiltersToMobile();
+    function applyDesktopFilters() {
+      syncDesktopToMobile();
       applyFilters();
     }
 
-    function applyMobileFiltersFromInputs() {
-      syncFiltersToDesktop();
+    function applyMobileFilters() {
+      syncMobileToDesktop();
       applyFilters();
     }
 
@@ -1481,12 +1434,20 @@
         attributionControl: true
       });
 
-      STATE.map.addControl(new maplibregl.NavigationControl({ visualizePitch: false, showCompass: false }), "bottom-left");
+      STATE.map.addControl(
+        new maplibregl.NavigationControl({
+          visualizePitch: false,
+          showCompass: false
+        }),
+        "bottom-left"
+      );
 
       STATE.map.dragRotate.disable();
+
       if (STATE.map.touchZoomRotate && STATE.map.touchZoomRotate.disableRotation) {
         STATE.map.touchZoomRotate.disableRotation();
       }
+
       if (STATE.map.touchPitch && STATE.map.touchPitch.disable) {
         STATE.map.touchPitch.disable();
       }
@@ -1517,6 +1478,10 @@
 
         applyFilters();
         updateMarkerZoomAppearance();
+
+        if (isMobile()) {
+          setMobileSheetState("closed");
+        }
       });
 
       STATE.map.on("moveend", function() {
@@ -1532,66 +1497,58 @@
       });
     }
 
-    function setupEvents() {
-      // Desktop filters
-      els.regionFilter.addEventListener("change", applyDesktopFiltersFromInputs);
-      els.prefFilter.addEventListener("change", applyDesktopFiltersFromInputs);
+    function setupDesktopEvents() {
+      els.regionFilter.addEventListener("change", applyDesktopFilters);
+      els.prefFilter.addEventListener("change", applyDesktopFilters);
 
-      let desktopTagTimer = null;
-      let desktopFreewordTimer = null;
+      let t1 = null;
+      let t2 = null;
 
       els.tagFilter.addEventListener("input", function() {
-        clearTimeout(desktopTagTimer);
-        desktopTagTimer = setTimeout(applyDesktopFiltersFromInputs, 250);
+        clearTimeout(t1);
+        t1 = setTimeout(applyDesktopFilters, 250);
       });
 
       els.freewordFilter.addEventListener("input", function() {
-        clearTimeout(desktopFreewordTimer);
-        desktopFreewordTimer = setTimeout(applyDesktopFiltersFromInputs, 250);
+        clearTimeout(t2);
+        t2 = setTimeout(applyDesktopFilters, 250);
       });
 
       els.favoritesOnlyBtn.addEventListener("click", function() {
         STATE.favoritesOnly = !STATE.favoritesOnly;
         updateFavoriteButtons();
-        applyDesktopFiltersFromInputs();
+        applyDesktopFilters();
       });
 
-      // Mobile filters
-      els.mobileRegionFilter.addEventListener("change", applyMobileFiltersFromInputs);
-      els.mobilePrefFilter.addEventListener("change", applyMobileFiltersFromInputs);
+      els.fitAllBtn.addEventListener("click", function() {
+        clearSelection();
+        fitToFiltered();
+      });
+    }
 
-      let mobileTagTimer = null;
-      let mobileFreewordTimer = null;
+    function setupMobileEvents() {
+      els.mobileRegionFilter.addEventListener("change", applyMobileFilters);
+      els.mobilePrefFilter.addEventListener("change", applyMobileFilters);
+
+      let t1 = null;
+      let t2 = null;
 
       els.mobileTagFilter.addEventListener("input", function() {
-        clearTimeout(mobileTagTimer);
-        mobileTagTimer = setTimeout(applyMobileFiltersFromInputs, 250);
+        clearTimeout(t1);
+        t1 = setTimeout(applyMobileFilters, 250);
       });
 
       els.mobileFreewordFilter.addEventListener("input", function() {
-        clearTimeout(mobileFreewordTimer);
-        mobileFreewordTimer = setTimeout(applyMobileFiltersFromInputs, 250);
+        clearTimeout(t2);
+        t2 = setTimeout(applyMobileFilters, 250);
       });
 
       els.mobileFavoritesOnlyBtn.addEventListener("click", function() {
         STATE.favoritesOnly = !STATE.favoritesOnly;
         updateFavoriteButtons();
-        applyMobileFiltersFromInputs();
+        applyMobileFilters();
       });
 
-      // Fit buttons
-      els.desktopFitAllBtn.addEventListener("click", function() {
-        clearSelection();
-        fitToFiltered();
-      });
-
-      els.mobileFitAllBtn.addEventListener("click", function() {
-        closeMobileDrawer();
-        clearSelection();
-        fitToFiltered();
-      });
-
-      // Mobile drawer
       els.mobileMenuBtn.addEventListener("click", function(e) {
         e.stopPropagation();
         toggleMobileDrawer();
@@ -1601,134 +1558,98 @@
         closeMobileDrawer();
       });
 
-      // Mobile sheet toggle
+      els.mobileFitAllBtn.addEventListener("click", function() {
+        closeMobileDrawer();
+        clearSelection();
+        fitToFiltered();
+      });
+
       els.mobileSheetToggleBtn.addEventListener("click", function() {
         if (STATE.mobileSheetState === "closed") {
-          STATE.mobileSheetManuallyOpened = true;
           setMobileSheetState("peek");
-          return;
-        }
-        if (STATE.mobileSheetState === "peek") {
-          STATE.mobileSheetManuallyOpened = true;
+        } else if (STATE.mobileSheetState === "peek") {
           setMobileSheetState("open");
-          return;
-        }
-        STATE.mobileSheetManuallyOpened = false;
-        if (STATE.selectedSpotId) {
-          setMobileSheetState("peek");
         } else {
           setMobileSheetState("closed");
         }
       });
 
-      // Outside drawer tap
       document.addEventListener("click", function(e) {
         if (!isMobile()) return;
+
         const drawerClicked = e.target.closest("#mobileFilterDrawer");
-        const menuBtnClicked = e.target.closest("#mobileMenuBtn");
-        if (!drawerClicked && !menuBtnClicked && STATE.mobileDrawerOpen) {
+        const menuClicked = e.target.closest("#mobileMenuBtn");
+
+        if (!drawerClicked && !menuClicked && STATE.mobileDrawerOpen) {
           closeMobileDrawer();
         }
       });
 
-      // Swipe bottom sheet
-      let touchStartY = 0;
-      let touchCurrentY = 0;
+      let startY = 0;
+      let currentY = 0;
       let dragging = false;
 
       function onTouchStart(e) {
         if (!isMobile()) return;
         dragging = true;
-        touchStartY = e.touches[0].clientY;
-        touchCurrentY = touchStartY;
+        startY = e.touches[0].clientY;
+        currentY = startY;
       }
 
       function onTouchMove(e) {
         if (!dragging) return;
-        touchCurrentY = e.touches[0].clientY;
+        currentY = e.touches[0].clientY;
       }
 
       function onTouchEnd() {
         if (!dragging) return;
-        const delta = touchCurrentY - touchStartY;
         dragging = false;
+        const delta = currentY - startY;
 
         if (delta < -40) {
-          STATE.mobileSheetManuallyOpened = true;
           stepOpenMobileSheet();
         } else if (delta > 40) {
-          if (STATE.mobileSheetState === "open") {
-            setMobileSheetState("peek");
-          } else if (STATE.mobileSheetState === "peek") {
-            if (STATE.selectedSpotId) {
-              STATE.mobileSheetManuallyOpened = false;
-              setMobileSheetState("closed");
-            } else {
-              STATE.mobileSheetManuallyOpened = false;
-              setMobileSheetState("closed");
-            }
-          }
+          stepCloseMobileSheet();
         }
       }
 
       els.mobileSheetHandle.addEventListener("touchstart", onTouchStart, { passive: true });
       els.mobileSheetHandle.addEventListener("touchmove", onTouchMove, { passive: true });
       els.mobileSheetHandle.addEventListener("touchend", onTouchEnd);
+    }
 
-      // Click handle as shortcut
-      els.mobileSheetHandle.addEventListener("dblclick", function() {
-        if (!isMobile()) return;
-        if (STATE.mobileSheetState === "closed") {
-          STATE.mobileSheetManuallyOpened = true;
-          setMobileSheetState("peek");
-        } else if (STATE.mobileSheetState === "peek") {
-          STATE.mobileSheetManuallyOpened = true;
-          setMobileSheetState("open");
-        } else {
-          STATE.mobileSheetManuallyOpened = false;
-          if (STATE.selectedSpotId) {
-            setMobileSheetState("peek");
-          } else {
-            setMobileSheetState("closed");
-          }
-        }
-      });
+    function setupCommonEvents() {
+      bindDelegatedActions(els.selectedBody);
+      bindDelegatedActions(els.listBody);
+      bindDelegatedActions(els.mobileSelectedWrap);
+      bindDelegatedActions(els.mobileListWrap);
 
-      // Resize
       window.addEventListener("resize", function() {
-        syncFiltersToMobile();
-        syncFiltersToDesktop();
-
-        if (isMobile()) {
-          setMobileSheetState(STATE.mobileSheetState);
-        }
+        syncDesktopToMobile();
+        syncMobileToDesktop();
 
         if (STATE.map) {
           STATE.map.resize();
           updateMarkerZoomAppearance();
         }
-      });
 
-      // Delegated actions
-      bindDelegatedActions(els.desktopSelectedBody);
-      bindDelegatedActions(els.desktopListBody);
-      bindDelegatedActions(els.mobileSelectedWrap);
-      bindDelegatedActions(els.mobileListWrap);
+        if (isMobile()) {
+          setMobileSheetState(STATE.mobileSheetState);
+        }
+      });
     }
 
     function loadSpots() {
       fetch("./spots.json")
-        .then(function(res) { return res.json(); })
+        .then(function(res) {
+          return res.json();
+        })
         .then(function(data) {
           STATE.spots = data;
           buildFilterOptions();
           updateFavoriteButtons();
-          syncFiltersToMobile();
+          syncDesktopToMobile();
           setupMap();
-
-          if (isMobile()) {
-            setMobileSheetState("closed");
-          }
         })
         .catch(function(err) {
           console.error(err);
@@ -1737,9 +1658,10 @@
         });
     }
 
-    setupEvents();
+    setupDesktopEvents();
+    setupMobileEvents();
+    setupCommonEvents();
     loadSpots();
   </script>
 </body>
 </html>
-``
