@@ -21,6 +21,24 @@
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
     font-family:-apple-system,"Inter","Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
 
+  /* ===== スタイリッシュなスクロールバー（PC/Firefox両対応） ===== */
+  *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;}
+  *::-webkit-scrollbar{width:8px;height:8px;}
+  *::-webkit-scrollbar-track{background:transparent;}
+  *::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.15);
+    border-radius:4px;
+    border:2px solid transparent;
+    background-clip:padding-box;
+    transition:background .2s;
+  }
+  *::-webkit-scrollbar-thumb:hover{
+    background:rgba(255,255,255,.35);
+    background-clip:padding-box;
+    border:2px solid transparent;
+  }
+  *::-webkit-scrollbar-corner{background:transparent;}
+
   /* ===== マップ全画面背景 ===== */
   #map{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:1;}
   .leaflet-container{background:#000;cursor:grab;}
@@ -90,7 +108,7 @@
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* ===== カード島：堅牢な2段Flex構造 ===== */
+  /* ===== カード島：2段Flex堅牢構造 ===== */
   #cardIsland{
     position:fixed;
     left:var(--island-gap);
@@ -110,7 +128,6 @@
   }
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
 
-  /* SVGチェバロン（モバイルのみ表示） */
   .chevron{display:none;position:absolute;top:8px;left:50%;
     width:40px;height:14px;transform:translateX(-50%);
     transition:transform .35s var(--ease);
@@ -120,11 +137,8 @@
     fill:none;stroke:#bbb;stroke-width:2.5;
     stroke-linecap:round;stroke-linejoin:round;
   }
-  #cardIsland.expanded .chevron{
-    transform:translateX(-50%) rotate(180deg);
-  }
+  #cardIsland.expanded .chevron{transform:translateX(-50%) rotate(180deg);}
 
-  /* スクロール領域：絶対にスクロールが効く2段Flex */
   .listScroll{
     flex:1 1 0;
     min-height:0;
@@ -157,7 +171,7 @@
     border:none;color:#fff;font-size:12px;width:26px;height:26px;border-radius:50%;cursor:pointer;z-index:2;}
   .fav.on{color:var(--pinFav);}
 
-  /* ===== マップピン ===== */
+  /* ===== マップピン（通常） ===== */
   .numPin{
     width:30px;height:30px;border-radius:50% 50% 50% 0;
     background:var(--pin);border:2px solid #000;
@@ -169,6 +183,37 @@
   .numPin > span{transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
     font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
   .numPin.fav > span{color:#fff;}
+
+  /* ===== マップピン（カード大表示時：目立つピン） ===== */
+  .bigPinWrap{
+    position:relative;width:40px;height:40px;
+    animation:bigPinPulse 2.2s ease-out infinite;
+    border-radius:50%;
+  }
+  @keyframes bigPinPulse{
+    0%   {box-shadow:0 0 0 0 rgba(255,255,255,.55);}
+    70%  {box-shadow:0 0 0 22px rgba(255,255,255,0);}
+    100% {box-shadow:0 0 0 0 rgba(255,255,255,0);}
+  }
+  .bigPin{
+    position:absolute;top:2px;left:2px;
+    width:36px;height:36px;
+    border-radius:50% 50% 50% 0;
+    background:linear-gradient(135deg,#fff 0%,#e8e8e8 100%);
+    border:3px solid #000;
+    transform:rotate(-45deg);
+    box-shadow:0 8px 20px rgba(0,0,0,.7);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .bigPin::after{
+    content:'';
+    width:12px;height:12px;
+    background:#000;border-radius:50%;
+    transform:rotate(45deg);
+  }
+  .bigPin.fav{background:linear-gradient(135deg,#ff7da6 0%,#ff5a8c 100%);}
+  .bigPin.fav::after{background:#fff;}
+
   .mePin{
     width:18px;height:18px;border-radius:50%;
     background:var(--pinMe);border:3px solid #fff;
@@ -193,12 +238,13 @@
     width:34px;height:34px;border-radius:50%;z-index:5;
   }
 
-  /* 写真スライダー（スワイプ式・object-fit:contain） */
+  /* PC: detailScroll は透過、image はトップ固定でナビボタン付き */
+  .detailScroll{display:contents;}
   .detailImages{
     flex:0 0 auto;
     position:relative;
     background:#000;
-    height:260px;
+    height:55vh;
     overflow:hidden;
   }
   .slidesTrack{
@@ -218,10 +264,33 @@
     background:#000;
   }
   .slide img{
-    max-width:100%;max-height:100%;
-    width:auto;height:auto;
-    object-fit:contain;display:block;
+    width:100%;height:100%;
+    object-fit:cover;display:block;
   }
+
+  /* PC用ナビ矢印 */
+  .slideNav{
+    position:absolute;top:50%;transform:translateY(-50%);
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(0,0,0,.55);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.2);
+    color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    z-index:4;
+    transition:opacity .2s, background .2s, transform .2s;
+    opacity:1;
+  }
+  .slideNav:hover{background:rgba(0,0,0,.8);transform:translateY(-50%) scale(1.08);}
+  .slideNav.prev{left:10px;}
+  .slideNav.next{right:10px;}
+  .slideNav.hidden{opacity:0;pointer-events:none;}
+  .slideNav svg{width:18px;height:18px;}
+  .slideNav svg polyline{
+    fill:none;stroke:#fff;stroke-width:2.5;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+
   .slideDots{
     position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
     display:flex;gap:6px;z-index:3;
@@ -257,7 +326,7 @@
     :root{ --island-w:auto; }
     .iconBtn{display:flex;}
     .chevron{display:block;}
-    .listHead{display:none;} /* モバイルではチェバロンのみで十分 */
+    .listHead{display:none;}
     .sheetHandle{justify-content:center;}
 
     #searchIsland{
@@ -271,7 +340,6 @@
     }
     #searchIsland.open{transform:translateY(0);opacity:1;}
 
-    /* カード島：top値のみで開閉アニメ（heightは固定値） */
     #cardIsland{
       left:var(--island-gap);right:var(--island-gap);
       bottom:var(--island-gap);
@@ -284,16 +352,35 @@
     #cardIsland.expanded{
       top:calc(var(--hdr) + var(--island-gap));
     }
-
     .sheetHandle{cursor:pointer;}
 
-    /* 詳細島：スマホは下半分、写真高さも縮める */
+    /* 詳細島：下半分、内部スクロール */
     #detailIsland{
       top:50vh;left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
       width:auto;
     }
     body.detail-mode .iconBtn{display:none;}
-    .detailImages{height:30vh;}
+
+    /* モバイル：detailScrollを実体化して全体スクロール */
+    .detailScroll{
+      display:block;
+      flex:1 1 0;min-height:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+    }
+    .detailImages{
+      height:auto;
+      aspect-ratio:1/1;          /* 画面幅に合わせた正方形 */
+      flex:0 0 auto;
+    }
+    .detailBody{
+      overflow:visible;
+      flex:none;
+    }
+    .slide img{object-fit:cover;}
+
+    /* モバイルでは矢印ナビ非表示（スワイプで操作） */
+    .slideNav{display:none;}
   }
 </style>
 </head>
@@ -338,11 +425,19 @@
 
 <section id="detailIsland" class="island">
   <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
-  <div class="detailImages" id="detailImages">
-    <div class="slidesTrack" id="slidesTrack"></div>
-    <div class="slideDots" id="slideDots"></div>
+  <div class="detailScroll">
+    <div class="detailImages">
+      <div class="slidesTrack" id="slidesTrack"></div>
+      <button class="slideNav prev hidden" id="slidePrev" aria-label="前へ">
+        <svg viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"></polyline></svg>
+      </button>
+      <button class="slideNav next hidden" id="slideNext" aria-label="次へ">
+        <svg viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"></polyline></svg>
+      </button>
+      <div class="slideDots" id="slideDots"></div>
+    </div>
+    <div class="detailBody" id="detailBody"></div>
   </div>
-  <div class="detailBody" id="detailBody"></div>
 </section>
 
 <div class="backdrop" id="backdrop"></div>
@@ -472,8 +567,6 @@
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
   var FIXED_ZOOM = 13;
   var DETAIL_ZOOM = 15;
-
-  // カード（大）島のレイアウト寸法（オフセット計算用）
   var ISLAND_GAP = 14, ISLAND_W = 360;
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
@@ -482,6 +575,7 @@
   var favs = JSON.parse(localStorage.getItem("favs") || "[]");
   var state = { tags:[], favOnly:false };
   var savedView = null;
+  var detailSpot = null;  // ← カード（大）表示中のスポット
 
   function lockZoom(zoom){ map.setMinZoom(zoom); map.setMaxZoom(zoom); }
   function unlockZoom(min, max){ map.setMinZoom(min); map.setMaxZoom(max); }
@@ -499,7 +593,10 @@
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: bounds
     }).addTo(map);
-    map.on('moveend', function(){ renderMarkers(); renderList(); });
+    map.on('moveend', function(){
+      if (detailSpot) return; // 詳細表示中は再描画しない
+      renderMarkers(); renderList();
+    });
     setTimeout(function(){ map.invalidateSize(); }, 100);
     setTimeout(function(){ map.invalidateSize(); }, 500);
     window.addEventListener('load', function(){ map.invalidateSize(); });
@@ -539,6 +636,21 @@
     if (!map) return;
     for (var i=0;i<markers.length;i++) map.removeLayer(markers[i]);
     markers = [];
+
+    // ===== 詳細表示中：当該スポットのみ目立つピンで表示 =====
+    if (detailSpot){
+      var isFav = favs.indexOf(detailSpot.id) >= 0;
+      var icon = L.divIcon({
+        className:'',
+        html:'<div class="bigPinWrap"><div class="bigPin' + (isFav?' fav':'') + '"></div></div>',
+        iconSize:[40,48], iconAnchor:[20,48]
+      });
+      var mk = L.marker([detailSpot.lat, detailSpot.lng], { icon:icon }).addTo(map);
+      markers.push(mk);
+      return;
+    }
+
+    // ===== 通常時：番号付き ピン =====
     var visible = getVisibleRanked();
     var numMap = {};
     for (var v=0;v<visible.length;v++) numMap[visible[v].id] = v+1;
@@ -632,22 +744,17 @@
     var size = map.getSize();
     var W = size.x, H = size.y;
     var isDesktop = window.innerWidth > 768;
-    // ピンを表示したい画面上の目標座標
     var targetX, targetY;
     if (isDesktop){
-      // 詳細島が左：left:14, width:360, right edge=14+360 = 374
       var rightEdgeOfCard = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
       targetX = rightEdgeOfCard + (W - rightEdgeOfCard) / 2;
       targetY = H / 2;
     } else {
-      // 詳細島が下半分(top:50vh) → 上半分のmapエリアの中央
       targetX = W / 2;
-      targetY = H * 0.25; // 上から1/4の位置 = 上半分(0〜H/2)の中央
+      targetY = H * 0.25;
     }
-    // 画面中央からのピクセルオフセット
     var dx = W/2 - targetX;
     var dy = H/2 - targetY;
-    // ピンのピクセル座標 + オフセット = 新しい center のピクセル座標
     var pinPx = map.project(latlng, zoom);
     var newCenterPx = pinPx.add(L.point(dx, dy));
     var newCenter = map.unproject(newCenterPx, zoom);
@@ -655,9 +762,14 @@
   }
 
   // ========= 写真スライダー =========
+  var currentSlideCount = 0;
   function buildSlider(images){
     var track = document.getElementById('slidesTrack');
     var dotsEl = document.getElementById('slideDots');
+    var prevBtn = document.getElementById('slidePrev');
+    var nextBtn = document.getElementById('slideNext');
+    currentSlideCount = images.length;
+
     var html = '';
     for (var i=0;i<images.length;i++){
       html += '<div class="slide"><img src="' + driveImg(images[i], 1600) + '" alt=""></div>';
@@ -671,25 +783,50 @@
       }
       dotsEl.innerHTML = dotsHtml;
       dotsEl.style.display = 'flex';
-
-      // スクロール位置からアクティブドットを更新
-      track.onscroll = function(){
-        var idx = Math.round(track.scrollLeft / track.clientWidth);
-        var spans = dotsEl.querySelectorAll('span');
-        for (var k=0;k<spans.length;k++){
-          spans[k].classList.toggle('active', k===idx);
-        }
-      };
     } else {
       dotsEl.innerHTML = '';
       dotsEl.style.display = 'none';
     }
-    // スクロール位置を先頭に
+
     track.scrollLeft = 0;
+    updateSlideButtons();
+
+    track.onscroll = function(){
+      var idx = Math.round(track.scrollLeft / track.clientWidth);
+      var spans = dotsEl.querySelectorAll('span');
+      for (var k=0;k<spans.length;k++){
+        spans[k].classList.toggle('active', k===idx);
+      }
+      updateSlideButtons();
+    };
+
+    prevBtn.onclick = function(){
+      track.scrollBy({ left: -track.clientWidth, behavior:'smooth' });
+    };
+    nextBtn.onclick = function(){
+      track.scrollBy({ left: track.clientWidth, behavior:'smooth' });
+    };
+  }
+
+  function updateSlideButtons(){
+    var track = document.getElementById('slidesTrack');
+    var prevBtn = document.getElementById('slidePrev');
+    var nextBtn = document.getElementById('slideNext');
+    if (!track || !prevBtn || !nextBtn) return;
+    if (currentSlideCount <= 1){
+      prevBtn.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      return;
+    }
+    var maxScroll = track.scrollWidth - track.clientWidth;
+    var x = track.scrollLeft;
+    prevBtn.classList.toggle('hidden', x < 5);
+    nextBtn.classList.toggle('hidden', x > maxScroll - 5);
   }
 
   // ========= 詳細表示 =========
   function openDetail(s){
+    detailSpot = s; // ← 詳細表示中フラグ
     buildSlider(s.images);
 
     var bodyEl = document.getElementById('detailBody');
@@ -716,22 +853,25 @@
         savedView = { center: map.getCenter(), zoom: FIXED_ZOOM };
       }
       unlockZoom(8, 18);
-      // DOM変化後にinvalidateSize→オフセットflyTo
       setTimeout(function(){
+        renderMarkers(); // ← 当該スポットのみの目立つピンに切替
         map.invalidateSize();
         flyToWithLayoutOffset([s.lat, s.lng], DETAIL_ZOOM);
+        // 矢印ボタン状態をDOM配置後に更新
+        setTimeout(updateSlideButtons, 100);
       }, 150);
     }
     document.getElementById('favBtn').onclick = function(){
       var idx = favs.indexOf(s.id);
       if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
       localStorage.setItem('favs', JSON.stringify(favs));
-      openDetail(s); applyFilters();
+      openDetail(s);
     };
   }
 
   function closeDetail(){
     document.body.classList.remove('detail-mode');
+    detailSpot = null;
     if (map && savedView){
       var sv = savedView;
       setTimeout(function(){
@@ -741,7 +881,10 @@
       setTimeout(function(){
         lockZoom(FIXED_ZOOM);
         savedView = null;
+        applyFilters(); // ← 通常表示に戻す（番号ピン再描画）
       }, 800);
+    } else {
+      applyFilters();
     }
   }
 
@@ -815,6 +958,7 @@
         setSearchOpen(false);
         cardIsland.classList.remove('expanded');
       }
+      updateSlideButtons();
     });
   }
 
