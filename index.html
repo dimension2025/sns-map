@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>GRAMAP</title>
 <style>
   :root{
@@ -38,10 +38,13 @@
   .leaflet-container{background:#000;cursor:grab;}
   .leaflet-container:active{cursor:grabbing;}
 
+  /* ===== ヘッダー / ロゴ ===== */
   header{
     position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1800;
     background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.5));
     display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+    transition:transform .35s var(--ease);
+    will-change:transform;
   }
   .brand{display:flex;align-items:baseline;gap:14px;}
   .logo{
@@ -64,6 +67,18 @@
   }
   body.detail-mode header{ display:none; }
 
+  /* ===== マップ操作中のUI退避 ===== */
+  body.map-interacting:not(.detail-mode) header{
+    transform:translateY(-100%);
+  }
+  body.map-interacting:not(.detail-mode) #searchIsland{
+    transform:translateX(calc(-100% - var(--island-gap) - 20px));
+  }
+  body.map-interacting:not(.detail-mode) #cardIsland{
+    transform:translateX(calc(-100% - var(--island-gap) - 20px));
+  }
+
+  /* ===== 島UI共通 ===== */
   .island{
     background:var(--panel);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -78,6 +93,8 @@
     left:var(--island-gap);
     width:var(--island-w);max-height:38vh;
     z-index:1550;display:flex;flex-direction:column;min-height:0;
+    transition:transform .4s var(--ease);
+    will-change:transform;
   }
   .search{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
   .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
@@ -108,6 +125,8 @@
     top:calc(var(--hdr) + var(--island-gap) + 38vh + var(--island-gap));
     z-index:1500;
     display:flex;flex-direction:column;
+    transition:transform .4s var(--ease);
+    will-change:transform;
   }
   .sheetHandle{
     flex:0 0 var(--handle-h);
@@ -331,6 +350,11 @@
       transition:transform .3s var(--ease), opacity .25s var(--ease);
     }
     #searchIsland.open{transform:translateY(0);opacity:1;}
+    /* マップ操作中は強制的に閉じる方向へ */
+    body.map-interacting:not(.detail-mode) #searchIsland{
+      transform:translateY(-130%) !important;
+      opacity:0 !important;
+    }
 
     #cardIsland{
       left:var(--island-gap);right:var(--island-gap);
@@ -338,19 +362,23 @@
       width:auto;
       top:calc(100vh - var(--card-collapsed-h) - var(--island-gap));
       z-index:1500;
-      transition:top .38s var(--ease);
-      will-change:top;
+      transition:top .38s var(--ease), transform .4s var(--ease);
+      will-change:top,transform;
     }
     #cardIsland.expanded{
       top:calc(var(--hdr) + var(--island-gap));
     }
     .sheetHandle{cursor:pointer;}
+    /* マップ操作中は下にスライド退避 */
+    body.map-interacting:not(.detail-mode) #cardIsland{
+      transform:translateY(calc(100% + var(--island-gap) + 20px)) !important;
+    }
 
     #detailIsland{
       top:42vh;
       left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
       width:auto;
-      cursor:pointer; /* タップ可能を示唆 */
+      cursor:pointer;
     }
     body.detail-mode #detailIsland{
       top:42vh;
@@ -366,7 +394,6 @@
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
     }
-
     .detailImages{
       height:28vh !important;
       aspect-ratio:auto !important;
@@ -374,18 +401,15 @@
       flex:0 0 auto;
     }
     .slide img{ object-fit:contain; }
-
     body.detail-expanded .detailImages{
       height:auto !important;
       max-height:65vh !important;
     }
     body.detail-expanded .slide img{ object-fit:cover; }
-
     .detailBody{
       overflow:visible;
       flex:none;
     }
-
     .slideNav{display:none;}
   }
 </style>
@@ -474,6 +498,7 @@
   }
   tryCdn(0);
 
+  // ========= データ =========
   var SPOTS = [
     { id:1, name:"アートアクアリウム", lat:35.67102560284623, lng:139.76608091349286,
       mapUrl:"https://maps.app.goo.gl/sQahHCCvjAMZ2fXY6",
@@ -570,7 +595,9 @@
 
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
-  var FIXED_ZOOM = 13;
+  var FIXED_ZOOM = 13;       // 標準縮尺（カード大から戻る時の縮尺）
+  var MIN_ZOOM   = 11;       // 拡大下限（過度な広域表示を防止）
+  var MAX_ZOOM   = 16;       // 拡大上限（過度なストリートズームを防止）
   var DETAIL_ZOOM = 15;
   var ISLAND_GAP = 14, ISLAND_W = 360;
   var HDR_H = 56;
@@ -584,27 +611,66 @@
   var savedView = null;
   var detailSpot = null;
   var firstImgAspect = null;
+  var isProgrammaticMove = false;  // flyTo中はtrue
+  var hideUITimer = null;
+  var programMoveTimer = null;
 
-  function lockZoom(zoom){ map.setMinZoom(zoom); map.setMaxZoom(zoom); }
-  function unlockZoom(min, max){ map.setMinZoom(min); map.setMaxZoom(max); }
+  // ========= マップ操作中UI表示制御 =========
+  function showMapInteracting(){
+    if (document.body.classList.contains('detail-mode')) return;
+    document.body.classList.add('map-interacting');
+    if (hideUITimer){ clearTimeout(hideUITimer); hideUITimer = null; }
+  }
+  function hideMapInteracting(){
+    if (hideUITimer) clearTimeout(hideUITimer);
+    hideUITimer = setTimeout(function(){
+      document.body.classList.remove('map-interacting');
+      hideUITimer = null;
+    }, 500); // 操作完了から500ms後にUIを戻す
+  }
 
   function initMap(){
     var bounds = L.latLngBounds(BOUNDS_ARR);
     map = L.map('map', {
-      zoomControl:false, attributionControl:true,
-      maxBounds: bounds, maxBoundsViscosity:1.0,
-      minZoom: FIXED_ZOOM, maxZoom: FIXED_ZOOM,
-      scrollWheelZoom:false, doubleClickZoom:false,
-      touchZoom:false, boxZoom:false, keyboard:false,
-      dragging:true, inertia:true
+      zoomControl:false,
+      attributionControl:true,
+      maxBounds: bounds,
+      maxBoundsViscosity:1.0,
+      minZoom: MIN_ZOOM,
+      maxZoom: MAX_ZOOM,
+      scrollWheelZoom:true,
+      doubleClickZoom:true,
+      touchZoom:true,
+      boxZoom:false,
+      keyboard:true,
+      dragging:true,
+      inertia:true,
+      zoomSnap:0.5,
+      wheelDebounceTime:40
     }).setView(IMPERIAL, FIXED_ZOOM);
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: bounds
     }).addTo(map);
+
+    // ===== マップ操作監視 =====
+    map.on('movestart', function(){
+      if (isProgrammaticMove) return;
+      showMapInteracting();
+    });
+    map.on('zoomstart', function(){
+      if (isProgrammaticMove) return;
+      showMapInteracting();
+    });
     map.on('moveend', function(){
+      if (!isProgrammaticMove) hideMapInteracting();
       if (detailSpot) return;
       renderMarkers(); renderList();
     });
+    map.on('zoomend', function(){
+      if (!isProgrammaticMove) hideMapInteracting();
+    });
+
     setTimeout(function(){ map.invalidateSize(); }, 100);
     setTimeout(function(){ map.invalidateSize(); }, 500);
     window.addEventListener('load', function(){ map.invalidateSize(); });
@@ -744,7 +810,17 @@
     }
   }
 
-  // mode: 'detail' or 'normal'
+  // ========= プログラム的なflyTo（UI退避をトリガーしない） =========
+  function programmaticFlyTo(newCenter, zoom, duration){
+    isProgrammaticMove = true;
+    map.flyTo(newCenter, zoom, { duration: duration || 0.6 });
+    if (programMoveTimer) clearTimeout(programMoveTimer);
+    programMoveTimer = setTimeout(function(){
+      isProgrammaticMove = false;
+      programMoveTimer = null;
+    }, (duration || 0.6) * 1000 + 200);
+  }
+
   function flyToVisibleCenter(latlng, zoom, mode){
     if (!map) return;
     var size = map.getSize();
@@ -782,7 +858,7 @@
     var pinPx = map.project(latlng, zoom);
     var newCenterPx = pinPx.add(L.point(dx, dy));
     var newCenter = map.unproject(newCenterPx, zoom);
-    map.flyTo(newCenter, zoom, { duration:.6 });
+    programmaticFlyTo(newCenter, zoom, 0.6);
   }
 
   // ========= 写真スライダー =========
@@ -885,6 +961,9 @@
   function openDetail(s){
     detailSpot = s;
     document.body.classList.remove('detail-expanded');
+    // 詳細表示開始時にmap-interactingを解除
+    document.body.classList.remove('map-interacting');
+    if (hideUITimer){ clearTimeout(hideUITimer); hideUITimer = null; }
     buildSlider(s.images);
 
     var bodyEl = document.getElementById('detailBody');
@@ -908,9 +987,8 @@
     document.body.classList.add('detail-mode');
     if (map){
       if (!savedView){
-        savedView = { center: map.getCenter(), zoom: FIXED_ZOOM };
+        savedView = { center: map.getCenter(), zoom: map.getZoom() };
       }
-      unlockZoom(8, 18);
       setTimeout(function(){
         renderMarkers();
         map.invalidateSize();
@@ -935,14 +1013,14 @@
     if (map){
       setTimeout(function(){
         map.invalidateSize();
+        // 標準縮尺(FIXED_ZOOM)に戻す
         if (spotLatLng){
           flyToVisibleCenter(spotLatLng, FIXED_ZOOM, 'normal');
         } else if (savedView){
-          map.flyTo(savedView.center, FIXED_ZOOM, { duration:.5 });
+          programmaticFlyTo(savedView.center, FIXED_ZOOM, 0.5);
         }
       }, 150);
       setTimeout(function(){
-        lockZoom(FIXED_ZOOM);
         savedView = null;
         applyFilters();
       }, 900);
@@ -951,16 +1029,15 @@
     }
   }
 
-  // ========= カード（大）タップで拡大・縮小トグル（スマホのみ） =========
+  // ========= カード（大）タップで拡大・縮小トグル =========
   function initDetailTapToggle(){
     var detailIsland = document.getElementById('detailIsland');
-    var startX = 0, startY = 0, startTime = 0, moved = false;
+    var startX = 0, startY = 0, moved = false;
 
     detailIsland.addEventListener('touchstart', function(e){
       if (!e.touches[0]) return;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      startTime = Date.now();
       moved = false;
     }, { passive:true });
 
@@ -972,21 +1049,14 @@
     }, { passive:true });
 
     detailIsland.addEventListener('click', function(e){
-      // スマホのみ動作
       if (window.innerWidth > 768) return;
-
-      // スワイプ動作はトグルしない
       if (moved) return;
-
-      // 操作可能要素はトグルしない（誤動作防止）
       if (e.target.closest('.detailClose')) return;
       if (e.target.closest('.btn')) return;
       if (e.target.closest('a')) return;
       if (e.target.closest('.slideNav')) return;
       if (e.target.closest('button')) return;
       if (e.target.closest('.fav')) return;
-
-      // トグル実行
       document.body.classList.toggle('detail-expanded');
       setTimeout(applyImageAspect, 50);
     });
