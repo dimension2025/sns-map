@@ -3,78 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-<title>Instagrammable Map - SNS映えスポットMAP</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>GRAMAP - Instagrammable Map</title>
+.4/dist/leaflet.css">
 <style>
   :root{
-    --bg:#0a0a0a; --panel:#141414; --panel2:#1c1c1c;
-    --text:#f5f5f5; --muted:#9a9a9a; --accent:#e6c36a; --border:#262626;
+    --bg:#000; --panel:#0e0e0e; --panel2:#1a1a1a;
+    --text:#f5f5f5; --muted:#8a8a8a; --accent:#ffffff; --border:#222;
+    --pin:#ffffff; --pinFav:#ff5a8c;
+    --hdr:56px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
-    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;}
-  #app{display:grid;grid-template-columns:380px 1fr;height:100vh;}
-  #sidebar{background:var(--panel);border-right:1px solid var(--border);
-    display:flex;flex-direction:column;overflow:hidden;position:relative;}
-  #map{height:100vh;background:#000;}
+    font-family:-apple-system,"Inter","Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
 
-  .header{padding:14px 16px 10px;border-bottom:1px solid var(--border);position:relative;}
-  .header h1{margin:0;font-size:16px;letter-spacing:.05em;color:var(--accent);}
-  .header p{margin:4px 0 0;font-size:11px;color:var(--muted);}
-  .closeSide{display:none;position:absolute;top:10px;right:10px;background:transparent;
-    border:1px solid var(--border);color:#fff;width:34px;height:34px;border-radius:50%;
-    cursor:pointer;font-size:18px;line-height:1;}
+  /* ===== ヘッダー / ロゴ ===== */
+  header{
+    position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1600;
+    background:#000;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  }
+  .logo{
+    font-family:"Inter","Helvetica Neue",Arial,sans-serif;
+    font-weight:800;font-size:22px;letter-spacing:.22em;color:#fff;
+    text-transform:uppercase;user-select:none;
+  }
+  .iconBtn{
+    background:transparent;border:1px solid var(--border);color:#fff;
+    width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;
+    display:none;align-items:center;justify-content:center;
+  }
 
-  /* タブ */
-  .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);}
-  .tab{flex:1;padding:12px 0;text-align:center;font-size:13px;color:var(--muted);
-    cursor:pointer;border-bottom:2px solid transparent;user-select:none;}
-  .tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--panel2);}
+  /* ===== レイアウト ===== */
+  #app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:var(--hdr) 1fr;height:100vh;}
+  #app > header{grid-column:1 / -1;grid-row:1;}
+  #sidebar{
+    grid-column:1;grid-row:2;background:var(--panel);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  #map{grid-column:2;grid-row:2;background:#000;}
 
-  .pane{flex:1;overflow:hidden;display:none;flex-direction:column;}
-  .pane.active{display:flex;}
-
-  /* 検索タブ */
-  .search{padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+  /* ===== 検索パネル ===== */
+  #searchPanel{
+    flex:0 0 auto;max-height:50%;overflow-y:auto;
+    border-bottom:1px solid var(--border);
+  }
+  .search{padding:14px;display:flex;flex-direction:column;gap:10px;}
   .search input,.search select{
     width:100%;padding:9px 10px;background:var(--panel2);border:1px solid var(--border);
     border-radius:8px;color:var(--text);font-size:13px;outline:none;}
   .search .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .lab{font-size:11px;color:var(--muted);margin-bottom:4px;}
+  .lab{font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;}
   .tagrow{display:flex;flex-wrap:wrap;gap:6px;}
   .tag{font-size:11px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;
     background:var(--panel2);color:var(--muted);cursor:pointer;user-select:none;}
-  .tag.active{background:var(--accent);color:#000;border-color:var(--accent);}
+  .tag.active{background:#fff;color:#000;border-color:#fff;}
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* カードタブ */
+  /* ===== カードパネル ===== */
+  #cardPanel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+  .sheetHandle{
+    display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+    border-bottom:1px solid var(--border);background:var(--panel);
+  }
+  .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+  .expandToggle{display:none;background:transparent;border:none;color:#fff;
+    cursor:pointer;font-size:18px;padding:4px 10px;}
   .list{flex:1;overflow-y:auto;padding:8px;}
-  .listHead{padding:10px 14px;font-size:11px;color:var(--muted);
-    border-bottom:1px solid var(--border);background:var(--panel);}
+
   .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
     margin-bottom:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
-  .card:hover{transform:translateY(-2px);border-color:var(--accent);}
+  .card:hover{transform:translateY(-2px);border-color:#fff;}
   .thumbwrap{position:relative;}
   .thumb{width:100%;height:140px;background:#000 center/cover no-repeat;}
+  .numBadge{
+    position:absolute;top:8px;left:8px;background:#fff;color:#000;
+    font-weight:800;font-size:12px;min-width:26px;height:26px;padding:0 6px;
+    border-radius:13px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);
+  }
   .body{padding:10px 12px;}
   .ttl{display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .name{font-size:14px;font-weight:600;}
-  .rate{font-size:12px;color:var(--accent);white-space:nowrap;}
+  .rate{font-size:12px;color:#fff;white-space:nowrap;}
   .area{font-size:11px;color:var(--muted);margin-top:2px;}
   .ctags{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
   .ctags span{font-size:10px;color:var(--muted);background:#222;padding:2px 6px;border-radius:999px;}
   .fav{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
     border:none;color:#fff;font-size:14px;width:30px;height:30px;border-radius:50%;cursor:pointer;}
-  .fav.on{color:#ff6b9d;}
+  .fav.on{color:var(--pinFav);}
 
-  /* 詳細 */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;
+  /* ===== マップピン（番号） ===== */
+  .numPin{
+    width:30px;height:30px;border-radius:50% 50% 50% 0;
+    background:var(--pin);border:2px solid #000;
+    transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.6);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .numPin.fav{background:var(--pinFav);}
+  .numPin > span{
+    transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
+    font-family:"Inter","Helvetica Neue",Arial,sans-serif;
+  }
+  .numPin.fav > span{color:#fff;}
+
+  /* ===== 詳細オーバーレイ ===== */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
     align-items:center;justify-content:center;z-index:2000;padding:16px;}
   .overlay.open{display:flex;}
   .detail{background:var(--panel);border:1px solid var(--border);border-radius:14px;
     max-width:680px;width:100%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;position:relative;}
-  .detail .close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.5);
+  .detail .close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.6);
     border:none;color:#fff;font-size:20px;cursor:pointer;width:34px;height:34px;border-radius:50%;z-index:2;}
   .images{display:flex;overflow-x:auto;gap:4px;scroll-snap-type:x mandatory;flex-shrink:0;}
   .images img{height:320px;flex-shrink:0;scroll-snap-align:start;background:#000;}
@@ -85,68 +124,70 @@
   .row2 dt{color:var(--muted);}
   .desc{font-size:14px;line-height:1.7;margin:10px 0;}
   .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
-  .btn{padding:10px 14px;border-radius:8px;border:1px solid var(--accent);
-    background:var(--accent);color:#000;font-weight:600;text-decoration:none;font-size:13px;cursor:pointer;}
-  .btn.ghost{background:transparent;color:var(--accent);}
-
-  /* モバイル */
-  .mobile-toggle{display:none;}
-  @media (max-width:768px){
-    #app{grid-template-columns:1fr;}
-    #sidebar{position:fixed;top:0;left:0;bottom:0;z-index:1500;
-      transform:translateX(-100%);transition:transform .25s;width:88%;max-width:380px;}
-    #sidebar.open{transform:translateX(0);}
-    .mobile-toggle{display:flex;position:fixed;top:12px;left:12px;z-index:1400;
-      background:var(--panel);border:1px solid var(--border);color:#fff;
-      width:44px;height:44px;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;font-size:18px;}
-    .closeSide{display:block;}
-  }
-
-  /* ピン（通常） */
-  .pin{background:var(--accent);width:22px;height:22px;border-radius:50% 50% 50% 0;
-    transform:rotate(-45deg);border:2px solid #000;box-shadow:0 2px 6px rgba(0,0,0,.5);}
-  .pin.fav{background:#ff6b9d;}
-
-  /* ピン（拡大時：画像サムネ） */
-  .photoPin{width:56px;height:56px;border-radius:50%;border:3px solid var(--accent);
-    background:#000 center/cover no-repeat;box-shadow:0 4px 10px rgba(0,0,0,.6);
-    position:relative;cursor:pointer;}
-  .photoPin.fav{border-color:#ff6b9d;}
-  .photoPin::after{
-    content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
-    width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
-    border-top:8px solid var(--accent);}
-  .photoPin.fav::after{border-top-color:#ff6b9d;}
+  .btn{padding:10px 14px;border-radius:8px;border:1px solid #fff;
+    background:#fff;color:#000;font-weight:600;text-decoration:none;font-size:13px;cursor:pointer;}
+  .btn.ghost{background:transparent;color:#fff;}
 
   .leaflet-container{background:#000;}
+  .backdrop{position:fixed;inset:var(--hdr) 0 0 0;background:rgba(0,0,0,.4);
+    display:none;z-index:1450;}
+  .backdrop.show{display:block;}
+
+  /* ===== モバイル ===== */
+  @media (max-width:768px){
+    #app{grid-template-columns:1fr;}
+    .iconBtn{display:flex;}
+    #sidebar{display:contents;}
+
+    /* 検索パネル：上部スライドダウン */
+    #searchPanel{
+      position:fixed;top:var(--hdr);left:0;right:0;
+      max-height:75vh;background:var(--panel);border-bottom:1px solid var(--border);
+      transform:translateY(-110%);transition:transform .25s ease;z-index:1500;
+    }
+    #searchPanel.open{transform:translateY(0);}
+
+    /* カードパネル：ボトムシート */
+    #cardPanel{
+      position:fixed;left:0;right:0;bottom:0;
+      height:280px;z-index:1400;border-top:1px solid var(--border);
+      transition:height .28s ease;border-radius:14px 14px 0 0;overflow:hidden;
+    }
+    #cardPanel.expanded{height:calc(100vh - var(--hdr));border-radius:0;}
+    .expandToggle{display:block;}
+    .sheetHandle{cursor:pointer;}
+
+    /* peek状態：横スクロール2枚見せ */
+    #cardPanel:not(.expanded) .list{
+      display:flex;flex-direction:row;gap:10px;
+      overflow-x:auto;overflow-y:hidden;
+      scroll-snap-type:x mandatory;
+      padding:10px;
+    }
+    #cardPanel:not(.expanded) .card{
+      flex:0 0 46%;margin:0;scroll-snap-align:start;
+    }
+    #cardPanel:not(.expanded) .thumb{height:90px;}
+    #cardPanel:not(.expanded) .ctags{display:none;}
+
+    /* マップは画面全体に */
+    #map{grid-column:1;grid-row:2;height:calc(100vh - var(--hdr));}
+  }
 </style>
 </head>
 <body>
-<button class="mobile-toggle" id="toggleSidebar">☰</button>
 <div id="app">
+  <header>
+    <div class="logo">GRAMAP</div>
+    <button class="iconBtn" id="searchToggle" aria-label="検索">🔍</button>
+  </header>
+
   <aside id="sidebar">
-    <div class="header">
-      <h1>📍 Instagrammable Map</h1>
-      <p>SNS映えスポットMAP</p>
-      <button class="closeSide" id="closeSide" aria-label="閉じる">×</button>
-    </div>
-
-    <div class="tabs">
-      <div class="tab active" data-pane="paneList">📋 スポット</div>
-      <div class="tab" data-pane="paneSearch">🔍 検索</div>
-    </div>
-
-    <!-- カードタブ -->
-    <div class="pane active" id="paneList">
-      <div class="listHead" id="listHead">マップ表示範囲のスポット</div>
-      <div class="list" id="list"></div>
-    </div>
-
-    <!-- 検索タブ -->
-    <div class="pane" id="paneSearch">
+    <!-- 検索パネル -->
+    <section id="searchPanel">
       <div class="search">
         <div>
-          <div class="lab">フリーワード</div>
+          <div class="lab">Search</div>
           <input type="text" id="q" placeholder="名前・説明・タグから検索">
         </div>
         <div class="row">
@@ -173,13 +214,25 @@
         </div>
         <button class="clearBtn" id="clearBtn">条件をクリア</button>
       </div>
-    </div>
+    </section>
+
+    <!-- カードパネル -->
+    <section id="cardPanel">
+      <div class="sheetHandle" id="sheetHandle">
+        <div class="listHead" id="listHead">スポット一覧</div>
+        <button class="expandToggle" id="expandToggle" aria-label="拡張">▲</button>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
   </aside>
+
   <div id="map"></div>
 </div>
+
+<div class="backdrop" id="backdrop"></div>
 <div class="overlay" id="overlay"><div class="detail" id="detail"></div></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+et@1.9.4/dist/leaflet.js"></script>
 <script>
 // ========= データ =========
 var SPOTS = [
@@ -276,64 +329,41 @@ var SPOTS = [
     tags:["夜景","無料","建築","穴場","デート"], rating:4.3 }
 ];
 
-// ========= 設定 =========
-var PHOTO_PIN_ZOOM = 15; // この値以上に拡大すると画像ピンに切替
-
 // ========= 共通 =========
 function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
 
 var map, markers=[], filtered=[];
 var favs = JSON.parse(localStorage.getItem("favs") || "[]");
 var state = { q:"", region:"", pref:"", sort:"rating", tags:[] };
-var lastZoomMode = null; // 'normal' / 'photo'
 
 // ========= Map =========
 function initMap(){
   map = L.map('map', {
-    zoomControl: false,      // ズームボタン非表示
+    zoomControl: false,
     attributionControl: true
   }).setView([35.68, 139.76], 11);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution:'© OpenStreetMap, © CARTO', maxZoom:19
   }).addTo(map);
   map.on('moveend', renderList);
-  map.on('zoomend', function(){
-    var mode = map.getZoom() >= PHOTO_PIN_ZOOM ? 'photo' : 'normal';
-    if (mode !== lastZoomMode){
-      lastZoomMode = mode;
-      renderMarkers();
-    }
-    renderList();
-  });
 }
 
 function renderMarkers(){
   for (var i=0;i<markers.length;i++) map.removeLayer(markers[i]);
   markers = [];
-  var photoMode = map.getZoom() >= PHOTO_PIN_ZOOM;
   for (var j=0;j<filtered.length;j++){
-    (function(s){
+    (function(s, num){
       var isFav = favs.indexOf(s.id) >= 0;
-      var icon;
-      if (photoMode && s.images && s.images[0]){
-        icon = L.divIcon({
-          className:'',
-          html:'<div class="photoPin' + (isFav?' fav':'') + '" style="background-image:url(' + driveImg(s.images[0], 200) + ')"></div>',
-          iconSize:[56,64], iconAnchor:[28,64]
-        });
-      } else {
-        icon = L.divIcon({
-          className:'',
-          html:'<div class="pin' + (isFav?' fav':'') + '"></div>',
-          iconSize:[22,22], iconAnchor:[11,22]
-        });
-      }
+      var icon = L.divIcon({
+        className:'',
+        html:'<div class="numPin' + (isFav?' fav':'') + '"><span>' + num + '</span></div>',
+        iconSize:[30,38], iconAnchor:[15,38]
+      });
       var mk = L.marker([s.lat, s.lng], { icon:icon }).addTo(map);
       mk.on('click', function(){ openDetail(s); });
       markers.push(mk);
-    })(filtered[j]);
+    })(filtered[j], j+1);
   }
-  lastZoomMode = photoMode ? 'photo' : 'normal';
 }
 
 // ========= Filter =========
@@ -365,18 +395,25 @@ function applyFilters(){
 function renderList(){
   if (!map) return;
   var bounds = map.getBounds();
-  var visible = filtered.filter(function(s){ return bounds.contains([s.lat, s.lng]); });
+  // 番号は filtered の並び順に基づく（番号 = i+1）
+  var visible = [];
+  for (var i=0;i<filtered.length;i++){
+    if (bounds.contains([filtered[i].lat, filtered[i].lng])){
+      visible.push({ spot:filtered[i], num:i+1 });
+    }
+  }
   var listEl = document.getElementById('list');
   var headEl = document.getElementById('listHead');
-  headEl.textContent = 'マップ表示範囲のスポット（' + visible.length + '件 / 全' + filtered.length + '件）';
+  headEl.textContent = '表示範囲 ' + visible.length + ' / 全 ' + filtered.length + ' 件';
 
   if (!visible.length){
     listEl.innerHTML = '<div style="padding:24px;color:var(--muted);text-align:center;font-size:13px;">表示範囲に該当スポットがありません</div>';
     return;
   }
   var html = "";
-  for (var i=0;i<visible.length;i++){
-    var s = visible[i];
+  for (var v=0;v<visible.length;v++){
+    var s = visible[v].spot;
+    var num = visible[v].num;
     var img = s.images[0] ? driveImg(s.images[0], 600) : '';
     var isFav = favs.indexOf(s.id) >= 0;
     var tagHtml = "";
@@ -385,6 +422,7 @@ function renderList(){
     html += '<div class="card" data-id="' + s.id + '">' +
               '<div class="thumbwrap">' +
                 '<div class="thumb" style="background-image:url(' + img + ')"></div>' +
+                '<div class="numBadge">' + num + '</div>' +
                 '<button class="fav ' + (isFav?'on':'') + '" data-fav="' + s.id + '">' + (isFav?'♥':'♡') + '</button>' +
               '</div>' +
               '<div class="body">' +
@@ -457,24 +495,6 @@ document.getElementById('overlay').addEventListener('click', function(e){
   if (e.target.id === 'overlay') closeDetail();
 });
 
-// ========= タブ切替 =========
-function initTabs(){
-  var tabs = document.querySelectorAll('.tab');
-  for (var i=0;i<tabs.length;i++){
-    tabs[i].addEventListener('click', function(){
-      var target = this.getAttribute('data-pane');
-      var allTabs = document.querySelectorAll('.tab');
-      for (var k=0;k<allTabs.length;k++) allTabs[k].classList.remove('active');
-      this.classList.add('active');
-      var panes = document.querySelectorAll('.pane');
-      for (var p=0;p<panes.length;p++){
-        if (panes[p].id === target) panes[p].classList.add('active');
-        else panes[p].classList.remove('active');
-      }
-    });
-  }
-}
-
 // ========= UI 初期化 =========
 function initFilters(){
   var regions = {}, prefs = {}, tagSet = {};
@@ -524,17 +544,49 @@ function initFilters(){
   });
 }
 
-// モバイル用：開閉
-document.getElementById('toggleSidebar').addEventListener('click', function(){
-  document.getElementById('sidebar').classList.add('open');
-});
-document.getElementById('closeSide').addEventListener('click', function(){
-  document.getElementById('sidebar').classList.remove('open');
-});
+// ========= モバイルUI制御 =========
+function initMobileUI(){
+  var searchPanel = document.getElementById('searchPanel');
+  var cardPanel = document.getElementById('cardPanel');
+  var backdrop = document.getElementById('backdrop');
+  var searchToggle = document.getElementById('searchToggle');
+  var sheetHandle = document.getElementById('sheetHandle');
+  var expandToggle = document.getElementById('expandToggle');
+
+  // 🔍 検索パネル展開
+  searchToggle.addEventListener('click', function(){
+    var open = searchPanel.classList.toggle('open');
+    backdrop.classList.toggle('show', open);
+  });
+  backdrop.addEventListener('click', function(){
+    searchPanel.classList.remove('open');
+    backdrop.classList.remove('show');
+  });
+
+  // ▲ ボトムシート展開/折りたたみ
+  function toggleSheet(){
+    var expanded = cardPanel.classList.toggle('expanded');
+    expandToggle.textContent = expanded ? '▼' : '▲';
+    // マップサイズが変わるのでリサイズ通知
+    setTimeout(function(){ if (map) map.invalidateSize(); }, 300);
+  }
+  sheetHandle.addEventListener('click', toggleSheet);
+
+  // 画面サイズ変更時のリセット
+  window.addEventListener('resize', function(){
+    if (window.innerWidth > 768){
+      searchPanel.classList.remove('open');
+      cardPanel.classList.remove('expanded');
+      backdrop.classList.remove('show');
+      expandToggle.textContent = '▲';
+    }
+    if (map) map.invalidateSize();
+  });
+}
 
 initMap();
-initTabs();
 initFilters();
+initMobileUI();
 applyFilters();
 </script>
 </body>
