@@ -13,6 +13,7 @@
     --island-gap:14px;
     --island-radius:16px;
     --island-w:360px;
+    --handle-h:42px;
     --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
@@ -30,7 +31,7 @@
   /* ===== ヘッダー / ロゴ ===== */
   header{
     position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1800;
-    background:linear-gradient(to bottom,rgba(0,0,0,.85),rgba(0,0,0,.4));
+    background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.5));
     display:flex;align-items:center;justify-content:space-between;padding:0 18px;
   }
   .brand{display:flex;align-items:baseline;gap:14px;}
@@ -48,9 +49,11 @@
     border:1px solid var(--border);color:#fff;
     width:42px;height:42px;border-radius:50%;cursor:pointer;
     display:none;align-items:center;justify-content:center;
-    font-weight:700;font-size:18px;
+    font-weight:600;font-size:20px;line-height:1;
     box-shadow:0 4px 12px rgba(0,0,0,.4);
+    transition:transform .25s var(--ease);
   }
+  .iconBtn.open{transform:rotate(0deg);}
 
   /* ===== 島UI（共通スタイル） ===== */
   .island{
@@ -99,24 +102,51 @@
     width:var(--island-w);
     top:calc(var(--hdr) + var(--island-gap) + 38vh + var(--island-gap));
     z-index:1500;
-    display:flex;flex-direction:column;
-    min-height:0;
   }
+  /* シートハンドル（絶対位置：固定上部） */
   .sheetHandle{
-    display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
-    border-bottom:1px solid var(--border);flex:0 0 auto;
+    position:absolute;top:0;left:0;right:0;
+    height:var(--handle-h);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 14px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-radius:var(--island-radius) var(--island-radius) 0 0;
+    z-index:3;
   }
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
-  .expandToggle{
-    display:none;background:transparent;border:none;color:#fff;
-    cursor:pointer;font-size:16px;padding:4px 10px;
+
+  /* チェバロン（「く」形状） */
+  .chevron{
+    display:none;
+    width:38px;height:18px;
+    position:absolute;left:50%;top:6px;
+    transform:translateX(-50%);
+    cursor:pointer;
+  }
+  .chevron::before,.chevron::after{
+    content:'';position:absolute;top:7px;
+    width:18px;height:3px;background:#bbb;border-radius:2px;
     transition:transform .3s var(--ease);
   }
+  .chevron::before{
+    left:1px;transform-origin:right center;
+    transform:rotate(-22deg);
+  }
+  .chevron::after{
+    right:1px;transform-origin:left center;
+    transform:rotate(22deg);
+  }
+  /* 展開時：チェバロンを下向きに */
+  #cardIsland.expanded .chevron::before{transform:rotate(22deg);}
+  #cardIsland.expanded .chevron::after{transform:rotate(-22deg);}
 
-  /* カード（小）：2列グリッド＋縦スクロール（確実版） */
+  /* カード（小）リスト：絶対位置で確実なスクロール */
   .list{
-    flex:1 1 0;
-    min-height:0;
+    position:absolute;
+    top:var(--handle-h);
+    left:0;right:0;bottom:0;
     overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
     padding:8px;
@@ -209,7 +239,7 @@
 
   /* ===== モバイル ===== */
   @media (max-width:768px){
-    :root{ --island-w:auto; }
+    :root{ --island-w:auto; --handle-h:50px; }
     .iconBtn{display:flex;}
 
     /* 検索島：上から展開（カード島より前面） */
@@ -227,7 +257,7 @@
       opacity:1;
     }
 
-    /* カード島：下部固定＋heightアニメーション */
+    /* カード島：下部固定＋top/heightアニメ */
     #cardIsland{
       top:auto;
       left:var(--island-gap);right:var(--island-gap);
@@ -235,17 +265,25 @@
       width:auto;
       height:260px;
       z-index:1500;
-      transition:height .35s var(--ease);
-      will-change:height;
+      transition:height .35s var(--ease), top .35s var(--ease);
+      will-change:height,top;
     }
     #cardIsland.expanded{
-      height:calc(100vh - var(--hdr) - var(--island-gap) * 2);
+      /* ヘッダー直下から開始 → 重なり防止 */
+      top:calc(var(--hdr) + var(--island-gap));
+      height:auto;
     }
-    #cardIsland.expanded .expandToggle{
-      transform:rotate(180deg);
+
+    /* モバイル時はチェバロン表示、listHeadは小さく中央寄せ */
+    .chevron{display:block;}
+    .sheetHandle{
+      flex-direction:column;
+      justify-content:flex-end;
+      align-items:center;
+      padding-bottom:6px;
+      cursor:pointer;
     }
-    .expandToggle{display:block;}
-    .sheetHandle{cursor:pointer;}
+    .listHead{font-size:10px;}
 
     /* 詳細島：下半分に */
     #detailIsland{
@@ -287,8 +325,8 @@
 
 <section id="cardIsland" class="island">
   <div class="sheetHandle" id="sheetHandle">
+    <div class="chevron" id="chevron" aria-label="開閉"></div>
     <div class="listHead" id="listHead">スポット一覧</div>
-    <button class="expandToggle" id="expandToggle" aria-label="拡張">▲</button>
   </div>
   <div class="list" id="list"></div>
 </section>
@@ -428,13 +466,11 @@
       tags:["夜景","無料","建築","穴場","デート"], rating:4.3 }
   ];
 
-  // ===== 皇居中心、半径50km円が内接する正方形 =====
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
 
-  // ===== ズーム固定設定 =====
-  var FIXED_ZOOM = 13;        // 通常時の固定ズーム（11→12）
-  var DETAIL_ZOOM = 15;       // 詳細表示時のズーム
+  var FIXED_ZOOM = 13;
+  var DETAIL_ZOOM = 15;
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
 
@@ -443,14 +479,8 @@
   var state = { tags:[], favOnly:false };
   var savedView = null;
 
-  function lockZoom(zoom){
-    map.setMinZoom(zoom);
-    map.setMaxZoom(zoom);
-  }
-  function unlockZoom(min, max){
-    map.setMinZoom(min);
-    map.setMaxZoom(max);
-  }
+  function lockZoom(zoom){ map.setMinZoom(zoom); map.setMaxZoom(zoom); }
+  function unlockZoom(min, max){ map.setMinZoom(min); map.setMaxZoom(max); }
 
   function initMap(){
     var bounds = L.latLngBounds(BOUNDS_ARR);
@@ -701,26 +731,41 @@
     var backdrop = document.getElementById('backdrop');
     var searchToggle = document.getElementById('searchToggle');
     var sheetHandle = document.getElementById('sheetHandle');
-    var expandToggle = document.getElementById('expandToggle');
+
+    // ハッシュタグボタン：開閉でテキストを # ⇄ × に切替
+    function setSearchOpen(open){
+      if (open){
+        searchIsland.classList.add('open');
+        backdrop.classList.add('show');
+        searchToggle.textContent = '×';
+        searchToggle.classList.add('open');
+        searchToggle.setAttribute('aria-label', '検索を閉じる');
+      } else {
+        searchIsland.classList.remove('open');
+        backdrop.classList.remove('show');
+        searchToggle.textContent = '#';
+        searchToggle.classList.remove('open');
+        searchToggle.setAttribute('aria-label', 'ハッシュタグ検索');
+      }
+    }
     searchToggle.addEventListener('click', function(){
-      var open = searchIsland.classList.toggle('open');
-      backdrop.classList.toggle('show', open);
+      setSearchOpen(!searchIsland.classList.contains('open'));
     });
     backdrop.addEventListener('click', function(){
-      searchIsland.classList.remove('open');
-      backdrop.classList.remove('show');
+      setSearchOpen(false);
     });
+
+    // カード一覧シート開閉（チェバロン/シートハンドル全体タップで反応）
     function toggleSheet(){
       cardIsland.classList.toggle('expanded');
-      // アニメ完了後にマップサイズ再計算
       setTimeout(function(){ if (map) map.invalidateSize(); }, 360);
     }
     sheetHandle.addEventListener('click', toggleSheet);
+
     window.addEventListener('resize', function(){
       if (window.innerWidth > 768){
-        searchIsland.classList.remove('open');
+        setSearchOpen(false);
         cardIsland.classList.remove('expanded');
-        backdrop.classList.remove('show');
       }
     });
   }
