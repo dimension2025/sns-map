@@ -13,6 +13,7 @@
     --island-gap:14px;
     --island-radius:16px;
     --island-w:360px;
+    --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
@@ -28,7 +29,7 @@
 
   /* ===== ヘッダー / ロゴ ===== */
   header{
-    position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1600;
+    position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1800;
     background:linear-gradient(to bottom,rgba(0,0,0,.85),rgba(0,0,0,.4));
     display:flex;align-items:center;justify-content:space-between;padding:0 18px;
   }
@@ -66,7 +67,8 @@
     position:fixed;top:calc(var(--hdr) + var(--island-gap));
     left:var(--island-gap);
     width:var(--island-w);max-height:38vh;
-    z-index:1500;display:flex;flex-direction:column;
+    z-index:1550;display:flex;flex-direction:column;
+    min-height:0;
   }
   .search{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
   .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
@@ -105,15 +107,20 @@
     border-bottom:1px solid var(--border);flex:0 0 auto;
   }
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
-  .expandToggle{display:none;background:transparent;border:none;color:#fff;cursor:pointer;font-size:18px;padding:4px 10px;}
+  .expandToggle{
+    display:none;background:transparent;border:none;color:#fff;
+    cursor:pointer;font-size:16px;padding:4px 10px;
+    transition:transform .3s var(--ease);
+  }
 
-  /* カード（小）：2列グリッド＋縦スクロール */
+  /* カード（小）：2列グリッド＋縦スクロール（確実版） */
   .list{
-    flex:1 1 auto;
+    flex:1 1 0;
+    min-height:0;
     overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
     padding:8px;
     display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;
-    min-height:0;
   }
   .card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
     overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
@@ -180,7 +187,7 @@
     width:100%;height:240px;object-fit:cover;flex:0 0 100%;scroll-snap-align:center;background:#000;
   }
   .detailImages.single img{flex:1;width:100%;}
-  .detailBody{flex:1;overflow-y:auto;padding:18px;min-height:0;}
+  .detailBody{flex:1 1 0;min-height:0;overflow-y:auto;padding:18px;}
   .detailBody h2{margin:0 0 6px;font-size:18px;text-align:center;}
   .detailBody .meta{font-size:12px;color:var(--muted);margin-bottom:12px;text-align:center;}
   .detailBody .desc{font-size:13px;line-height:1.7;margin:10px 0;}
@@ -192,7 +199,7 @@
     background:#fff;color:#000;font-weight:600;text-decoration:none;font-size:12px;cursor:pointer;}
   .btn.ghost{background:transparent;color:#fff;}
 
-  .backdrop{position:fixed;inset:var(--hdr) 0 0 0;background:rgba(0,0,0,.4);display:none;z-index:1450;}
+  .backdrop{position:fixed;inset:var(--hdr) 0 0 0;background:rgba(0,0,0,.4);display:none;z-index:1500;}
   .backdrop.show{display:block;}
   #loadingMsg{
     position:fixed;inset:0;background:#000;color:#fff;
@@ -205,27 +212,37 @@
     :root{ --island-w:auto; }
     .iconBtn{display:flex;}
 
-    /* 検索島：上から展開 */
+    /* 検索島：上から展開（カード島より前面） */
     #searchIsland{
       top:calc(var(--hdr) + var(--island-gap));
       left:var(--island-gap);right:var(--island-gap);width:auto;
       max-height:65vh;
-      transform:translateY(-130%);transition:transform .25s ease;
+      z-index:1650;
+      transform:translateY(-130%);
+      opacity:0;
+      transition:transform .3s var(--ease), opacity .25s var(--ease);
     }
-    #searchIsland.open{transform:translateY(0);}
+    #searchIsland.open{
+      transform:translateY(0);
+      opacity:1;
+    }
 
-    /* カード島：下部固定 */
+    /* カード島：下部固定＋heightアニメーション */
     #cardIsland{
       top:auto;
       left:var(--island-gap);right:var(--island-gap);
       bottom:var(--island-gap);
       width:auto;
       height:260px;
-      transition:height .28s ease, top .28s ease;
+      z-index:1500;
+      transition:height .35s var(--ease);
+      will-change:height;
     }
     #cardIsland.expanded{
-      top:calc(var(--hdr) + var(--island-gap));
-      height:auto;
+      height:calc(100vh - var(--hdr) - var(--island-gap) * 2);
+    }
+    #cardIsland.expanded .expandToggle{
+      transform:rotate(180deg);
     }
     .expandToggle{display:block;}
     .sheetHandle{cursor:pointer;}
@@ -412,13 +429,11 @@
   ];
 
   // ===== 皇居中心、半径50km円が内接する正方形 =====
-  // 皇居: 35.6852, 139.7528
-  // 50km ≈ 緯度0.45度、経度0.556度(35.68°時)
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
 
   // ===== ズーム固定設定 =====
-  var FIXED_ZOOM = 11;        // 通常時の固定ズーム
+  var FIXED_ZOOM = 12;        // 通常時の固定ズーム（11→12）
   var DETAIL_ZOOM = 15;       // 詳細表示時のズーム
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
@@ -426,7 +441,7 @@
   var map, markers=[], filtered=[], meMarker=null;
   var favs = JSON.parse(localStorage.getItem("favs") || "[]");
   var state = { tags:[], favOnly:false };
-  var savedView = null; // 詳細表示前の地図状態
+  var savedView = null;
 
   function lockZoom(zoom){
     map.setMinZoom(zoom);
@@ -613,13 +628,10 @@
 
     document.body.classList.add('detail-mode');
 
-    // 詳細表示時のみズームを許可してflyTo
     if (map){
-      // 現在のviewを保存
       if (!savedView){
         savedView = { center: map.getCenter(), zoom: FIXED_ZOOM };
       }
-      // ズーム制限を一時的に解除
       unlockZoom(8, 18);
       setTimeout(function(){
         map.invalidateSize();
@@ -638,7 +650,6 @@
   function closeDetail(){
     document.body.classList.remove('detail-mode');
     if (map && savedView){
-      // 元のviewに戻してからズームを再固定
       map.flyTo(savedView.center, FIXED_ZOOM, { duration:.5 });
       setTimeout(function(){
         lockZoom(FIXED_ZOOM);
@@ -700,9 +711,9 @@
       backdrop.classList.remove('show');
     });
     function toggleSheet(){
-      var expanded = cardIsland.classList.toggle('expanded');
-      expandToggle.textContent = expanded ? '▼' : '▲';
-      setTimeout(function(){ if (map) map.invalidateSize(); }, 300);
+      cardIsland.classList.toggle('expanded');
+      // アニメ完了後にマップサイズ再計算
+      setTimeout(function(){ if (map) map.invalidateSize(); }, 360);
     }
     sheetHandle.addEventListener('click', toggleSheet);
     window.addEventListener('resize', function(){
@@ -710,7 +721,6 @@
         searchIsland.classList.remove('open');
         cardIsland.classList.remove('expanded');
         backdrop.classList.remove('show');
-        expandToggle.textContent = '▲';
       }
     });
   }
