@@ -225,18 +225,6 @@
     border:1px solid var(--border);color:#fff;font-size:18px;cursor:pointer;
     width:34px;height:34px;border-radius:50%;z-index:5;
   }
-  .detailExpand{
-    display:none;
-    position:absolute;top:10px;right:54px;background:rgba(0,0,0,.7);
-    border:1px solid var(--border);color:#fff;cursor:pointer;
-    width:34px;height:34px;border-radius:50%;z-index:5;
-    align-items:center;justify-content:center;padding:0;
-  }
-  .detailExpand svg{width:16px;height:16px;}
-  .detailExpand svg path{
-    fill:none;stroke:#fff;stroke-width:2;
-    stroke-linecap:round;stroke-linejoin:round;
-  }
 
   .detailScroll{display:contents;}
   .detailImages{
@@ -333,8 +321,6 @@
     .listHead{display:none;}
     .sheetHandle{justify-content:center;}
 
-    .detailExpand{display:flex;}
-
     #searchIsland{
       top:calc(var(--hdr) + var(--island-gap));
       left:var(--island-gap);right:var(--island-gap);width:auto;
@@ -364,6 +350,7 @@
       top:42vh;
       left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
       width:auto;
+      cursor:pointer; /* タップ可能を示唆 */
     }
     body.detail-mode #detailIsland{
       top:42vh;
@@ -444,11 +431,6 @@
 
 <section id="detailIsland" class="island">
   <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
-  <button class="detailExpand" id="detailExpand" aria-label="拡大">
-    <svg viewBox="0 0 16 16">
-      <path d="M2,6 V2 H6 M14,6 V2 H10 M2,10 V14 H6 M14,10 V14 H10"></path>
-    </svg>
-  </button>
   <div class="detailScroll">
     <div class="detailImages" id="detailImages">
       <div class="slidesTrack" id="slidesTrack"></div>
@@ -762,8 +744,7 @@
     }
   }
 
-  // ========= 可視マップ領域中心へのオフセット計算 =========
-  // mode: 'detail' (カード大表示中) or 'normal' (通常)
+  // mode: 'detail' or 'normal'
   function flyToVisibleCenter(latlng, zoom, mode){
     if (!map) return;
     var size = map.getSize();
@@ -773,30 +754,23 @@
     var targetX, targetY;
 
     if (mode === 'detail'){
-      // ===== カード（大）表示中 =====
       if (isDesktop){
-        // 左に詳細島(388px幅)、右がマップ可視領域
         var leftPad = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
         targetX = leftPad + (W - leftPad) / 2;
         targetY = H / 2;
       } else if (isExpanded){
-        // スマホ拡大モード：マップは見えない → 普通に中央でOK
         targetX = W / 2;
         targetY = H / 2;
       } else {
-        // スマホ通常詳細：上 0〜42vh がマップ可視領域
         targetX = W / 2;
-        targetY = H * 0.21; // 42vh の半分
+        targetY = H * 0.21;
       }
     } else {
-      // ===== 通常モード（ヘッダー + 検索/カード島を除いた領域の中心）=====
       if (isDesktop){
-        // 左：検索島+カード島(388px) / 上：ヘッダー(56px)
         var leftPad2 = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
         targetX = leftPad2 + (W - leftPad2) / 2;
         targetY = HDR_H + (H - HDR_H) / 2;
       } else {
-        // スマホ通常：上ヘッダー(56) / 下カード島(360 + 14 = 374)を侵食
         var bottomPad = CARD_COLLAPSED_H + ISLAND_GAP;
         targetX = W / 2;
         targetY = HDR_H + (H - HDR_H - bottomPad) / 2;
@@ -867,10 +841,12 @@
       updateSlideButtons();
     };
 
-    prevBtn.onclick = function(){
+    prevBtn.onclick = function(e){
+      e.stopPropagation();
       track.scrollBy({ left: -track.clientWidth, behavior:'smooth' });
     };
-    nextBtn.onclick = function(){
+    nextBtn.onclick = function(e){
+      e.stopPropagation();
       track.scrollBy({ left: track.clientWidth, behavior:'smooth' });
     };
   }
@@ -909,7 +885,6 @@
   function openDetail(s){
     detailSpot = s;
     document.body.classList.remove('detail-expanded');
-    updateExpandIcon(false);
     buildSlider(s.images);
 
     var bodyEl = document.getElementById('detailBody');
@@ -943,7 +918,8 @@
         setTimeout(updateSlideButtons, 100);
       }, 150);
     }
-    document.getElementById('favBtn').onclick = function(){
+    document.getElementById('favBtn').onclick = function(e){
+      e.stopPropagation();
       var idx = favs.indexOf(s.id);
       if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
       localStorage.setItem('favs', JSON.stringify(favs));
@@ -960,7 +936,6 @@
       setTimeout(function(){
         map.invalidateSize();
         if (spotLatLng){
-          // 通常モードの可視マップ領域中心にスポットが来るようflyTo
           flyToVisibleCenter(spotLatLng, FIXED_ZOOM, 'normal');
         } else if (savedView){
           map.flyTo(savedView.center, FIXED_ZOOM, { duration:.5 });
@@ -976,19 +951,45 @@
     }
   }
 
-  function updateExpandIcon(expanded){
-    var btn = document.getElementById('detailExpand');
-    if (!btn) return;
-    btn.setAttribute('aria-label', expanded ? '縮小' : '拡大');
-    btn.innerHTML = expanded
-      ? '<svg viewBox="0 0 16 16"><path d="M6,2 V6 H2 M14,2 H10 V6 M6,14 V10 H2 M14,14 H10 V10"></path></svg>'
-      : '<svg viewBox="0 0 16 16"><path d="M2,6 V2 H6 M14,6 V2 H10 M2,10 V14 H6 M14,10 V14 H10"></path></svg>';
-  }
+  // ========= カード（大）タップで拡大・縮小トグル（スマホのみ） =========
+  function initDetailTapToggle(){
+    var detailIsland = document.getElementById('detailIsland');
+    var startX = 0, startY = 0, startTime = 0, moved = false;
 
-  function toggleDetailExpand(){
-    var expanded = document.body.classList.toggle('detail-expanded');
-    updateExpandIcon(expanded);
-    setTimeout(applyImageAspect, 50);
+    detailIsland.addEventListener('touchstart', function(e){
+      if (!e.touches[0]) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+      moved = false;
+    }, { passive:true });
+
+    detailIsland.addEventListener('touchmove', function(e){
+      if (!e.touches[0]) return;
+      var dx = Math.abs(e.touches[0].clientX - startX);
+      var dy = Math.abs(e.touches[0].clientY - startY);
+      if (dx > 8 || dy > 8) moved = true;
+    }, { passive:true });
+
+    detailIsland.addEventListener('click', function(e){
+      // スマホのみ動作
+      if (window.innerWidth > 768) return;
+
+      // スワイプ動作はトグルしない
+      if (moved) return;
+
+      // 操作可能要素はトグルしない（誤動作防止）
+      if (e.target.closest('.detailClose')) return;
+      if (e.target.closest('.btn')) return;
+      if (e.target.closest('a')) return;
+      if (e.target.closest('.slideNav')) return;
+      if (e.target.closest('button')) return;
+      if (e.target.closest('.fav')) return;
+
+      // トグル実行
+      document.body.classList.toggle('detail-expanded');
+      setTimeout(applyImageAspect, 50);
+    });
   }
 
   function initFilters(){
@@ -1061,7 +1062,6 @@
         setSearchOpen(false);
         cardIsland.classList.remove('expanded');
         document.body.classList.remove('detail-expanded');
-        updateExpandIcon(false);
       }
       updateSlideButtons();
       applyImageAspect();
@@ -1069,12 +1069,14 @@
   }
 
   function startApp(){
-    document.getElementById('detailClose').addEventListener('click', closeDetail);
-    document.getElementById('detailExpand').addEventListener('click', toggleDetailExpand);
-    updateExpandIcon(false);
+    document.getElementById('detailClose').addEventListener('click', function(e){
+      e.stopPropagation();
+      closeDetail();
+    });
     initMap();
     initFilters();
     initMobileUI();
+    initDetailTapToggle();
     applyFilters();
     initGeolocation();
   }
