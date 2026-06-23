@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-<title>GRAMAP - Instagrammable Map</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<title>GRAMAP</title>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.css-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
   :root{
     --bg:#000; --panel:#0e0e0e; --panel2:#1a1a1a;
-    --text:#f5f5f5; --muted:#8a8a8a; --accent:#ffffff; --border:#222;
-    --pin:#ffffff; --pinFav:#ff5a8c;
+    --text:#f5f5f5; --muted:#7a7a7a; --accent:#ffffff; --border:#222;
+    --pin:#ffffff; --pinFav:#ff5a8c; --pinMe:#3da9ff;
     --hdr:56px;
   }
   *{box-sizing:border-box}
@@ -22,15 +22,20 @@
     background:#000;border-bottom:1px solid var(--border);
     display:flex;align-items:center;justify-content:space-between;padding:0 18px;
   }
+  .brand{display:flex;align-items:baseline;gap:14px;}
   .logo{
     font-family:"Inter","Helvetica Neue",Arial,sans-serif;
-    font-weight:800;font-size:22px;letter-spacing:.22em;color:#fff;
+    font-weight:300;font-size:22px;letter-spacing:.18em;color:#fff;
     text-transform:uppercase;user-select:none;
+  }
+  .subtitle{
+    font-size:11px;color:var(--muted);letter-spacing:.05em;font-weight:400;
   }
   .iconBtn{
     background:transparent;border:1px solid var(--border);color:#fff;
-    width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;
+    width:40px;height:40px;border-radius:50%;cursor:pointer;
     display:none;align-items:center;justify-content:center;
+    font-weight:700;font-size:18px;
   }
 
   /* ===== レイアウト ===== */
@@ -50,19 +55,28 @@
 
   /* ===== 検索パネル ===== */
   #searchPanel{
-    flex:0 0 auto;max-height:50%;overflow-y:auto;
-    border-bottom:1px solid var(--border);
+    flex:0 0 auto;border-bottom:1px solid var(--border);
   }
-  .search{padding:14px;display:flex;flex-direction:column;gap:10px;}
-  .search input,.search select{
-    width:100%;padding:9px 10px;background:var(--panel2);border:1px solid var(--border);
-    border-radius:8px;color:var(--text);font-size:13px;outline:none;}
-  .search .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .lab{font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;}
-  .tagrow{display:flex;flex-wrap:wrap;gap:6px;}
+  .search{padding:14px;display:flex;flex-direction:column;gap:12px;}
+  .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
+  .tagrow{display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow-y:auto;}
   .tag{font-size:11px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;
     background:var(--panel2);color:var(--muted);cursor:pointer;user-select:none;}
   .tag.active{background:#fff;color:#000;border-color:#fff;}
+  .favToggle{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 12px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;cursor:pointer;font-size:13px;user-select:none;
+  }
+  .favToggle .sw{
+    width:36px;height:20px;background:#333;border-radius:10px;position:relative;transition:background .2s;
+  }
+  .favToggle .sw::after{
+    content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
+    background:#fff;border-radius:50%;transition:transform .2s;
+  }
+  .favToggle.on .sw{background:var(--pinFav);}
+  .favToggle.on .sw::after{transform:translateX(16px);}
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
@@ -70,36 +84,39 @@
   #cardPanel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--panel);min-height:0;}
   .sheetHandle{
     display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
-    border-bottom:1px solid var(--border);background:var(--panel);
+    border-bottom:1px solid var(--border);background:var(--panel);flex:0 0 auto;
   }
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
   .expandToggle{display:none;background:transparent;border:none;color:#fff;
     cursor:pointer;font-size:18px;padding:4px 10px;}
-  .list{flex:1;overflow-y:auto;padding:8px;}
 
-  .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
-    margin-bottom:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
-  .card:hover{transform:translateY(-2px);border-color:#fff;}
-  .thumbwrap{position:relative;}
-  .thumb{width:100%;height:140px;background:#000 center/cover no-repeat;}
-  .body{padding:10px 12px;}
-  .ttl{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-  .name{font-size:14px;font-weight:600;}
-  .rate{font-size:12px;color:#fff;white-space:nowrap;}
-  .area{font-size:11px;color:var(--muted);margin-top:2px;}
-  .ctags{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;}
-  .ctags span{font-size:10px;color:var(--muted);background:#222;padding:2px 6px;border-radius:999px;}
-  .numBadge{
-    position:absolute;top:8px;left:8px;background:#fff;color:#000;
-    font-weight:800;font-size:12px;min-width:26px;height:26px;padding:0 6px;
-    border-radius:13px;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 4px rgba(0,0,0,.4);
+  /* カード（小）：常時2列グリッド */
+  .list{
+    flex:1;overflow-y:auto;padding:8px;
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;
   }
-  .fav{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);
-    border:none;color:#fff;font-size:14px;width:30px;height:30px;border-radius:50%;cursor:pointer;}
+  .card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+    overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
+  .card:hover{transform:translateY(-2px);border-color:#fff;}
+  .thumbwrap{position:relative;width:100%;aspect-ratio:1/1;}
+  .thumb{position:absolute;inset:0;background:#000 center/cover no-repeat;}
+  .body{padding:8px 10px;}
+  .ttl{display:flex;justify-content:space-between;align-items:center;gap:6px;}
+  .name{font-size:12px;font-weight:600;line-height:1.3;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .rate{font-size:11px;color:#fff;white-space:nowrap;}
+  .area{font-size:10px;color:var(--muted);margin-top:2px;}
+  .numBadge{
+    position:absolute;top:6px;left:6px;background:#fff;color:#000;
+    font-weight:800;font-size:11px;min-width:22px;height:22px;padding:0 5px;
+    border-radius:11px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:2;
+  }
+  .fav{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);
+    border:none;color:#fff;font-size:12px;width:26px;height:26px;border-radius:50%;cursor:pointer;z-index:2;}
   .fav.on{color:var(--pinFav);}
 
-  /* ===== マップピン（番号） ===== */
+  /* ===== マップピン ===== */
   .numPin{
     width:30px;height:30px;border-radius:50% 50% 50% 0;
     background:var(--pin);border:2px solid #000;
@@ -107,30 +124,55 @@
     display:flex;align-items:center;justify-content:center;
   }
   .numPin.fav{background:var(--pinFav);}
+  .numPin.dim{opacity:.45;}
   .numPin > span{
     transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
     font-family:"Inter","Helvetica Neue",Arial,sans-serif;
   }
   .numPin.fav > span{color:#fff;}
+  .mePin{
+    width:18px;height:18px;border-radius:50%;
+    background:var(--pinMe);border:3px solid #fff;
+    box-shadow:0 0 0 4px rgba(61,169,255,.25);
+  }
 
-  /* ===== 詳細オーバーレイ ===== */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
-    align-items:center;justify-content:center;z-index:2000;padding:16px;}
-  .overlay.open{display:flex;}
-  .detail{background:var(--panel);border:1px solid var(--border);border-radius:14px;
-    max-width:680px;width:100%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;position:relative;}
-  .detail .close{position:absolute;top:12px;right:14px;background:rgba(0,0,0,.6);
-    border:none;color:#fff;font-size:20px;cursor:pointer;width:34px;height:34px;border-radius:50%;z-index:2;}
-  .images{display:flex;overflow-x:auto;gap:4px;scroll-snap-type:x mandatory;flex-shrink:0;}
-  .images img{height:320px;flex-shrink:0;scroll-snap-align:start;background:#000;}
-  .info{padding:18px 20px;overflow-y:auto;}
-  .info h2{margin:0 0 6px;font-size:20px;}
-  .meta{font-size:13px;color:var(--muted);margin-bottom:12px;}
-  .row2{display:grid;grid-template-columns:90px 1fr;gap:6px 12px;font-size:13px;margin:10px 0;}
-  .row2 dt{color:var(--muted);}
-  .desc{font-size:14px;line-height:1.7;margin:10px 0;}
-  .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
-  .btn{padding:10px 14px;border-radius:8px;border:1px solid #fff;
+  /* ===== カード（大）= 詳細パネル ===== */
+  #detailPanel{
+    display:none;background:var(--panel);border-right:1px solid var(--border);
+    flex-direction:column;overflow:hidden;min-height:0;
+    grid-column:1;grid-row:2;
+  }
+  body.detail-mode #sidebar{display:none;}
+  body.detail-mode #detailPanel{display:flex;}
+
+  .detailClose{
+    position:absolute;top:12px;right:12px;background:rgba(0,0,0,.6);
+    border:1px solid var(--border);color:#fff;font-size:18px;cursor:pointer;
+    width:36px;height:36px;border-radius:50%;z-index:5;
+  }
+  .detailImages{
+    flex:0 0 auto;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+    background:#000;
+  }
+  .detailImages img{
+    width:100%;height:300px;object-fit:cover;flex:0 0 100%;scroll-snap-align:center;
+    background:#000;
+  }
+  .detailImages.single img{flex:1;width:100%;}
+  .detailBody{
+    flex:1;overflow-y:auto;padding:20px;
+  }
+  .detailBody h2{margin:0 0 6px;font-size:20px;text-align:center;}
+  .detailBody .meta{font-size:13px;color:var(--muted);margin-bottom:14px;text-align:center;}
+  .detailBody .desc{font-size:14px;line-height:1.7;margin:12px 0;}
+  .detailBody dl{
+    display:grid;grid-template-columns:90px 1fr;gap:8px 12px;
+    font-size:13px;margin:14px 0;
+  }
+  .detailBody dt{color:var(--muted);}
+  .detailBody .tags{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;justify-content:center;}
+  .detailBody .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;justify-content:center;}
+  .btn{padding:10px 18px;border-radius:8px;border:1px solid #fff;
     background:#fff;color:#000;font-weight:600;text-decoration:none;font-size:13px;cursor:pointer;}
   .btn.ghost{background:transparent;color:#fff;}
 
@@ -154,67 +196,53 @@
 
     #cardPanel{
       position:fixed;left:0;right:0;bottom:0;
-      height:280px;z-index:1400;border-top:1px solid var(--border);
-      transition:height .28s ease;border-radius:14px 14px 0 0;overflow:hidden;
+      height:240px;z-index:1400;border-top:1px solid var(--border);
+      transition:height .28s ease, top .28s ease;
+      border-radius:14px 14px 0 0;overflow:hidden;
     }
-    #cardPanel.expanded{height:calc(100vh - var(--hdr));border-radius:0;}
+    #cardPanel.expanded{
+      top:var(--hdr);height:auto;border-radius:0;
+    }
     .expandToggle{display:block;}
     .sheetHandle{cursor:pointer;}
 
-    #cardPanel:not(.expanded) .list{
-      display:flex;flex-direction:row;gap:10px;
-      overflow-x:auto;overflow-y:hidden;
-      scroll-snap-type:x mandatory;
-      padding:10px;
-    }
-    #cardPanel:not(.expanded) .card{
-      flex:0 0 46%;margin:0;scroll-snap-align:start;
-    }
-    #cardPanel:not(.expanded) .thumb{height:90px;}
-    #cardPanel:not(.expanded) .ctags{display:none;}
+    #map{grid-column:1;grid-row:2;height:calc(100vh - var(--hdr));width:100vw;}
 
-    #map{
-      grid-column:1;grid-row:2;
-      height:calc(100vh - var(--hdr));width:100vw;
+    /* 詳細モード：上マップ・下カード */
+    body.detail-mode #detailPanel{
+      position:fixed;left:0;right:0;bottom:0;
+      height:60vh;z-index:1500;border-right:none;border-top:1px solid var(--border);
+      border-radius:14px 14px 0 0;
+      grid-column:auto;grid-row:auto;
     }
+    body.detail-mode #map{height:calc(40vh - var(--hdr) + 14px);}
+    body.detail-mode #cardPanel{display:none;}
+    body.detail-mode .iconBtn{display:none;}
+
+    .detailImages img{height:220px;}
   }
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div class="logo">GRAMAP</div>
-    <button class="iconBtn" id="searchToggle" aria-label="検索">🔍</button>
+    <div class="brand">
+      <div class="logo">GRAMAP</div>
+      <div class="subtitle">SNS映えスポットマップ</div>
+    </div>
+    <button class="iconBtn" id="searchToggle" aria-label="ハッシュタグ検索">#</button>
   </header>
 
   <aside id="sidebar">
     <section id="searchPanel">
       <div class="search">
         <div>
-          <div class="lab">Search</div>
-          <input type="text" id="q" placeholder="名前・説明・タグから検索">
-        </div>
-        <div class="row">
-          <div>
-            <div class="lab">地方</div>
-            <select id="region"><option value="">全地方</option></select>
-          </div>
-          <div>
-            <div class="lab">都道府県</div>
-            <select id="pref"><option value="">全都道府県</option></select>
-          </div>
-        </div>
-        <div>
-          <div class="lab">並び順</div>
-          <select id="sort">
-            <option value="rating">オススメ順</option>
-            <option value="name">名前順</option>
-            <option value="fav">お気に入りのみ</option>
-          </select>
-        </div>
-        <div>
           <div class="lab">ハッシュタグ</div>
           <div class="tagrow" id="tags"></div>
+        </div>
+        <div class="favToggle" id="favToggle">
+          <span>♥ お気に入りのみ表示</span>
+          <span class="sw"></span>
         </div>
         <button class="clearBtn" id="clearBtn">条件をクリア</button>
       </div>
@@ -229,13 +257,18 @@
     </section>
   </aside>
 
+  <section id="detailPanel">
+    <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
+    <div class="detailImages" id="detailImages"></div>
+    <div class="detailBody" id="detailBody"></div>
+  </section>
+
   <div id="map"></div>
 </div>
 
 <div class="backdrop" id="backdrop"></div>
-<div class="overlay" id="overlay"><div class="detail" id="detail"></div></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 // ========= データ =========
 var SPOTS = [
@@ -332,106 +365,133 @@ var SPOTS = [
     tags:["夜景","無料","建築","穴場","デート"], rating:4.3 }
 ];
 
+// ===== 関東地方の境界 =====
+var KANTO_BOUNDS_ARR = [[34.5, 138.5], [37.5, 141.2]];
+var KANTO_CENTER = [35.85, 139.85];
+
 // ========= 共通 =========
 function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
 
-var map, markers=[], filtered=[];
+var map, markers=[], filtered=[], meMarker=null;
 var favs = JSON.parse(localStorage.getItem("favs") || "[]");
-var state = { q:"", region:"", pref:"", sort:"rating", tags:[] };
+var state = { tags:[], favOnly:false };
 
 // ========= Map =========
 function initMap(){
-  if (typeof L === 'undefined'){
-    console.error('Leaflet (L) is not loaded.');
-    return;
-  }
+  if (typeof L === 'undefined'){ console.error('Leaflet not loaded.'); return; }
+  var kantoBounds = L.latLngBounds(KANTO_BOUNDS_ARR);
   map = L.map('map', {
-    zoomControl: false,
-    attributionControl: true
-  }).setView([35.68, 139.76], 11);
+    zoomControl:false, attributionControl:true,
+    maxBounds: kantoBounds, maxBoundsViscosity:1.0,
+    minZoom:8
+  }).setView(KANTO_CENTER, 9);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution:'© OpenStreetMap, © CARTO', maxZoom:19
+    attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: kantoBounds
   }).addTo(map);
-  map.on('moveend', renderList);
+  map.on('moveend', function(){ renderMarkers(); renderList(); });
 
-  // レイアウト確定後にサイズ再計算
   setTimeout(function(){ map.invalidateSize(); }, 100);
   setTimeout(function(){ map.invalidateSize(); }, 500);
   window.addEventListener('load', function(){ map.invalidateSize(); });
   window.addEventListener('resize', function(){ map.invalidateSize(); });
 }
 
+// ========= 現在地 =========
+function initGeolocation(){
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    try {
+      var lat = pos.coords.latitude, lng = pos.coords.longitude;
+      var b = KANTO_BOUNDS_ARR;
+      var inKanto = (lat >= b[0][0] && lat <= b[1][0] && lng >= b[0][1] && lng <= b[1][1]);
+      if (!inKanto || !map) return;
+      var icon = L.divIcon({
+        className:'', html:'<div class="mePin"></div>',
+        iconSize:[18,18], iconAnchor:[9,9]
+      });
+      meMarker = L.marker([lat, lng], { icon:icon, interactive:false, zIndexOffset:-100 }).addTo(map);
+      map.setView([lat, lng], 12);
+    } catch(e){ /* 失敗時は何もしない */ }
+  }, function(){ /* 取得失敗時は何もしない */ }, { timeout:8000, enableHighAccuracy:false });
+}
+
+// ========= 表示範囲内のスポット計算 =========
+function getVisibleRanked(){
+  // filtered はすでにオススメ順（rating降順）
+  if (!map) return [];
+  var bounds = map.getBounds();
+  var visible = [];
+  for (var i=0;i<filtered.length;i++){
+    if (bounds.contains([filtered[i].lat, filtered[i].lng])){
+      visible.push(filtered[i]);
+    }
+  }
+  return visible; // 既にrating順
+}
+
+// ========= マーカー描画 =========
 function renderMarkers(){
   if (!map) return;
   for (var i=0;i<markers.length;i++) map.removeLayer(markers[i]);
   markers = [];
+  var visible = getVisibleRanked();
+  var numMap = {};
+  for (var v=0;v<visible.length;v++) numMap[visible[v].id] = v+1;
+
   for (var j=0;j<filtered.length;j++){
-    (function(s, num){
+    (function(s){
       var isFav = favs.indexOf(s.id) >= 0;
+      var num = numMap[s.id]; // 範囲外は undefined
+      var isVisible = num !== undefined;
+      var inner = isVisible
+        ? '<span>' + num + '</span>'
+        : '<span></span>';
+      var cls = 'numPin' + (isFav?' fav':'') + (isVisible?'':' dim');
       var icon = L.divIcon({
         className:'',
-        html:'<div class="numPin' + (isFav?' fav':'') + '"><span>' + num + '</span></div>',
+        html:'<div class="' + cls + '">' + inner + '</div>',
         iconSize:[30,38], iconAnchor:[15,38]
       });
       var mk = L.marker([s.lat, s.lng], { icon:icon }).addTo(map);
       mk.on('click', function(){ openDetail(s); });
       markers.push(mk);
-    })(filtered[j], j+1);
+    })(filtered[j]);
   }
 }
 
-// ========= Filter =========
+// ========= フィルター =========
 function applyFilters(){
-  var q = state.q.toLowerCase();
   filtered = SPOTS.filter(function(s){
-    if (state.region && s.region !== state.region) return false;
-    if (state.pref && s.pref !== state.pref) return false;
-    if (state.sort === "fav" && favs.indexOf(s.id) < 0) return false;
+    if (state.favOnly && favs.indexOf(s.id) < 0) return false;
     for (var i=0;i<state.tags.length;i++){
       if (s.tags.indexOf(state.tags[i]) < 0) return false;
     }
-    if (q){
-      var hay = (s.name + " " + (s.description||"") + " " + s.tags.join(" ")).toLowerCase();
-      if (hay.indexOf(q) < 0) return false;
-    }
     return true;
   });
-  if (state.sort === "name"){
-    filtered.sort(function(a,b){ return a.name.localeCompare(b.name, 'ja'); });
-  } else {
-    filtered.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
-  }
+  // 常にオススメ順（rating降順）
+  filtered.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
   renderMarkers();
   renderList();
 }
 
-// ========= List =========
+// ========= カードリスト描画 =========
 function renderList(){
   if (!map) return;
-  var bounds = map.getBounds();
-  var visible = [];
-  for (var i=0;i<filtered.length;i++){
-    if (bounds.contains([filtered[i].lat, filtered[i].lng])){
-      visible.push({ spot:filtered[i], num:i+1 });
-    }
-  }
+  var visible = getVisibleRanked();
   var listEl = document.getElementById('list');
   var headEl = document.getElementById('listHead');
   headEl.textContent = '表示範囲 ' + visible.length + ' / 全 ' + filtered.length + ' 件';
 
   if (!visible.length){
-    listEl.innerHTML = '<div style="padding:24px;color:var(--muted);text-align:center;font-size:13px;">表示範囲に該当スポットがありません</div>';
+    listEl.innerHTML = '<div style="grid-column:1/-1;padding:24px;color:var(--muted);text-align:center;font-size:13px;">表示範囲に該当スポットがありません</div>';
     return;
   }
   var html = "";
   for (var v=0;v<visible.length;v++){
-    var s = visible[v].spot;
-    var num = visible[v].num;
-    var img = s.images[0] ? driveImg(s.images[0], 600) : '';
+    var s = visible[v];
+    var num = v+1;
+    var img = s.images[0] ? driveImg(s.images[0], 400) : '';
     var isFav = favs.indexOf(s.id) >= 0;
-    var tagHtml = "";
-    var ts = s.tags.slice(0,4);
-    for (var k=0;k<ts.length;k++) tagHtml += '<span>#' + ts[k] + '</span>';
     html += '<div class="card" data-id="' + s.id + '">' +
               '<div class="thumbwrap">' +
                 '<div class="thumb" style="background-image:url(' + img + ')"></div>' +
@@ -439,9 +499,8 @@ function renderList(){
                 '<button class="fav ' + (isFav?'on':'') + '" data-fav="' + s.id + '">' + (isFav?'♥':'♡') + '</button>' +
               '</div>' +
               '<div class="body">' +
-                '<div class="ttl"><div class="name">' + s.name + '</div><div class="rate">★ ' + (s.rating||'-') + '</div></div>' +
-                '<div class="area">' + s.pref + ' / ' + s.area + '</div>' +
-                '<div class="ctags">' + tagHtml + '</div>' +
+                '<div class="ttl"><div class="name">' + s.name + '</div><div class="rate">★' + (s.rating||'-') + '</div></div>' +
+                '<div class="area">' + s.area + '</div>' +
               '</div>' +
             '</div>';
   }
@@ -454,7 +513,7 @@ function renderList(){
       var id = parseInt(this.getAttribute('data-id'), 10);
       var sp = null;
       for (var x=0;x<SPOTS.length;x++) if (SPOTS[x].id === id) { sp = SPOTS[x]; break; }
-      if (sp){ map.flyTo([sp.lat, sp.lng], 16, { duration:.6 }); openDetail(sp); }
+      if (sp){ openDetail(sp); }
     });
   }
   var favBtns = listEl.querySelectorAll('[data-fav]');
@@ -470,32 +529,42 @@ function renderList(){
   }
 }
 
-// ========= Detail =========
+// ========= 詳細（カード大） =========
 function openDetail(s){
+  var imagesEl = document.getElementById('detailImages');
+  var bodyEl = document.getElementById('detailBody');
   var imgs = "";
   for (var i=0;i<s.images.length;i++) imgs += '<img src="' + driveImg(s.images[i], 1200) + '" alt="">';
+  imagesEl.innerHTML = imgs;
+  imagesEl.className = 'detailImages' + (s.images.length === 1 ? ' single' : '');
+
   var tagsHtml = "";
-  for (var j=0;j<s.tags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + s.tags[j] + '</span> ';
+  for (var j=0;j<s.tags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + s.tags[j] + '</span>';
   var isFav = favs.indexOf(s.id) >= 0;
-  document.getElementById('detail').innerHTML =
-    '<button class="close" id="closeBtn">×</button>' +
-    '<div class="images">' + imgs + '</div>' +
-    '<div class="info">' +
-      '<h2>' + s.name + '</h2>' +
-      '<div class="meta">' + s.pref + ' / ' + s.area + ' ・ ★ ' + (s.rating||'-') + '</div>' +
-      '<div class="desc">' + (s.description||'') + '</div>' +
-      '<dl class="row2">' +
-        '<dt>営業時間</dt><dd>' + (s.hours||'-') + '</dd>' +
-        '<dt>料金</dt><dd>' + (s.price||'-') + '</dd>' +
-      '</dl>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;">' + tagsHtml + '</div>' +
-      '<div class="actions">' +
-        '<a class="btn" href="' + s.mapUrl + '" target="_blank" rel="noopener">📍 Google Mapで開く</a>' +
-        '<button class="btn ghost" id="favBtn">' + (isFav?'♥ 解除':'♡ お気に入り') + '</button>' +
-      '</div>' +
+
+  bodyEl.innerHTML =
+    '<h2>' + s.name + '</h2>' +
+    '<div class="meta">' + s.pref + ' / ' + s.area + ' ・ ★ ' + (s.rating||'-') + '</div>' +
+    '<div class="desc">' + (s.description||'') + '</div>' +
+    '<dl>' +
+      '<dt>営業時間</dt><dd>' + (s.hours||'-') + '</dd>' +
+      '<dt>料金</dt><dd>' + (s.price||'-') + '</dd>' +
+    '</dl>' +
+    '<div class="tags">' + tagsHtml + '</div>' +
+    '<div class="actions">' +
+      '<a class="btn" href="' + s.mapUrl + '" target="_blank" rel="noopener">Google Mapで開く</a>' +
+      '<button class="btn ghost" id="favBtn">' + (isFav?'♥ お気に入り解除':'♡ お気に入り') + '</button>' +
     '</div>';
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('closeBtn').onclick = closeDetail;
+
+  document.body.classList.add('detail-mode');
+  // マップを該当ピンに移動
+  if (map){
+    setTimeout(function(){
+      map.invalidateSize();
+      map.flyTo([s.lat, s.lng], 15, { duration:.6 });
+    }, 100);
+  }
+
   document.getElementById('favBtn').onclick = function(){
     var idx = favs.indexOf(s.id);
     if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
@@ -503,28 +572,18 @@ function openDetail(s){
     openDetail(s); applyFilters();
   };
 }
-function closeDetail(){ document.getElementById('overlay').classList.remove('open'); }
-document.getElementById('overlay').addEventListener('click', function(e){
-  if (e.target.id === 'overlay') closeDetail();
-});
+function closeDetail(){
+  document.body.classList.remove('detail-mode');
+  setTimeout(function(){ if (map) map.invalidateSize(); }, 100);
+}
+document.getElementById('detailClose').addEventListener('click', closeDetail);
 
 // ========= UI 初期化 =========
 function initFilters(){
-  var regions = {}, prefs = {}, tagSet = {};
+  var tagSet = {};
   for (var i=0;i<SPOTS.length;i++){
     var s = SPOTS[i];
-    regions[s.region] = 1; prefs[s.pref] = 1;
     for (var k=0;k<s.tags.length;k++) tagSet[s.tags[k]] = (tagSet[s.tags[k]]||0) + 1;
-  }
-  var regionEl = document.getElementById('region');
-  var rk = Object.keys(regions);
-  for (var r=0;r<rk.length;r++){
-    var o = document.createElement('option'); o.value = rk[r]; o.textContent = rk[r]; regionEl.appendChild(o);
-  }
-  var prefEl = document.getElementById('pref');
-  var pk = Object.keys(prefs);
-  for (var p=0;p<pk.length;p++){
-    var o2 = document.createElement('option'); o2.value = pk[p]; o2.textContent = pk[p]; prefEl.appendChild(o2);
   }
   var tagEl = document.getElementById('tags');
   var tk = Object.keys(tagSet).sort(function(a,b){ return tagSet[b]-tagSet[a]; });
@@ -541,23 +600,24 @@ function initFilters(){
       tagEl.appendChild(el);
     })(tk[t]);
   }
-  document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value; applyFilters(); });
-  regionEl.addEventListener('change', function(e){ state.region = e.target.value; applyFilters(); });
-  prefEl.addEventListener('change', function(e){ state.pref = e.target.value; applyFilters(); });
-  document.getElementById('sort').addEventListener('change', function(e){ state.sort = e.target.value; applyFilters(); });
+
+  var favToggleEl = document.getElementById('favToggle');
+  favToggleEl.addEventListener('click', function(){
+    state.favOnly = !state.favOnly;
+    favToggleEl.classList.toggle('on', state.favOnly);
+    applyFilters();
+  });
 
   document.getElementById('clearBtn').addEventListener('click', function(){
-    state = { q:"", region:"", pref:"", sort:"rating", tags:[] };
-    document.getElementById('q').value = "";
-    regionEl.value = ""; prefEl.value = "";
-    document.getElementById('sort').value = "rating";
+    state = { tags:[], favOnly:false };
+    favToggleEl.classList.remove('on');
     var ts = document.querySelectorAll('#tags .tag');
     for (var i=0;i<ts.length;i++) ts[i].classList.remove('active');
     applyFilters();
   });
 }
 
-// ========= モバイルUI制御 =========
+// ========= モバイルUI =========
 function initMobileUI(){
   var searchPanel = document.getElementById('searchPanel');
   var cardPanel = document.getElementById('cardPanel');
@@ -597,6 +657,7 @@ initMap();
 initFilters();
 initMobileUI();
 applyFilters();
+initGeolocation();
 </script>
 </body>
 </html>
