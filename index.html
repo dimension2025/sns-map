@@ -13,18 +13,16 @@
     --island-gap:14px;
     --island-radius:16px;
     --island-w:360px;
-    --handle-h:42px;
+    --handle-h:46px;
+    --card-collapsed-h:260px;
     --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
     font-family:-apple-system,"Inter","Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
 
-  /* ===== マップを全画面背景に ===== */
-  #map{
-    position:fixed;top:0;left:0;right:0;bottom:0;
-    background:#000;z-index:1;
-  }
+  /* ===== マップ全画面背景 ===== */
+  #map{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:1;}
   .leaflet-container{background:#000;cursor:grab;}
   .leaflet-container:active{cursor:grabbing;}
 
@@ -53,9 +51,8 @@
     box-shadow:0 4px 12px rgba(0,0,0,.4);
     transition:transform .25s var(--ease);
   }
-  .iconBtn.open{transform:rotate(0deg);}
 
-  /* ===== 島UI（共通スタイル） ===== */
+  /* ===== 島UI共通 ===== */
   .island{
     background:var(--panel);
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -70,8 +67,7 @@
     position:fixed;top:calc(var(--hdr) + var(--island-gap));
     left:var(--island-gap);
     width:var(--island-w);max-height:38vh;
-    z-index:1550;display:flex;flex-direction:column;
-    min-height:0;
+    z-index:1550;display:flex;flex-direction:column;min-height:0;
   }
   .search{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
   .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
@@ -94,7 +90,7 @@
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* ===== カード島 ===== */
+  /* ===== カード島：堅牢な2段Flex構造 ===== */
   #cardIsland{
     position:fixed;
     left:var(--island-gap);
@@ -102,55 +98,43 @@
     width:var(--island-w);
     top:calc(var(--hdr) + var(--island-gap) + 38vh + var(--island-gap));
     z-index:1500;
+    display:flex;flex-direction:column;
   }
-  /* シートハンドル（絶対位置：固定上部） */
   .sheetHandle{
-    position:absolute;top:0;left:0;right:0;
+    flex:0 0 var(--handle-h);
     height:var(--handle-h);
-    display:flex;align-items:center;justify-content:space-between;
+    display:flex;align-items:center;justify-content:center;
     padding:0 14px;
     border-bottom:1px solid var(--border);
-    background:var(--panel);
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-    border-radius:var(--island-radius) var(--island-radius) 0 0;
-    z-index:3;
+    position:relative;
   }
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
 
-  /* チェバロン（「く」形状） */
-  .chevron{
-    display:none;
-    width:38px;height:18px;
-    position:absolute;left:50%;top:6px;
-    transform:translateX(-50%);
-    cursor:pointer;
+  /* SVGチェバロン（モバイルのみ表示） */
+  .chevron{display:none;position:absolute;top:8px;left:50%;
+    width:40px;height:14px;transform:translateX(-50%);
+    transition:transform .35s var(--ease);
+    pointer-events:none;
   }
-  .chevron::before,.chevron::after{
-    content:'';position:absolute;top:7px;
-    width:18px;height:3px;background:#bbb;border-radius:2px;
-    transition:transform .3s var(--ease);
+  .chevron polyline{
+    fill:none;stroke:#bbb;stroke-width:2.5;
+    stroke-linecap:round;stroke-linejoin:round;
   }
-  .chevron::before{
-    left:1px;transform-origin:right center;
-    transform:rotate(-22deg);
+  #cardIsland.expanded .chevron{
+    transform:translateX(-50%) rotate(180deg);
   }
-  .chevron::after{
-    right:1px;transform-origin:left center;
-    transform:rotate(22deg);
-  }
-  /* 展開時：チェバロンを下向きに */
-  #cardIsland.expanded .chevron::before{transform:rotate(22deg);}
-  #cardIsland.expanded .chevron::after{transform:rotate(-22deg);}
 
-  /* カード（小）リスト：絶対位置で確実なスクロール */
-  .list{
-    position:absolute;
-    top:var(--handle-h);
-    left:0;right:0;bottom:0;
-    overflow-y:auto;overflow-x:hidden;
+  /* スクロール領域：絶対にスクロールが効く2段Flex */
+  .listScroll{
+    flex:1 1 0;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
     -webkit-overflow-scrolling:touch;
+  }
+  .list{
     padding:8px;
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start;
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
   }
   .card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
     overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
@@ -182,10 +166,8 @@
   }
   .numPin.fav{background:var(--pinFav);}
   .numPin.dim{opacity:.45;}
-  .numPin > span{
-    transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
-    font-family:"Inter","Helvetica Neue",Arial,sans-serif;
-  }
+  .numPin > span{transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
+    font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
   .numPin.fav > span{color:#fff;}
   .mePin{
     width:18px;height:18px;border-radius:50%;
@@ -210,13 +192,46 @@
     border:1px solid var(--border);color:#fff;font-size:18px;cursor:pointer;
     width:34px;height:34px;border-radius:50%;z-index:5;
   }
+
+  /* 写真スライダー（スワイプ式・object-fit:contain） */
   .detailImages{
-    flex:0 0 auto;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:#000;
+    flex:0 0 auto;
+    position:relative;
+    background:#000;
+    height:260px;
+    overflow:hidden;
   }
-  .detailImages img{
-    width:100%;height:240px;object-fit:cover;flex:0 0 100%;scroll-snap-align:center;background:#000;
+  .slidesTrack{
+    display:flex;height:100%;width:100%;
+    overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
   }
-  .detailImages.single img{flex:1;width:100%;}
+  .slidesTrack::-webkit-scrollbar{display:none;}
+  .slide{
+    flex:0 0 100%;
+    width:100%;height:100%;
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    display:flex;align-items:center;justify-content:center;
+    background:#000;
+  }
+  .slide img{
+    max-width:100%;max-height:100%;
+    width:auto;height:auto;
+    object-fit:contain;display:block;
+  }
+  .slideDots{
+    position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    display:flex;gap:6px;z-index:3;
+  }
+  .slideDots span{
+    width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);
+    transition:background .2s;
+  }
+  .slideDots span.active{background:#fff;}
+
   .detailBody{flex:1 1 0;min-height:0;overflow-y:auto;padding:18px;}
   .detailBody h2{margin:0 0 6px;font-size:18px;text-align:center;}
   .detailBody .meta{font-size:12px;color:var(--muted);margin-bottom:12px;text-align:center;}
@@ -239,10 +254,12 @@
 
   /* ===== モバイル ===== */
   @media (max-width:768px){
-    :root{ --island-w:auto; --handle-h:50px; }
+    :root{ --island-w:auto; }
     .iconBtn{display:flex;}
+    .chevron{display:block;}
+    .listHead{display:none;} /* モバイルではチェバロンのみで十分 */
+    .sheetHandle{justify-content:center;}
 
-    /* 検索島：上から展開（カード島より前面） */
     #searchIsland{
       top:calc(var(--hdr) + var(--island-gap));
       left:var(--island-gap);right:var(--island-gap);width:auto;
@@ -252,47 +269,31 @@
       opacity:0;
       transition:transform .3s var(--ease), opacity .25s var(--ease);
     }
-    #searchIsland.open{
-      transform:translateY(0);
-      opacity:1;
-    }
+    #searchIsland.open{transform:translateY(0);opacity:1;}
 
-    /* カード島：下部固定＋top/heightアニメ */
+    /* カード島：top値のみで開閉アニメ（heightは固定値） */
     #cardIsland{
-      top:auto;
       left:var(--island-gap);right:var(--island-gap);
       bottom:var(--island-gap);
       width:auto;
-      height:260px;
+      top:calc(100vh - var(--card-collapsed-h) - var(--island-gap));
       z-index:1500;
-      transition:height .35s var(--ease), top .35s var(--ease);
-      will-change:height,top;
+      transition:top .38s var(--ease);
+      will-change:top;
     }
     #cardIsland.expanded{
-      /* ヘッダー直下から開始 → 重なり防止 */
       top:calc(var(--hdr) + var(--island-gap));
-      height:auto;
     }
 
-    /* モバイル時はチェバロン表示、listHeadは小さく中央寄せ */
-    .chevron{display:block;}
-    .sheetHandle{
-      flex-direction:column;
-      justify-content:flex-end;
-      align-items:center;
-      padding-bottom:6px;
-      cursor:pointer;
-    }
-    .listHead{font-size:10px;}
+    .sheetHandle{cursor:pointer;}
 
-    /* 詳細島：下半分に */
+    /* 詳細島：スマホは下半分、写真高さも縮める */
     #detailIsland{
       top:50vh;left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
       width:auto;
     }
     body.detail-mode .iconBtn{display:none;}
-
-    .detailImages img{height:200px;}
+    .detailImages{height:30vh;}
   }
 </style>
 </head>
@@ -325,15 +326,22 @@
 
 <section id="cardIsland" class="island">
   <div class="sheetHandle" id="sheetHandle">
-    <div class="chevron" id="chevron" aria-label="開閉"></div>
+    <svg class="chevron" viewBox="0 0 40 14" aria-label="開閉">
+      <polyline points="3,11 20,3 37,11"></polyline>
+    </svg>
     <div class="listHead" id="listHead">スポット一覧</div>
   </div>
-  <div class="list" id="list"></div>
+  <div class="listScroll">
+    <div class="list" id="list"></div>
+  </div>
 </section>
 
 <section id="detailIsland" class="island">
   <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
-  <div class="detailImages" id="detailImages"></div>
+  <div class="detailImages" id="detailImages">
+    <div class="slidesTrack" id="slidesTrack"></div>
+    <div class="slideDots" id="slideDots"></div>
+  </div>
   <div class="detailBody" id="detailBody"></div>
 </section>
 
@@ -351,10 +359,7 @@
       js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', name:'unpkg' }
   ];
   function tryCdn(i){
-    if (i >= cdns.length){
-      loadingEl.textContent = '❌ Leaflet読み込み失敗（全CDN）';
-      return;
-    }
+    if (i >= cdns.length){ loadingEl.textContent = '❌ Leaflet読み込み失敗（全CDN）'; return; }
     var c = cdns[i];
     loadingEl.textContent = 'Loading Leaflet from ' + c.name + '...';
     var link = document.createElement('link');
@@ -362,10 +367,7 @@
     document.head.appendChild(link);
     var s = document.createElement('script');
     s.src = c.js;
-    s.onload = function(){
-      loadingEl.style.display = 'none';
-      startApp();
-    };
+    s.onload = function(){ loadingEl.style.display = 'none'; startApp(); };
     s.onerror = function(){ tryCdn(i+1); };
     document.head.appendChild(s);
   }
@@ -468,9 +470,11 @@
 
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
-
   var FIXED_ZOOM = 13;
   var DETAIL_ZOOM = 15;
+
+  // カード（大）島のレイアウト寸法（オフセット計算用）
+  var ISLAND_GAP = 14, ISLAND_W = 360;
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
 
@@ -485,27 +489,17 @@
   function initMap(){
     var bounds = L.latLngBounds(BOUNDS_ARR);
     map = L.map('map', {
-      zoomControl:false,
-      attributionControl:true,
-      maxBounds: bounds,
-      maxBoundsViscosity:1.0,
-      minZoom: FIXED_ZOOM,
-      maxZoom: FIXED_ZOOM,
-      scrollWheelZoom:false,
-      doubleClickZoom:false,
-      touchZoom:false,
-      boxZoom:false,
-      keyboard:false,
-      dragging:true,
-      inertia:true
+      zoomControl:false, attributionControl:true,
+      maxBounds: bounds, maxBoundsViscosity:1.0,
+      minZoom: FIXED_ZOOM, maxZoom: FIXED_ZOOM,
+      scrollWheelZoom:false, doubleClickZoom:false,
+      touchZoom:false, boxZoom:false, keyboard:false,
+      dragging:true, inertia:true
     }).setView(IMPERIAL, FIXED_ZOOM);
-
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: bounds
     }).addTo(map);
-
     map.on('moveend', function(){ renderMarkers(); renderList(); });
-
     setTimeout(function(){ map.invalidateSize(); }, 100);
     setTimeout(function(){ map.invalidateSize(); }, 500);
     window.addEventListener('load', function(){ map.invalidateSize(); });
@@ -632,13 +626,73 @@
     }
   }
 
+  // ========= レイアウトを考慮したオフセットflyTo =========
+  function flyToWithLayoutOffset(latlng, zoom){
+    if (!map) return;
+    var size = map.getSize();
+    var W = size.x, H = size.y;
+    var isDesktop = window.innerWidth > 768;
+    // ピンを表示したい画面上の目標座標
+    var targetX, targetY;
+    if (isDesktop){
+      // 詳細島が左：left:14, width:360, right edge=14+360 = 374
+      var rightEdgeOfCard = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
+      targetX = rightEdgeOfCard + (W - rightEdgeOfCard) / 2;
+      targetY = H / 2;
+    } else {
+      // 詳細島が下半分(top:50vh) → 上半分のmapエリアの中央
+      targetX = W / 2;
+      targetY = H * 0.25; // 上から1/4の位置 = 上半分(0〜H/2)の中央
+    }
+    // 画面中央からのピクセルオフセット
+    var dx = W/2 - targetX;
+    var dy = H/2 - targetY;
+    // ピンのピクセル座標 + オフセット = 新しい center のピクセル座標
+    var pinPx = map.project(latlng, zoom);
+    var newCenterPx = pinPx.add(L.point(dx, dy));
+    var newCenter = map.unproject(newCenterPx, zoom);
+    map.flyTo(newCenter, zoom, { duration:.6 });
+  }
+
+  // ========= 写真スライダー =========
+  function buildSlider(images){
+    var track = document.getElementById('slidesTrack');
+    var dotsEl = document.getElementById('slideDots');
+    var html = '';
+    for (var i=0;i<images.length;i++){
+      html += '<div class="slide"><img src="' + driveImg(images[i], 1600) + '" alt=""></div>';
+    }
+    track.innerHTML = html;
+
+    if (images.length > 1){
+      var dotsHtml = '';
+      for (var j=0;j<images.length;j++){
+        dotsHtml += '<span' + (j===0?' class="active"':'') + '></span>';
+      }
+      dotsEl.innerHTML = dotsHtml;
+      dotsEl.style.display = 'flex';
+
+      // スクロール位置からアクティブドットを更新
+      track.onscroll = function(){
+        var idx = Math.round(track.scrollLeft / track.clientWidth);
+        var spans = dotsEl.querySelectorAll('span');
+        for (var k=0;k<spans.length;k++){
+          spans[k].classList.toggle('active', k===idx);
+        }
+      };
+    } else {
+      dotsEl.innerHTML = '';
+      dotsEl.style.display = 'none';
+    }
+    // スクロール位置を先頭に
+    track.scrollLeft = 0;
+  }
+
+  // ========= 詳細表示 =========
   function openDetail(s){
-    var imagesEl = document.getElementById('detailImages');
+    buildSlider(s.images);
+
     var bodyEl = document.getElementById('detailBody');
-    var imgs = "";
-    for (var i=0;i<s.images.length;i++) imgs += '<img src="' + driveImg(s.images[i], 1200) + '" alt="">';
-    imagesEl.innerHTML = imgs;
-    imagesEl.className = 'detailImages' + (s.images.length === 1 ? ' single' : '');
     var tagsHtml = "";
     for (var j=0;j<s.tags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + s.tags[j] + '</span>';
     var isFav = favs.indexOf(s.id) >= 0;
@@ -657,18 +711,17 @@
       '</div>';
 
     document.body.classList.add('detail-mode');
-
     if (map){
       if (!savedView){
         savedView = { center: map.getCenter(), zoom: FIXED_ZOOM };
       }
       unlockZoom(8, 18);
+      // DOM変化後にinvalidateSize→オフセットflyTo
       setTimeout(function(){
         map.invalidateSize();
-        map.flyTo([s.lat, s.lng], DETAIL_ZOOM, { duration:.6 });
-      }, 100);
+        flyToWithLayoutOffset([s.lat, s.lng], DETAIL_ZOOM);
+      }, 150);
     }
-
     document.getElementById('favBtn').onclick = function(){
       var idx = favs.indexOf(s.id);
       if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
@@ -680,12 +733,15 @@
   function closeDetail(){
     document.body.classList.remove('detail-mode');
     if (map && savedView){
-      map.flyTo(savedView.center, FIXED_ZOOM, { duration:.5 });
+      var sv = savedView;
+      setTimeout(function(){
+        map.invalidateSize();
+        map.flyTo(sv.center, FIXED_ZOOM, { duration:.5 });
+      }, 150);
       setTimeout(function(){
         lockZoom(FIXED_ZOOM);
         savedView = null;
-        map.invalidateSize();
-      }, 600);
+      }, 800);
     }
   }
 
@@ -732,33 +788,25 @@
     var searchToggle = document.getElementById('searchToggle');
     var sheetHandle = document.getElementById('sheetHandle');
 
-    // ハッシュタグボタン：開閉でテキストを # ⇄ × に切替
     function setSearchOpen(open){
       if (open){
         searchIsland.classList.add('open');
         backdrop.classList.add('show');
         searchToggle.textContent = '×';
-        searchToggle.classList.add('open');
-        searchToggle.setAttribute('aria-label', '検索を閉じる');
       } else {
         searchIsland.classList.remove('open');
         backdrop.classList.remove('show');
         searchToggle.textContent = '#';
-        searchToggle.classList.remove('open');
-        searchToggle.setAttribute('aria-label', 'ハッシュタグ検索');
       }
     }
     searchToggle.addEventListener('click', function(){
       setSearchOpen(!searchIsland.classList.contains('open'));
     });
-    backdrop.addEventListener('click', function(){
-      setSearchOpen(false);
-    });
+    backdrop.addEventListener('click', function(){ setSearchOpen(false); });
 
-    // カード一覧シート開閉（チェバロン/シートハンドル全体タップで反応）
     function toggleSheet(){
       cardIsland.classList.toggle('expanded');
-      setTimeout(function(){ if (map) map.invalidateSize(); }, 360);
+      setTimeout(function(){ if (map) map.invalidateSize(); }, 400);
     }
     sheetHandle.addEventListener('click', toggleSheet);
 
