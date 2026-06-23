@@ -13,6 +13,7 @@
     --island-gap:14px;
     --island-radius:16px;
     --island-w:360px;
+    --island-w-expanded:700px;
     --handle-h:46px;
     --card-collapsed-h:360px;
     --ease:cubic-bezier(.4,0,.2,1);
@@ -37,7 +38,6 @@
   .leaflet-container{background:#000;cursor:grab;}
   .leaflet-container:active{cursor:grabbing;}
 
-  /* ===== ヘッダー（スライドアニメ） ===== */
   header{
     position:fixed;top:0;left:0;right:0;height:var(--hdr);z-index:1800;
     background:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.5));
@@ -80,7 +80,6 @@
     overflow:hidden;
   }
 
-  /* ===== 検索島 ===== */
   #searchIsland{
     position:fixed;top:calc(var(--hdr) + var(--island-gap));
     left:var(--island-gap);
@@ -114,7 +113,6 @@
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* ===== カード島 ===== */
   #cardIsland{
     position:fixed;
     left:var(--island-gap);
@@ -234,7 +232,7 @@
     left:var(--island-gap);bottom:var(--island-gap);
     width:var(--island-w);z-index:1700;
     flex-direction:column;overflow:hidden;
-    cursor:pointer; /* PCもタップ可能を視覚化 */
+    cursor:pointer;
     transition:top .4s var(--ease), bottom .4s var(--ease),
                left .4s var(--ease), right .4s var(--ease),
                width .4s var(--ease);
@@ -243,12 +241,12 @@
   body.detail-mode #searchIsland,
   body.detail-mode #cardIsland{display:none;}
 
-  /* ===== PC：カード(大)拡大モード ===== */
+  /* ===== PC：カード(大)拡大モード（左寄せ・幅拡張） ===== */
   @media (min-width:769px){
     body.detail-mode.detail-expanded #detailIsland{
-      left:max(var(--island-gap), calc((100vw - 900px) / 2));
-      right:max(var(--island-gap), calc((100vw - 900px) / 2));
-      width:auto;
+      left:var(--island-gap);
+      right:auto;
+      width:min(var(--island-w-expanded), calc(100vw - var(--island-gap) * 2));
     }
     body.detail-mode.detail-expanded .detailImages{
       max-height:75vh;
@@ -611,13 +609,16 @@
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
   var FIXED_ZOOM = 13;
-  var MIN_ZOOM_PC = 12;       // PC: 下限12
-  var MIN_ZOOM_MOBILE = 11;   // スマホ: 下限11
+  var MIN_ZOOM_PC = 12;
+  var MIN_ZOOM_MOBILE = 11;
   var MAX_ZOOM = 17;
   var DETAIL_ZOOM = 15;
-  var ISLAND_GAP = 14, ISLAND_W = 360;
+  var ISLAND_GAP = 14;
+  var ISLAND_W = 360;
+  var ISLAND_W_EXPANDED = 700; // PC拡大時の幅（CSSと合わせる）
   var HDR_H = 56;
   var CARD_COLLAPSED_H = 360;
+  var PIN_W = 30, PIN_H = 38; // ピンアイコンの矩形サイズ（icon全体）
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
   function isDesktop(){ return window.innerWidth > 768; }
@@ -629,16 +630,15 @@
   var detailSpot = null;
   var firstImgAspect = null;
 
-  var programmaticMove = false;   // 内部flyTo中はtrue
+  var programmaticMove = false;
   var interactingTimer = null;
-  var forceHideUI = false;        // closeDetail中の強制UI非表示
+  var forceHideUI = false;
 
   function setInteracting(on){
     if (forceHideUI) return;
     if (on){
       if (interactingTimer){ clearTimeout(interactingTimer); interactingTimer = null; }
       document.body.classList.add('map-interacting');
-      // モバイル：検索パネルが開いていたら閉じる
       var si = document.getElementById('searchIsland');
       if (si && si.classList.contains('open')){
         si.classList.remove('open');
@@ -705,7 +705,6 @@
     window.addEventListener('load', function(){ map.invalidateSize(); });
     window.addEventListener('resize', function(){
       map.invalidateSize();
-      // PC/スマホ切替時の minZoom 更新
       var nm = getMinZoom();
       if (map.options.minZoom !== nm){
         map.setMinZoom(nm);
@@ -731,11 +730,8 @@
     }, function(){}, { timeout:8000, enableHighAccuracy:false });
   }
 
-  // ========= UI除外領域の可視範囲計算 =========
-  // PC: 左カラム(検索+カード島)、ヘッダーを除外
-  // スマホ: ヘッダー＋下部カード一覧(常に閉じ状態の高さで判定)
-  function getVisibleBounds(){
-    if (!map) return null;
+  // ========= 可視範囲のパディング取得 =========
+  function getViewportPads(){
     var size = map.getSize();
     var W = size.x, H = size.y;
     var topPad = HDR_H;
@@ -743,21 +739,36 @@
     if (isDesktop()){
       leftPad = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
     } else {
-      // 常に閉じ状態の高さで判定（展開中も同じ扱い）
       bottomPad = CARD_COLLAPSED_H + ISLAND_GAP;
     }
-    var nw = map.containerPointToLatLng([leftPad, topPad]);
-    var se = map.containerPointToLatLng([W - rightPad, H - bottomPad]);
-    return L.latLngBounds(nw, se);
+    return { W:W, H:H, top:topPad, left:leftPad, right:rightPad, bottom:bottomPad };
+  }
+
+  // ========= ピンアイコン矩形が可視領域と重なるか判定 =========
+  // ピンはanchor=[15,38]、つまり座標(lat,lng)のピクセル位置=ピン下端
+  // アイコン矩形: (px-15, px-38) 〜 (px+15, px)
+  function isPinVisible(latlng){
+    var p = getViewportPads();
+    var px = map.latLngToContainerPoint(latlng);
+    var pinLeft = px.x - PIN_W/2;
+    var pinRight = px.x + PIN_W/2;
+    var pinTop = px.y - PIN_H;
+    var pinBottom = px.y;
+    // 可視領域: (left, top) 〜 (W-right, H-bottom)
+    var vLeft = p.left, vTop = p.top;
+    var vRight = p.W - p.right;
+    var vBottom = p.H - p.bottom;
+    // 矩形が重なるか
+    if (pinRight < vLeft || pinLeft > vRight) return false;
+    if (pinBottom < vTop || pinTop > vBottom) return false;
+    return true;
   }
 
   function getVisibleRanked(){
     if (!map) return [];
-    var bounds = getVisibleBounds();
-    if (!bounds) return [];
     var visible = [];
     for (var i=0;i<filtered.length;i++){
-      if (bounds.contains([filtered[i].lat, filtered[i].lng])){
+      if (isPinVisible([filtered[i].lat, filtered[i].lng])){
         visible.push(filtered[i]);
       }
     }
@@ -868,7 +879,6 @@
     }
   }
 
-  // ========= プログラム的flyTo（UI退避をトリガーしない） =========
   function programmaticFlyTo(newCenter, zoom, duration){
     programmaticMove = true;
     map.flyTo(newCenter, zoom, { duration: duration || 0.6 });
@@ -886,24 +896,22 @@
 
     if (mode === 'detail'){
       if (desktop){
-        if (isExpanded){
-          // PC拡大時：詳細島が画面のほぼ全幅 → 中央でOK
-          targetX = W / 2;
-          targetY = H / 2;
-        } else {
-          var leftPad = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
-          targetX = leftPad + (W - leftPad) / 2;
-          targetY = H / 2;
-        }
+        // PC: 拡大時も左寄せのまま、幅だけ ISLAND_W → ISLAND_W_EXPANDED に変化
+        var w = isExpanded ? ISLAND_W_EXPANDED : ISLAND_W;
+        var leftPad = ISLAND_GAP + w + ISLAND_GAP;
+        targetX = leftPad + (W - leftPad) / 2;
+        targetY = H / 2;
       } else if (isExpanded){
+        // スマホ拡大時：マップは見えないので画面中央
         targetX = W / 2;
         targetY = H / 2;
       } else {
+        // スマホ通常時：上半分マップの中央
         targetX = W / 2;
         targetY = H * 0.21;
       }
     } else {
-      // 通常モード：UI除外領域の中心
+      // 通常モード
       if (desktop){
         var leftPad2 = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
         targetX = leftPad2 + (W - leftPad2) / 2;
@@ -923,7 +931,6 @@
     programmaticFlyTo(newCenter, zoom, 0.6);
   }
 
-  // ========= 写真スライダー =========
   var currentSlideCount = 0;
   function buildSlider(images){
     var track = document.getElementById('slidesTrack');
@@ -1019,7 +1026,6 @@
     nextBtn.classList.toggle('hidden', x > maxScroll - 5);
   }
 
-  // ========= 詳細表示 =========
   function openDetail(s){
     detailSpot = s;
     document.body.classList.remove('detail-expanded');
@@ -1069,7 +1075,6 @@
     document.body.classList.remove('detail-expanded');
     detailSpot = null;
 
-    // ===== 通常縮尺へ戻る間はUIを強制非表示 =====
     forceHideUI = true;
     document.body.classList.add('map-interacting');
     if (interactingTimer){ clearTimeout(interactingTimer); interactingTimer = null; }
@@ -1081,7 +1086,6 @@
           flyToVisibleCenter(spotLatLng, FIXED_ZOOM, 'normal');
         }
       }, 150);
-      // flyTo (約600ms) + バッファ → UI復帰
       setTimeout(function(){
         applyFilters();
         forceHideUI = false;
@@ -1114,23 +1118,20 @@
     }, { passive:true });
 
     detailIsland.addEventListener('click', function(e){
-      // タッチ後のスワイプは無視（PCのclickではmovedは常にfalse）
       if (moved) return;
-      // 操作要素は除外
       if (e.target.closest('.detailClose')) return;
       if (e.target.closest('.btn')) return;
       if (e.target.closest('a')) return;
       if (e.target.closest('.slideNav')) return;
       if (e.target.closest('button')) return;
       if (e.target.closest('.fav')) return;
-      // PC：テキスト選択範囲がある場合はトグルしない
       if (isDesktop()){
         var sel = window.getSelection && window.getSelection();
         if (sel && sel.toString().length > 0) return;
       }
-      var nowExpanded = document.body.classList.toggle('detail-expanded');
+      document.body.classList.toggle('detail-expanded');
       setTimeout(applyImageAspect, 50);
-      // PCの拡大/縮小時：詳細島のサイズ変化に合わせてマップ中心位置を再調整
+      // PC：拡大/縮小時にマップ可視中心を再調整
       if (isDesktop() && detailSpot && map){
         setTimeout(function(){
           map.invalidateSize();
