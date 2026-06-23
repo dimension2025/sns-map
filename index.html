@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>GRAMAP</title>
-https://unpkg.com/leaflet@1.9.4/dist/leaflet.css-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   :root{
     --bg:#000; --panel:#0e0e0e; --panel2:#1a1a1a;
@@ -140,7 +140,7 @@ https://unpkg.com/leaflet@1.9.4/dist/leaflet.css-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyo
   #detailPanel{
     display:none;background:var(--panel);border-right:1px solid var(--border);
     flex-direction:column;overflow:hidden;min-height:0;
-    grid-column:1;grid-row:2;
+    grid-column:1;grid-row:2;position:relative;
   }
   body.detail-mode #sidebar{display:none;}
   body.detail-mode #detailPanel{display:flex;}
@@ -268,7 +268,7 @@ https://unpkg.com/leaflet@1.9.4/dist/leaflet.css-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyo
 
 <div class="backdrop" id="backdrop"></div>
 
-https://unpkg.com/leaflet@1.9.4/dist/leaflet.js0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
 <script>
 // ========= データ =========
 var SPOTS = [
@@ -417,7 +417,6 @@ function initGeolocation(){
 
 // ========= 表示範囲内のスポット計算 =========
 function getVisibleRanked(){
-  // filtered はすでにオススメ順（rating降順）
   if (!map) return [];
   var bounds = map.getBounds();
   var visible = [];
@@ -426,7 +425,7 @@ function getVisibleRanked(){
       visible.push(filtered[i]);
     }
   }
-  return visible; // 既にrating順
+  return visible;
 }
 
 // ========= マーカー描画 =========
@@ -441,11 +440,9 @@ function renderMarkers(){
   for (var j=0;j<filtered.length;j++){
     (function(s){
       var isFav = favs.indexOf(s.id) >= 0;
-      var num = numMap[s.id]; // 範囲外は undefined
+      var num = numMap[s.id];
       var isVisible = num !== undefined;
-      var inner = isVisible
-        ? '<span>' + num + '</span>'
-        : '<span></span>';
+      var inner = isVisible ? '<span>' + num + '</span>' : '<span></span>';
       var cls = 'numPin' + (isFav?' fav':'') + (isVisible?'':' dim');
       var icon = L.divIcon({
         className:'',
@@ -468,7 +465,6 @@ function applyFilters(){
     }
     return true;
   });
-  // 常にオススメ順（rating降順）
   filtered.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
   renderMarkers();
   renderList();
@@ -557,7 +553,6 @@ function openDetail(s){
     '</div>';
 
   document.body.classList.add('detail-mode');
-  // マップを該当ピンに移動
   if (map){
     setTimeout(function(){
       map.invalidateSize();
