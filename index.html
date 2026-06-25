@@ -225,7 +225,6 @@
     box-shadow:0 0 0 4px rgba(61,169,255,.25);
   }
 
-  /* ===== 詳細島 ===== */
   #detailIsland{
     display:none;position:fixed;
     top:var(--island-gap);
@@ -241,7 +240,6 @@
   body.detail-mode #searchIsland,
   body.detail-mode #cardIsland{display:none;}
 
-  /* ===== PC：カード(大)拡大モード（左寄せ・幅拡張） ===== */
   @media (min-width:769px){
     body.detail-mode.detail-expanded #detailIsland{
       left:var(--island-gap);
@@ -342,9 +340,31 @@
     position:fixed;inset:0;background:#000;color:#fff;
     display:flex;align-items:center;justify-content:center;
     font-size:14px;z-index:9999;
+    flex-direction:column;gap:14px;
+  }
+  .loadSpinner{
+    width:40px;height:40px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.15);
+    border-top-color:#fff;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* データ取得失敗時のオーバーレイ */
+  #errorMsg{
+    position:fixed;inset:0;background:#000;color:#fff;
+    display:none;align-items:center;justify-content:center;
+    z-index:9998;padding:20px;text-align:center;
+    flex-direction:column;gap:12px;
+  }
+  #errorMsg.show{display:flex;}
+  #errorMsg .ttl{font-size:16px;font-weight:600;}
+  #errorMsg .desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:400px;}
+  #errorMsg button{
+    padding:8px 16px;background:#fff;color:#000;border:none;border-radius:6px;
+    cursor:pointer;font-weight:600;font-size:13px;margin-top:8px;
   }
 
-  /* ===== モバイル ===== */
   @media (max-width:768px){
     :root{
       --island-w:auto;
@@ -429,7 +449,16 @@
 </style>
 </head>
 <body>
-<div id="loadingMsg">Loading...</div>
+<div id="loadingMsg">
+  <div class="loadSpinner"></div>
+  <div id="loadingText">Loading...</div>
+</div>
+
+<div id="errorMsg">
+  <div class="ttl">⚠️ データ読み込みに失敗しました</div>
+  <div class="desc">スポットデータを取得できませんでした。ネットワーク接続を確認の上、再読み込みしてください。</div>
+  <button onclick="location.reload()">再読み込み</button>
+</div>
 
 <div id="map"></div>
 
@@ -489,6 +518,7 @@
 <script>
 (function(){
   var loadingEl = document.getElementById('loadingMsg');
+  var loadingText = document.getElementById('loadingText');
   var cdns = [
     { css:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css',
       js: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js', name:'cdnjs' },
@@ -498,113 +528,66 @@
       js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', name:'unpkg' }
   ];
   function tryCdn(i){
-    if (i >= cdns.length){ loadingEl.textContent = '❌ Leaflet読み込み失敗（全CDN）'; return; }
+    if (i >= cdns.length){ loadingText.textContent = '❌ Leaflet読み込み失敗（全CDN）'; return; }
     var c = cdns[i];
-    loadingEl.textContent = 'Loading Leaflet from ' + c.name + '...';
+    loadingText.textContent = 'Loading Leaflet from ' + c.name + '...';
     var link = document.createElement('link');
     link.rel = 'stylesheet'; link.href = c.css;
     document.head.appendChild(link);
     var s = document.createElement('script');
     s.src = c.js;
-    s.onload = function(){ loadingEl.style.display = 'none'; startApp(); };
+    s.onload = function(){ startApp(); };
     s.onerror = function(){ tryCdn(i+1); };
     document.head.appendChild(s);
   }
   tryCdn(0);
 
-  var SPOTS = [
-    { id:1, name:"アートアクアリウム", lat:35.67102560284623, lng:139.76608091349286,
-      mapUrl:"https://maps.app.goo.gl/sQahHCCvjAMZ2fXY6",
-      images:["1-vKLg0AuxVM8YFkXs4zN2PJJi5aWVeyW"],
-      region:"関東", pref:"東京都", area:"中央区",
-      description:"金魚×光×アートの幻想的な屋内アクアリウム。雨の日でも映える。",
-      hours:"10:00-19:00", price:"2,500円〜",
-      tags:["屋内","アート","夜映え","映え","デート"], rating:4.5 },
-    { id:2, name:"川崎市役所 展望ロビー", lat:35.531053844218874, lng:139.70286258465714,
-      mapUrl:"https://maps.app.goo.gl/spC9LRjLNdGWWNq4A",
-      images:["1O0Ak9yCq8gqyFVfuiEzmalSLpQdST4Y6"],
-      region:"関東", pref:"神奈川県", area:"川崎市",
-      description:"無料で楽しめる夜景スポット。穴場的な高所眺望。",
-      hours:"9:00-21:00", price:"無料",
-      tags:["夜景","無料","展望","穴場"], rating:4.2 },
-    { id:3, name:"浅草寺", lat:35.714934966214024, lng:139.7966553,
-      mapUrl:"https://maps.app.goo.gl/X9spST63ic5j9JtK8",
-      images:["1d6ulBvZDwCQ6QxvuN4EaEtdrg9debAIE"],
-      region:"関東", pref:"東京都", area:"台東区",
-      description:"言わずと知れた東京の象徴。夜のライトアップが特に映える。",
-      hours:"24時間（本堂6:00-17:00）", price:"無料",
-      tags:["和風","夜映え","定番","無料","観光"], rating:4.6 },
-    { id:4, name:"SHIBUYA SKY", lat:35.65885060290267, lng:139.7019311558214,
-      mapUrl:"https://maps.app.goo.gl/vcqNinFqdjR6tJgT6",
-      images:["1uaAGZL0WK7iwFRff3JwOdzbo_J3WxW2t","1s2xnxjwY8Pr17uyy0VvPbR3dM-Brq4tX"],
-      region:"関東", pref:"東京都", area:"渋谷区",
-      description:"渋谷スクランブルスクエア屋上の絶景展望。360°の都心パノラマ。",
-      hours:"10:00-22:30", price:"2,500円〜",
-      tags:["夜景","展望","定番","映え","デート"], rating:4.8 },
-    { id:5, name:"the SOHO", lat:35.61818256391152, lng:139.77508707116428,
-      mapUrl:"https://maps.app.goo.gl/5jpDeRE5TuRKg3q4A",
-      images:["1Hp2tf2uU9XIYqdjPRJVsl9CgMil84lvT"],
-      region:"関東", pref:"東京都", area:"江東区",
-      description:"カラフルな吹き抜けが特徴的な建築。デザイナーズオフィスの撮影名所。",
-      hours:"平日昼間推奨", price:"無料",
-      tags:["建築","カラフル","屋内","無料","穴場"], rating:4.3 },
-    { id:6, name:"カレッタ汐留 SKY VIEW", lat:35.66461194022665, lng:139.76253302883572,
-      mapUrl:"https://maps.app.goo.gl/LMhqV1fz1rpvsc587",
-      images:["1Lz1wvnzY5uD9nN2iwbfaWr6MFk9pdzvW"],
-      region:"関東", pref:"東京都", area:"港区",
-      description:"無料展望スペースから望むレインボーブリッジと東京タワー。",
-      hours:"11:00-23:00", price:"無料",
-      tags:["夜景","展望","無料","デート","穴場"], rating:4.4 },
-    { id:7, name:"マクセル アクアパーク 品川", lat:35.62851499398817, lng:139.73521784232858,
-      mapUrl:"https://maps.app.goo.gl/BWbXu1rhLEusvh4k9",
-      images:["1dasuGOYl4kKCxDsDSN2uiqqeWvuPdEe2"],
-      region:"関東", pref:"東京都", area:"港区",
-      description:"光と音の演出が魅せる都市型水族館。イルカショーが圧巻。",
-      hours:"10:00-20:00", price:"2,500円〜",
-      tags:["屋内","水族館","夜映え","デート","アート"], rating:4.4 },
-    { id:8, name:"PIGMENT TOKYO", lat:35.62152357159187, lng:139.7496009576714,
-      mapUrl:"https://maps.app.goo.gl/JL6TdtwRYDmTfaVPA",
-      images:["1knqvkE_qWRY4uogYbg6lhJ0k4d2UWZoP"],
-      region:"関東", pref:"東京都", area:"品川区",
-      description:"4,500色の顔料が並ぶ壁面ラボ。アート好きの聖地。",
-      hours:"11:30-18:00（火-土）", price:"無料",
-      tags:["アート","カラフル","屋内","無料","穴場"], rating:4.5 },
-    { id:9, name:"東京国際フォーラム", lat:35.67699999950352, lng:139.76374247116428,
-      mapUrl:"https://maps.app.goo.gl/U187HgcpDp7VgVQJA",
-      images:["1rF58dzdpHWZyg6gKLwodKwnWVYPr1JSN"],
-      region:"関東", pref:"東京都", area:"千代田区",
-      description:"ガラスのホールの曲線美が圧倒的。建築フォトの名所。",
-      hours:"7:00-23:30", price:"無料",
-      tags:["建築","屋内","無料","アート","定番"], rating:4.5 },
-    { id:10, name:"恵比寿ガーデンプレイス", lat:35.64282923991299, lng:139.71389887301427,
-      mapUrl:"https://maps.app.goo.gl/TrFbL7K42NgtSK188",
-      images:["1Lc0Kf8WFN9MvCi8rEKeD5BYdL96BmK5o"],
-      region:"関東", pref:"東京都", area:"渋谷区",
-      description:"冬のシャンデリアイルミネーションが象徴的。年中映える広場。",
-      hours:"24時間", price:"無料",
-      tags:["夜映え","無料","デート","定番","イルミ"], rating:4.4 },
-    { id:11, name:"東京都庁都民広場", lat:35.68993855625288, lng:139.69286631534283,
-      mapUrl:"https://maps.app.goo.gl/7piCGBqB2e8EXMbm9",
-      images:["1X1RSM9YLQV1ad_qsGIFkGGmpeNKXgRlS"],
-      region:"関東", pref:"東京都", area:"新宿区",
-      description:"夜は都庁プロジェクションマッピング。ギネス認定の大規模演出。",
-      hours:"日没後", price:"無料",
-      tags:["夜映え","無料","建築","定番","アート"], rating:4.3 },
-    { id:12, name:"和田倉噴水公園", lat:35.683555005718084, lng:139.76091651534284,
-      mapUrl:"https://maps.app.goo.gl/CaGXCpnjfzgGAm7a8",
-      images:["1G2AQ_KI1QiunXCDjq-PwLhYSv61HT3vb"],
-      region:"関東", pref:"東京都", area:"千代田区",
-      description:"皇居外苑の噴水公園。夜のライトアップと水鏡が幻想的。",
-      hours:"24時間", price:"無料",
-      tags:["夜映え","無料","水辺","穴場","デート"], rating:4.2 },
-    { id:13, name:"浜松町〜竹芝 歩行者デッキ", lat:35.65646725578621, lng:139.75806684232856,
-      mapUrl:"https://maps.app.goo.gl/h4ykRNnaaxnd8FYu6",
-      images:["1W7mBAZiOYiRbTBspQxfoi5XMCR4gxE-D"],
-      region:"関東", pref:"東京都", area:"港区",
-      description:"未来感のあるデッキから望む東京タワー。新しい都市夜景スポット。",
-      hours:"24時間", price:"無料",
-      tags:["夜景","無料","建築","穴場","デート"], rating:4.3 }
-  ];
+  // ========= Google Sheets API設定 =========
+  var SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzn2ooVIQcZV_nVR7FuYhlyDZJ1lTUNHRnp-_WRYCu0-d2D4aupjP8I8ayO4KNIN7C4cg/exec';
+  var CACHE_KEY = 'gramapSpotsCache';
+  var CACHE_TIME_KEY = 'gramapSpotsCacheTime';
+  var CACHE_TTL = 60 * 60 * 1000; // 1時間
+
+  var SPOTS = [];
+
+  function loadSpots(callback){
+    var hasCached = false;
+    try {
+      var cached = localStorage.getItem(CACHE_KEY);
+      var cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0', 10);
+      if (cached){
+        SPOTS = JSON.parse(cached);
+        hasCached = SPOTS.length > 0;
+        // 1時間以内のキャッシュなら即callback
+        if (hasCached && Date.now() - cachedTime < CACHE_TTL){
+          if (callback) callback(true);
+        }
+      }
+    } catch(e){}
+
+    // バックグラウンドで最新取得
+    fetch(SHEETS_API_URL)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (!data || !data.length) throw new Error('Empty data');
+        SPOTS = data;
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+        } catch(e){}
+        if (callback) callback(true);
+      })
+      .catch(function(e){
+        console.error('Sheets読み込み失敗:', e);
+        // キャッシュがあればそれを使う
+        if (hasCached){
+          if (callback) callback(true);
+        } else {
+          // 完全失敗時はエラー表示
+          if (callback) callback(false);
+        }
+      });
+  }
 
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
@@ -615,10 +598,10 @@
   var DETAIL_ZOOM = 15;
   var ISLAND_GAP = 14;
   var ISLAND_W = 360;
-  var ISLAND_W_EXPANDED = 700; // PC拡大時の幅（CSSと合わせる）
+  var ISLAND_W_EXPANDED = 700;
   var HDR_H = 56;
   var CARD_COLLAPSED_H = 360;
-  var PIN_W = 30, PIN_H = 38; // ピンアイコンの矩形サイズ（icon全体）
+  var PIN_W = 30, PIN_H = 38;
 
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
   function isDesktop(){ return window.innerWidth > 768; }
@@ -730,23 +713,19 @@
     }, function(){}, { timeout:8000, enableHighAccuracy:false });
   }
 
-  // ========= 可視範囲のパディング取得 =========
   function getViewportPads(){
     var size = map.getSize();
     var W = size.x, H = size.y;
     var topPad = HDR_H;
     var leftPad = 0, rightPad = 0, bottomPad = 0;
     if (isDesktop()){
-      leftPad = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
+      leftPad = ISLAND_GAP + ISLAND_W;
     } else {
-      bottomPad = CARD_COLLAPSED_H + ISLAND_GAP;
+      bottomPad = CARD_COLLAPSED_H;
     }
     return { W:W, H:H, top:topPad, left:leftPad, right:rightPad, bottom:bottomPad };
   }
 
-  // ========= ピンアイコン矩形が可視領域と重なるか判定 =========
-  // ピンはanchor=[15,38]、つまり座標(lat,lng)のピクセル位置=ピン下端
-  // アイコン矩形: (px-15, px-38) 〜 (px+15, px)
   function isPinVisible(latlng){
     var p = getViewportPads();
     var px = map.latLngToContainerPoint(latlng);
@@ -754,11 +733,9 @@
     var pinRight = px.x + PIN_W/2;
     var pinTop = px.y - PIN_H;
     var pinBottom = px.y;
-    // 可視領域: (left, top) 〜 (W-right, H-bottom)
     var vLeft = p.left, vTop = p.top;
     var vRight = p.W - p.right;
     var vBottom = p.H - p.bottom;
-    // 矩形が重なるか
     if (pinRight < vLeft || pinLeft > vRight) return false;
     if (pinBottom < vTop || pinTop > vBottom) return false;
     return true;
@@ -818,7 +795,7 @@
     filtered = SPOTS.filter(function(s){
       if (state.favOnly && favs.indexOf(s.id) < 0) return false;
       for (var i=0;i<state.tags.length;i++){
-        if (s.tags.indexOf(state.tags[i]) < 0) return false;
+        if ((s.tags||[]).indexOf(state.tags[i]) < 0) return false;
       }
       return true;
     });
@@ -841,7 +818,7 @@
     for (var v=0;v<visible.length;v++){
       var s = visible[v];
       var num = v+1;
-      var img = s.images[0] ? driveImg(s.images[0], 400) : '';
+      var img = (s.images && s.images[0]) ? driveImg(s.images[0], 400) : '';
       var isFav = favs.indexOf(s.id) >= 0;
       html += '<div class="card" data-id="' + s.id + '">' +
                 '<div class="thumbwrap">' +
@@ -851,7 +828,7 @@
                 '</div>' +
                 '<div class="body">' +
                   '<div class="ttl"><div class="name">' + s.name + '</div><div class="rate">★' + (s.rating||'-') + '</div></div>' +
-                  '<div class="area">' + s.area + '</div>' +
+                  '<div class="area">' + (s.area||'') + '</div>' +
                 '</div>' +
               '</div>';
     }
@@ -885,7 +862,6 @@
     setTimeout(function(){ programmaticMove = false; }, (duration || 0.6) * 1000 + 200);
   }
 
-  // mode: 'detail' or 'normal'
   function flyToVisibleCenter(latlng, zoom, mode){
     if (!map) return;
     var size = map.getSize();
@@ -896,22 +872,18 @@
 
     if (mode === 'detail'){
       if (desktop){
-        // PC: 拡大時も左寄せのまま、幅だけ ISLAND_W → ISLAND_W_EXPANDED に変化
         var w = isExpanded ? ISLAND_W_EXPANDED : ISLAND_W;
         var leftPad = ISLAND_GAP + w + ISLAND_GAP;
         targetX = leftPad + (W - leftPad) / 2;
         targetY = H / 2;
       } else if (isExpanded){
-        // スマホ拡大時：マップは見えないので画面中央
         targetX = W / 2;
         targetY = H / 2;
       } else {
-        // スマホ通常時：上半分マップの中央
         targetX = W / 2;
         targetY = H * 0.21;
       }
     } else {
-      // 通常モード
       if (desktop){
         var leftPad2 = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
         targetX = leftPad2 + (W - leftPad2) / 2;
@@ -938,6 +910,7 @@
     var prevBtn = document.getElementById('slidePrev');
     var nextBtn = document.getElementById('slideNext');
     var detailImg = document.getElementById('detailImages');
+    images = images || [];
     currentSlideCount = images.length;
     firstImgAspect = null;
 
@@ -1035,11 +1008,12 @@
 
     var bodyEl = document.getElementById('detailBody');
     var tagsHtml = "";
-    for (var j=0;j<s.tags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + s.tags[j] + '</span>';
+    var stags = s.tags || [];
+    for (var j=0;j<stags.length;j++) tagsHtml += '<span class="tag" style="cursor:default">#' + stags[j] + '</span>';
     var isFav = favs.indexOf(s.id) >= 0;
     bodyEl.innerHTML =
       '<h2>' + s.name + '</h2>' +
-      '<div class="meta">' + s.pref + ' / ' + s.area + ' ・ ★ ' + (s.rating||'-') + '</div>' +
+      '<div class="meta">' + (s.pref||'') + ' / ' + (s.area||'') + ' ・ ★ ' + (s.rating||'-') + '</div>' +
       '<div class="desc">' + (s.description||'') + '</div>' +
       '<dl>' +
         '<dt>営業時間</dt><dd>' + (s.hours||'-') + '</dd>' +
@@ -1047,7 +1021,7 @@
       '</dl>' +
       '<div class="tags">' + tagsHtml + '</div>' +
       '<div class="actions">' +
-        '<a class="btn" href="' + s.mapUrl + '" target="_blank" rel="noopener">Google Mapで開く</a>' +
+        '<a class="btn" href="' + (s.mapUrl||'#') + '" target="_blank" rel="noopener">Google Mapで開く</a>' +
         '<button class="btn ghost" id="favBtn">' + (isFav?'♥ お気に入り解除':'♡ お気に入り') + '</button>' +
       '</div>';
 
@@ -1098,7 +1072,6 @@
     }
   }
 
-  // ========= カード（大）タップで拡大・縮小（PC/スマホ両対応） =========
   function initDetailTapToggle(){
     var detailIsland = document.getElementById('detailIsland');
     var startX = 0, startY = 0, moved = false;
@@ -1131,7 +1104,6 @@
       }
       document.body.classList.toggle('detail-expanded');
       setTimeout(applyImageAspect, 50);
-      // PC：拡大/縮小時にマップ可視中心を再調整
       if (isDesktop() && detailSpot && map){
         setTimeout(function(){
           map.invalidateSize();
@@ -1145,14 +1117,18 @@
     var tagSet = {};
     for (var i=0;i<SPOTS.length;i++){
       var s = SPOTS[i];
-      for (var k=0;k<s.tags.length;k++) tagSet[s.tags[k]] = (tagSet[s.tags[k]]||0) + 1;
+      var stags = s.tags || [];
+      for (var k=0;k<stags.length;k++) tagSet[stags[k]] = (tagSet[stags[k]]||0) + 1;
     }
     var tagEl = document.getElementById('tags');
+    tagEl.innerHTML = '';
     var tk = Object.keys(tagSet).sort(function(a,b){ return tagSet[b]-tagSet[a]; });
     for (var t=0;t<tk.length;t++){
       (function(tag){
         var el = document.createElement('span');
         el.className = 'tag'; el.textContent = '#' + tag;
+        // 選択状態を復元
+        if (state.tags.indexOf(tag) >= 0) el.classList.add('active');
         el.addEventListener('click', function(){
           var idx = state.tags.indexOf(tag);
           if (idx >= 0){ state.tags.splice(idx,1); el.classList.remove('active'); }
@@ -1163,18 +1139,23 @@
       })(tk[t]);
     }
     var favToggleEl = document.getElementById('favToggle');
-    favToggleEl.addEventListener('click', function(){
-      state.favOnly = !state.favOnly;
-      favToggleEl.classList.toggle('on', state.favOnly);
-      applyFilters();
-    });
-    document.getElementById('clearBtn').addEventListener('click', function(){
-      state = { tags:[], favOnly:false };
-      favToggleEl.classList.remove('on');
-      var ts = document.querySelectorAll('#tags .tag');
-      for (var i=0;i<ts.length;i++) ts[i].classList.remove('active');
-      applyFilters();
-    });
+    if (state.favOnly) favToggleEl.classList.add('on');
+    // イベントは初回のみバインド（重複防止）
+    if (!favToggleEl._inited){
+      favToggleEl.addEventListener('click', function(){
+        state.favOnly = !state.favOnly;
+        favToggleEl.classList.toggle('on', state.favOnly);
+        applyFilters();
+      });
+      document.getElementById('clearBtn').addEventListener('click', function(){
+        state = { tags:[], favOnly:false };
+        favToggleEl.classList.remove('on');
+        var ts = document.querySelectorAll('#tags .tag');
+        for (var i=0;i<ts.length;i++) ts[i].classList.remove('active');
+        applyFilters();
+      });
+      favToggleEl._inited = true;
+    }
   }
 
   function initMobileUI(){
@@ -1216,17 +1197,30 @@
     });
   }
 
+  function showError(){
+    document.getElementById('errorMsg').classList.add('show');
+  }
+
   function startApp(){
+    loadingText.textContent = 'スポットデータを取得中...';
     document.getElementById('detailClose').addEventListener('click', function(e){
       e.stopPropagation();
       closeDetail();
     });
     initMap();
-    initFilters();
     initMobileUI();
     initDetailTapToggle();
-    applyFilters();
     initGeolocation();
+
+    loadSpots(function(success){
+      if (!success){
+        showError();
+        return;
+      }
+      loadingEl.style.display = 'none';
+      initFilters();
+      applyFilters();
+    });
   }
 })();
 </script>
