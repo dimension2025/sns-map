@@ -410,7 +410,6 @@
     if (dc) dc.setAttribute('aria-label', t('closeAria'));
     var pa = document.getElementById('slidePrev'); if (pa) pa.setAttribute('aria-label', t('prevAria'));
     var na = document.getElementById('slideNext'); if (na) na.setAttribute('aria-label', t('nextAria'));
-    // 言語ボタンのアクティブ状態
     var btns = document.querySelectorAll('.langSwitch button');
     for (var b=0;b<btns.length;b++){
       btns[b].classList.toggle('active', btns[b].getAttribute('data-lang') === currentLang);
@@ -419,17 +418,23 @@
 
   function setLang(lang){
     if (!I18N[lang]) return;
+    if (lang === currentLang){ applyI18nToUI(); return; }
+    // 古いキャッシュをクリア（強制再取得）
+    try {
+      localStorage.removeItem('gramapSpotsCache_' + lang);
+      localStorage.removeItem('gramapSpotsCacheTime_' + lang);
+    } catch(e){}
     currentLang = lang;
     localStorage.setItem('gramapLang', lang);
     applyI18nToUI();
-    // データ再取得
+    loadingEl.style.display = 'flex';
+    loadingText.textContent = t('loadingSpots');
     loadSpots(function(success){
+      loadingEl.style.display = 'none';
       if (!success) return;
-      // フィルタ状態のタグはクリア（言語が変わって対応するタグがなくなる可能性があるため）
       state.tags = [];
       initFilters();
       applyFilters();
-      // 詳細表示中ならその内容を新言語で更新
       if (detailSpot){
         var updated = null;
         for (var i=0;i<SPOTS.length;i++){
@@ -464,7 +469,8 @@
   tryCdn(0);
 
   // ====== Sheets API ======
-  var SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzn2ooVIQcZV_nVR7FuYhlyDZJ1lTUNHRnp-_WRYCu0-d2D4aupjP8I8ayO4KNIN7C4cg/exec';
+  // ★ 新URLに更新
+  var SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbwVPlhJIUdwM8cBQbLXfRn7mKQktT_CcFevhIgHY2aGObTCd57BQZikxW3MlkaYW6XpTA/exec';
   var CACHE_TTL = 60 * 60 * 1000;
   var SPOTS = [];
 
