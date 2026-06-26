@@ -16,6 +16,7 @@
     --island-w-expanded:700px;
     --handle-h:46px;
     --card-collapsed-h:360px;
+    --search-h-pc:38vh;
     --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
@@ -80,10 +81,12 @@
     overflow:hidden;
   }
 
+  /* ===== 検索島（PC） ===== */
   #searchIsland{
     position:fixed;top:calc(var(--hdr) + var(--island-gap));
     left:var(--island-gap);
-    width:var(--island-w);max-height:38vh;
+    width:var(--island-w);
+    max-height:var(--search-h-pc);
     z-index:1550;display:flex;flex-direction:column;min-height:0;
     transition:transform .35s var(--ease), opacity .3s var(--ease);
     will-change:transform;
@@ -113,12 +116,14 @@
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
+  /* ===== カード島（PC：検索島直下から画面下部まで） ===== */
   #cardIsland{
     position:fixed;
     left:var(--island-gap);
     bottom:var(--island-gap);
     width:var(--island-w);
-    top:calc(var(--hdr) + var(--island-gap) + 38vh + var(--island-gap));
+    /* ★ 検索島の max-height をベースに、検索島直下に配置 */
+    top:calc(var(--hdr) + var(--island-gap) + var(--search-h-pc) + var(--island-gap));
     z-index:1500;
     display:flex;flex-direction:column;
     transition:transform .35s var(--ease), opacity .3s var(--ease);
@@ -350,7 +355,6 @@
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
 
-  /* データ取得失敗時のオーバーレイ */
   #errorMsg{
     position:fixed;inset:0;background:#000;color:#fff;
     display:none;align-items:center;justify-content:center;
@@ -365,6 +369,7 @@
     cursor:pointer;font-weight:600;font-size:13px;margin-top:8px;
   }
 
+  /* ===== モバイル ===== */
   @media (max-width:768px){
     :root{
       --island-w:auto;
@@ -546,7 +551,7 @@
   var SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzn2ooVIQcZV_nVR7FuYhlyDZJ1lTUNHRnp-_WRYCu0-d2D4aupjP8I8ayO4KNIN7C4cg/exec';
   var CACHE_KEY = 'gramapSpotsCache';
   var CACHE_TIME_KEY = 'gramapSpotsCacheTime';
-  var CACHE_TTL = 60 * 60 * 1000; // 1時間
+  var CACHE_TTL = 60 * 60 * 1000;
 
   var SPOTS = [];
 
@@ -558,14 +563,12 @@
       if (cached){
         SPOTS = JSON.parse(cached);
         hasCached = SPOTS.length > 0;
-        // 1時間以内のキャッシュなら即callback
         if (hasCached && Date.now() - cachedTime < CACHE_TTL){
           if (callback) callback(true);
         }
       }
     } catch(e){}
 
-    // バックグラウンドで最新取得
     fetch(SHEETS_API_URL)
       .then(function(r){ return r.json(); })
       .then(function(data){
@@ -579,11 +582,9 @@
       })
       .catch(function(e){
         console.error('Sheets読み込み失敗:', e);
-        // キャッシュがあればそれを使う
         if (hasCached){
           if (callback) callback(true);
         } else {
-          // 完全失敗時はエラー表示
           if (callback) callback(false);
         }
       });
@@ -591,7 +592,9 @@
 
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
-  var FIXED_ZOOM = 13;
+  // ★ PCとモバイルで異なるFIXED_ZOOM
+  var FIXED_ZOOM_PC = 13;
+  var FIXED_ZOOM_MOBILE = 12;
   var MIN_ZOOM_PC = 12;
   var MIN_ZOOM_MOBILE = 11;
   var MAX_ZOOM = 17;
@@ -606,6 +609,7 @@
   function driveImg(id, w){ return "https://lh3.googleusercontent.com/d/" + id + "=w" + (w||1200); }
   function isDesktop(){ return window.innerWidth > 768; }
   function getMinZoom(){ return isDesktop() ? MIN_ZOOM_PC : MIN_ZOOM_MOBILE; }
+  function getFixedZoom(){ return isDesktop() ? FIXED_ZOOM_PC : FIXED_ZOOM_MOBILE; }
 
   var map, markers=[], filtered=[], meMarker=null;
   var favs = JSON.parse(localStorage.getItem("favs") || "[]");
@@ -657,7 +661,7 @@
       inertia: true,
       zoomSnap: 0.5,
       wheelDebounceTime: 40
-    }).setView(IMPERIAL, FIXED_ZOOM);
+    }).setView(IMPERIAL, getFixedZoom());
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: bounds
@@ -1047,6 +1051,9 @@
     var spotLatLng = detailSpot ? [detailSpot.lat, detailSpot.lng] : null;
     document.body.classList.remove('detail-mode');
     document.body.classList.remove('detail-expanded');
+    // ★ スマホ：カード一覧を必ず縮小状態に戻す
+    var cardIsland = document.getElementById('cardIsland');
+    if (cardIsland) cardIsland.classList.remove('expanded');
     detailSpot = null;
 
     forceHideUI = true;
@@ -1057,7 +1064,8 @@
       setTimeout(function(){
         map.invalidateSize();
         if (spotLatLng){
-          flyToVisibleCenter(spotLatLng, FIXED_ZOOM, 'normal');
+          // ★ FIXED_ZOOM は環境別
+          flyToVisibleCenter(spotLatLng, getFixedZoom(), 'normal');
         }
       }, 150);
       setTimeout(function(){
@@ -1127,7 +1135,6 @@
       (function(tag){
         var el = document.createElement('span');
         el.className = 'tag'; el.textContent = '#' + tag;
-        // 選択状態を復元
         if (state.tags.indexOf(tag) >= 0) el.classList.add('active');
         el.addEventListener('click', function(){
           var idx = state.tags.indexOf(tag);
@@ -1140,7 +1147,6 @@
     }
     var favToggleEl = document.getElementById('favToggle');
     if (state.favOnly) favToggleEl.classList.add('on');
-    // イベントは初回のみバインド（重複防止）
     if (!favToggleEl._inited){
       favToggleEl.addEventListener('click', function(){
         state.favOnly = !state.favOnly;
@@ -1191,6 +1197,7 @@
       if (isDesktop()){
         setSearchOpen(false);
         cardIsland.classList.remove('expanded');
+        document.body.classList.remove('detail-expanded');
       }
       updateSlideButtons();
       applyImageAspect();
