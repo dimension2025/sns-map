@@ -21,18 +21,11 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
     font-family:-apple-system,"Inter","Helvetica Neue","Hiragino Kaku Gothic ProN","Noto Sans JP",Arial,sans-serif;}
-
   *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;}
   *::-webkit-scrollbar{width:8px;height:8px;}
   *::-webkit-scrollbar-track{background:transparent;}
-  *::-webkit-scrollbar-thumb{
-    background:rgba(255,255,255,.15);
-    border-radius:4px;border:2px solid transparent;background-clip:padding-box;
-    transition:background .2s;
-  }
-  *::-webkit-scrollbar-thumb:hover{
-    background:rgba(255,255,255,.35);background-clip:padding-box;border:2px solid transparent;
-  }
+  *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px;border:2px solid transparent;background-clip:padding-box;transition:background .2s;}
+  *::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.35);background-clip:padding-box;border:2px solid transparent;}
 
   #map{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:1;}
   .leaflet-container{background:#000;cursor:grab;}
@@ -45,24 +38,29 @@
     transition:transform .35s var(--ease), opacity .3s var(--ease);
     will-change:transform;
   }
-  body.map-interacting header{
-    transform:translateY(-100%);
-    opacity:0;pointer-events:none;
-  }
+  body.map-interacting header{transform:translateY(-100%);opacity:0;pointer-events:none;}
   body.detail-mode header{ display:none; }
 
   .brand{display:flex;align-items:baseline;gap:14px;}
-  .logo{
-    font-family:"Inter","Helvetica Neue",Arial,sans-serif;
-    font-weight:300;font-size:22px;letter-spacing:.18em;color:#fff;
-    text-transform:uppercase;user-select:none;
-    text-shadow:0 1px 4px rgba(0,0,0,.8);
+  .logo{font-family:"Inter","Helvetica Neue",Arial,sans-serif;font-weight:300;font-size:22px;letter-spacing:.18em;color:#fff;text-transform:uppercase;user-select:none;text-shadow:0 1px 4px rgba(0,0,0,.8);}
+  .subtitle{font-size:11px;color:var(--muted);letter-spacing:.05em;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.8);}
+
+  .hdrRight{display:flex;align-items:center;gap:14px;}
+
+  /* 言語切替 */
+  .langSwitch{display:flex;gap:2px;align-items:center;user-select:none;}
+  .langSwitch button{
+    background:transparent;border:none;color:var(--muted);
+    font-family:"Inter",sans-serif;font-size:11px;font-weight:500;
+    letter-spacing:.08em;cursor:pointer;padding:6px 8px;
+    transition:color .2s;
   }
-  .subtitle{font-size:11px;color:var(--muted);letter-spacing:.05em;font-weight:400;
-    text-shadow:0 1px 3px rgba(0,0,0,.8);}
+  .langSwitch button.active{color:#fff;font-weight:700;}
+  .langSwitch button:hover{color:#fff;}
+  .langSwitch .sep{color:var(--muted);font-size:11px;opacity:.4;}
+
   .iconBtn{
-    background:rgba(14,14,14,.85);backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
+    background:rgba(14,14,14,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     border:1px solid var(--border);color:#fff;
     width:42px;height:42px;border-radius:50%;cursor:pointer;
     display:none;align-items:center;justify-content:center;
@@ -80,7 +78,6 @@
     overflow:hidden;
   }
 
-  /* ===== 左カラム（PC：flexコンテナ／モバイル：透過） ===== */
   #leftColumn{
     position:fixed;
     top:calc(var(--hdr) + var(--island-gap));
@@ -88,246 +85,106 @@
     left:var(--island-gap);
     width:var(--island-w);
     z-index:1550;
-    display:flex;
-    flex-direction:column;
-    gap:var(--island-gap);
-    pointer-events:none; /* 子要素のみクリック可能に */
+    display:flex;flex-direction:column;gap:var(--island-gap);
+    pointer-events:none;
     transition:transform .35s var(--ease), opacity .3s var(--ease);
     will-change:transform;
   }
-  body.map-interacting #leftColumn{
-    transform:translateX(calc(-100% - var(--island-gap) - 20px));
-    opacity:0;
-  }
+  body.map-interacting #leftColumn{transform:translateX(calc(-100% - var(--island-gap) - 20px));opacity:0;}
   body.detail-mode #leftColumn{ display:none; }
 
-  /* ===== 検索島（PC：flex item） ===== */
   #searchIsland{
-    position:relative;
-    flex:0 0 auto;
-    max-height:38vh;
+    position:relative;flex:0 0 auto;max-height:38vh;
     display:flex;flex-direction:column;min-height:0;
     pointer-events:auto;
   }
   .search{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
   .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
   .tagrow{display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow-y:auto;}
-  .tag{font-size:11px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;
-    background:rgba(255,255,255,.05);color:var(--muted);cursor:pointer;user-select:none;}
+  .tag{font-size:11px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.05);color:var(--muted);cursor:pointer;user-select:none;}
   .tag.active{background:#fff;color:#000;border-color:#fff;}
-  .favToggle{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-    border-radius:8px;cursor:pointer;font-size:13px;user-select:none;
-  }
+  .favToggle{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;user-select:none;}
   .favToggle .sw{width:36px;height:20px;background:#333;border-radius:10px;position:relative;transition:background .2s;}
-  .favToggle .sw::after{
-    content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
-    background:#fff;border-radius:50%;transition:transform .2s;
-  }
+  .favToggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;}
   .favToggle.on .sw{background:var(--pinFav);}
   .favToggle.on .sw::after{transform:translateX(16px);}
-  .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
-    border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
+  .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* ===== カード島（PC：flex itemで残りスペース全部） ===== */
   #cardIsland{
-    position:relative;
-    flex:1 1 0;
-    min-height:0;
-    display:flex;flex-direction:column;
-    pointer-events:auto;
+    position:relative;flex:1 1 0;min-height:0;
+    display:flex;flex-direction:column;pointer-events:auto;
   }
-  .sheetHandle{
-    flex:0 0 var(--handle-h);
-    height:var(--handle-h);
-    display:flex;align-items:center;justify-content:center;
-    padding:0 14px;
-    border-bottom:1px solid var(--border);
-    position:relative;
-  }
+  .sheetHandle{flex:0 0 var(--handle-h);height:var(--handle-h);display:flex;align-items:center;justify-content:center;padding:0 14px;border-bottom:1px solid var(--border);position:relative;}
   .listHead{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
-
-  .chevron{display:none;position:absolute;top:9px;left:50%;
-    width:36px;height:12px;transform:translateX(-50%);
-    transition:transform .35s var(--ease);
-    pointer-events:none;
-  }
-  .chevron polyline{
-    fill:none;stroke:#bbb;stroke-width:2.4;
-    stroke-linecap:round;stroke-linejoin:round;
-  }
+  .chevron{display:none;position:absolute;top:9px;left:50%;width:36px;height:12px;transform:translateX(-50%);transition:transform .35s var(--ease);pointer-events:none;}
+  .chevron polyline{fill:none;stroke:#bbb;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
   #cardIsland.expanded .chevron{transform:translateX(-50%) rotate(180deg);}
 
-  .listScroll{
-    flex:1 1 0;
-    min-height:0;
-    overflow-y:auto;overflow-x:hidden;
-    -webkit-overflow-scrolling:touch;
-  }
-  .list{
-    padding:8px;
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;
-  }
-  .card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
-    overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
+  .listScroll{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  .list{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;}
   .card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.4);}
   .thumbwrap{position:relative;width:100%;aspect-ratio:1/1;}
   .thumb{position:absolute;inset:0;background:#000 center/cover no-repeat;}
   .body{padding:8px 10px;}
   .ttl{display:flex;justify-content:space-between;align-items:center;gap:6px;}
-  .name{font-size:12px;font-weight:600;line-height:1.3;
-    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+  .name{font-size:12px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
   .rate{font-size:11px;color:#fff;white-space:nowrap;}
   .area{font-size:10px;color:var(--muted);margin-top:2px;}
-  .numBadge{
-    position:absolute;top:6px;left:6px;background:#fff;color:#000;
-    font-weight:800;font-size:11px;min-width:22px;height:22px;padding:0 5px;
-    border-radius:11px;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:2;
-  }
-  .fav{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);
-    border:none;color:#fff;font-size:12px;width:26px;height:26px;border-radius:50%;cursor:pointer;z-index:2;}
+  .numBadge{position:absolute;top:6px;left:6px;background:#fff;color:#000;font-weight:800;font-size:11px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:2;}
+  .fav{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#fff;font-size:12px;width:26px;height:26px;border-radius:50%;cursor:pointer;z-index:2;}
   .fav.on{color:var(--pinFav);}
 
-  .numPin{
-    width:30px;height:30px;border-radius:50% 50% 50% 0;
-    background:var(--pin);border:2px solid #000;
-    transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.6);
-    display:flex;align-items:center;justify-content:center;
-  }
+  .numPin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--pin);border:2px solid #000;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;}
   .numPin.fav{background:var(--pinFav);}
   .numPin.dim{opacity:.45;}
-  .numPin > span{transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;
-    font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
+  .numPin > span{transform:rotate(45deg);color:#000;font-weight:800;font-size:12px;font-family:"Inter","Helvetica Neue",Arial,sans-serif;}
   .numPin.fav > span{color:#fff;}
 
-  .bigPinWrap{
-    position:relative;width:40px;height:40px;
-    animation:bigPinPulse 2.2s ease-out infinite;
-    border-radius:50%;
-  }
-  @keyframes bigPinPulse{
-    0%   {box-shadow:0 0 0 0 rgba(255,255,255,.55);}
-    70%  {box-shadow:0 0 0 22px rgba(255,255,255,0);}
-    100% {box-shadow:0 0 0 0 rgba(255,255,255,0);}
-  }
-  .bigPin{
-    position:absolute;top:2px;left:2px;
-    width:36px;height:36px;
-    border-radius:50% 50% 50% 0;
-    background:linear-gradient(135deg,#fff 0%,#e8e8e8 100%);
-    border:3px solid #000;
-    transform:rotate(-45deg);
-    box-shadow:0 8px 20px rgba(0,0,0,.7);
-    display:flex;align-items:center;justify-content:center;
-  }
-  .bigPin::after{
-    content:'';width:12px;height:12px;
-    background:#000;border-radius:50%;transform:rotate(45deg);
-  }
+  .bigPinWrap{position:relative;width:40px;height:40px;animation:bigPinPulse 2.2s ease-out infinite;border-radius:50%;}
+  @keyframes bigPinPulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55);}70%{box-shadow:0 0 0 22px rgba(255,255,255,0);}100%{box-shadow:0 0 0 0 rgba(255,255,255,0);}}
+  .bigPin{position:absolute;top:2px;left:2px;width:36px;height:36px;border-radius:50% 50% 50% 0;background:linear-gradient(135deg,#fff 0%,#e8e8e8 100%);border:3px solid #000;transform:rotate(-45deg);box-shadow:0 8px 20px rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;}
+  .bigPin::after{content:'';width:12px;height:12px;background:#000;border-radius:50%;transform:rotate(45deg);}
   .bigPin.fav{background:linear-gradient(135deg,#ff7da6 0%,#ff5a8c 100%);}
   .bigPin.fav::after{background:#fff;}
-
-  .mePin{
-    width:18px;height:18px;border-radius:50%;
-    background:var(--pinMe);border:3px solid #fff;
-    box-shadow:0 0 0 4px rgba(61,169,255,.25);
-  }
+  .mePin{width:18px;height:18px;border-radius:50%;background:var(--pinMe);border:3px solid #fff;box-shadow:0 0 0 4px rgba(61,169,255,.25);}
 
   #detailIsland{
-    display:none;position:fixed;
-    top:var(--island-gap);
+    display:none;position:fixed;top:var(--island-gap);
     left:var(--island-gap);bottom:var(--island-gap);
     width:var(--island-w);z-index:1700;
-    flex-direction:column;overflow:hidden;
-    cursor:pointer;
-    transition:top .4s var(--ease), bottom .4s var(--ease),
-               left .4s var(--ease), right .4s var(--ease),
-               width .4s var(--ease);
+    flex-direction:column;overflow:hidden;cursor:pointer;
+    transition:top .4s var(--ease), bottom .4s var(--ease), left .4s var(--ease), right .4s var(--ease), width .4s var(--ease);
   }
   body.detail-mode #detailIsland{display:flex;}
 
   @media (min-width:769px){
     body.detail-mode.detail-expanded #detailIsland{
-      left:var(--island-gap);
-      right:auto;
+      left:var(--island-gap);right:auto;
       width:min(var(--island-w-expanded), calc(100vw - var(--island-gap) * 2));
     }
-    body.detail-mode.detail-expanded .detailImages{
-      max-height:75vh;
-    }
+    body.detail-mode.detail-expanded .detailImages{max-height:75vh;}
   }
 
-  .detailClose{
-    position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);
-    border:1px solid var(--border);color:#fff;font-size:18px;cursor:pointer;
-    width:34px;height:34px;border-radius:50%;z-index:5;
-  }
+  .detailClose{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid var(--border);color:#fff;font-size:18px;cursor:pointer;width:34px;height:34px;border-radius:50%;z-index:5;}
 
   .detailScroll{display:contents;}
-  .detailImages{
-    flex:0 0 auto;
-    position:relative;
-    background:#000;
-    width:100%;
-    height:auto;
-    aspect-ratio:4/3;
-    max-height:60vh;
-    overflow:hidden;
-    transition:max-height .35s var(--ease);
-  }
-  .slidesTrack{
-    display:flex;height:100%;width:100%;
-    overflow-x:auto;overflow-y:hidden;
-    scroll-snap-type:x mandatory;
-    -webkit-overflow-scrolling:touch;
-    scrollbar-width:none;
-  }
+  .detailImages{flex:0 0 auto;position:relative;background:#000;width:100%;height:auto;aspect-ratio:4/3;max-height:60vh;overflow:hidden;transition:max-height .35s var(--ease);}
+  .slidesTrack{display:flex;height:100%;width:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .slidesTrack::-webkit-scrollbar{display:none;}
-  .slide{
-    flex:0 0 100%;
-    width:100%;height:100%;
-    scroll-snap-align:start;
-    scroll-snap-stop:always;
-    display:flex;align-items:center;justify-content:center;
-    background:#000;
-  }
-  .slide img{
-    width:100%;height:100%;
-    object-fit:cover;display:block;
-  }
+  .slide{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;background:#000;}
+  .slide img{width:100%;height:100%;object-fit:cover;display:block;}
 
-  .slideNav{
-    position:absolute;top:50%;transform:translateY(-50%);
-    width:40px;height:40px;border-radius:50%;
-    background:rgba(0,0,0,.55);
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,.2);
-    color:#fff;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    z-index:4;
-    transition:opacity .2s, background .2s, transform .2s;
-    opacity:1;
-  }
+  .slideNav{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:4;transition:opacity .2s, background .2s, transform .2s;opacity:1;}
   .slideNav:hover{background:rgba(0,0,0,.8);transform:translateY(-50%) scale(1.08);}
   .slideNav.prev{left:10px;}
   .slideNav.next{right:10px;}
   .slideNav.hidden{opacity:0;pointer-events:none;}
   .slideNav svg{width:18px;height:18px;}
-  .slideNav svg polyline{
-    fill:none;stroke:#fff;stroke-width:2.5;
-    stroke-linecap:round;stroke-linejoin:round;
-  }
+  .slideNav svg polyline{fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
 
-  .slideDots{
-    position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
-    display:flex;gap:6px;z-index:3;
-  }
-  .slideDots span{
-    width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);
-    transition:background .2s;
-  }
+  .slideDots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:3;}
+  .slideDots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s;}
   .slideDots span.active{background:#fff;}
 
   .detailBody{flex:1 1 0;min-height:0;overflow-y:auto;padding:18px;}
@@ -338,132 +195,62 @@
   .detailBody dt{color:var(--muted);}
   .detailBody .tags{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;justify-content:center;}
   .detailBody .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;justify-content:center;}
-  .btn{padding:9px 16px;border-radius:8px;border:1px solid #fff;
-    background:#fff;color:#000;font-weight:600;text-decoration:none;font-size:12px;cursor:pointer;}
+  .btn{padding:9px 16px;border-radius:8px;border:1px solid #fff;background:#fff;color:#000;font-weight:600;text-decoration:none;font-size:12px;cursor:pointer;}
   .btn.ghost{background:transparent;color:#fff;}
 
   .backdrop{position:fixed;inset:var(--hdr) 0 0 0;background:rgba(0,0,0,.4);display:none;z-index:1500;}
   .backdrop.show{display:block;}
-  #loadingMsg{
-    position:fixed;inset:0;background:#000;color:#fff;
-    display:flex;align-items:center;justify-content:center;
-    font-size:14px;z-index:9999;
-    flex-direction:column;gap:14px;
-  }
-  .loadSpinner{
-    width:40px;height:40px;border-radius:50%;
-    border:3px solid rgba(255,255,255,.15);
-    border-top-color:#fff;
-    animation:spin .8s linear infinite;
-  }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-
-  #errorMsg{
-    position:fixed;inset:0;background:#000;color:#fff;
-    display:none;align-items:center;justify-content:center;
-    z-index:9998;padding:20px;text-align:center;
-    flex-direction:column;gap:12px;
-  }
+  #loadingMsg{position:fixed;inset:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:9999;flex-direction:column;gap:14px;}
+  .loadSpinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#fff;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #errorMsg{position:fixed;inset:0;background:#000;color:#fff;display:none;align-items:center;justify-content:center;z-index:9998;padding:20px;text-align:center;flex-direction:column;gap:12px;}
   #errorMsg.show{display:flex;}
   #errorMsg .ttl{font-size:16px;font-weight:600;}
   #errorMsg .desc{font-size:13px;color:var(--muted);line-height:1.6;max-width:400px;}
-  #errorMsg button{
-    padding:8px 16px;background:#fff;color:#000;border:none;border-radius:6px;
-    cursor:pointer;font-weight:600;font-size:13px;margin-top:8px;
-  }
+  #errorMsg button{padding:8px 16px;background:#fff;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;margin-top:8px;}
 
-  /* ===== モバイル：leftColumnを透過してそれぞれ独自配置に戻す ===== */
   @media (max-width:768px){
-    :root{
-      --island-w:auto;
-      --handle-h:32px;
-    }
+    :root{--island-w:auto;--handle-h:32px;}
     .iconBtn{display:flex;}
     .chevron{display:block;top:9px;}
     .listHead{display:none;}
     .sheetHandle{justify-content:center;}
 
-    /* leftColumnは「枠」をなくして子要素を独立配置 */
-    #leftColumn{
-      position:static;
-      display:contents;
-      transform:none !important;
-      opacity:1 !important;
-      pointer-events:auto;
-      transition:none;
-    }
+    #leftColumn{position:static;display:contents;transform:none !important;opacity:1 !important;pointer-events:auto;transition:none;}
 
-    /* 検索島：モバイル独自のスライドダウン */
     #searchIsland{
-      position:fixed;
-      top:calc(var(--hdr) + var(--island-gap));
+      position:fixed;top:calc(var(--hdr) + var(--island-gap));
       left:var(--island-gap);right:var(--island-gap);width:auto;
-      max-height:65vh;
-      z-index:1650;
-      flex:none;
-      transform:translateY(-130%);
-      opacity:0;
+      max-height:65vh;z-index:1650;flex:none;
+      transform:translateY(-130%);opacity:0;
       transition:transform .3s var(--ease), opacity .25s var(--ease);
     }
     #searchIsland.open{transform:translateY(0);opacity:1;}
-    body.map-interacting #searchIsland{
-      transform:translateY(-130%);
-      opacity:0;
-    }
+    body.map-interacting #searchIsland{transform:translateY(-130%);opacity:0;}
 
-    /* カード島：モバイル独自のボトムシート */
     #cardIsland{
-      position:fixed;
-      left:var(--island-gap);right:var(--island-gap);
-      bottom:var(--island-gap);
-      width:auto;
-      flex:none;
+      position:fixed;left:var(--island-gap);right:var(--island-gap);
+      bottom:var(--island-gap);width:auto;flex:none;
       top:calc(100vh - var(--card-collapsed-h) - var(--island-gap));
       z-index:1500;
       transition:top .38s var(--ease), transform .38s var(--ease), opacity .3s var(--ease);
       will-change:top,transform;
     }
-    #cardIsland.expanded{
-      top:calc(var(--hdr) + var(--island-gap));
-    }
-    body.map-interacting #cardIsland{
-      transform:translateY(calc(100% + var(--island-gap) + 30px));
-      opacity:1;
-      pointer-events:none;
-    }
+    #cardIsland.expanded{top:calc(var(--hdr) + var(--island-gap));}
+    body.map-interacting #cardIsland{transform:translateY(calc(100% + var(--island-gap) + 30px));opacity:1;pointer-events:none;}
     .sheetHandle{cursor:pointer;}
 
-    #detailIsland{
-      top:42vh;
-      left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
-      width:auto;
-    }
-    body.detail-mode #detailIsland{ top:42vh; }
-    body.detail-mode.detail-expanded #detailIsland{ top:var(--island-gap); }
+    #detailIsland{top:42vh;left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);width:auto;}
+    body.detail-mode #detailIsland{top:42vh;}
+    body.detail-mode.detail-expanded #detailIsland{top:var(--island-gap);}
     body.detail-mode .iconBtn{display:none;}
 
-    .detailScroll{
-      display:block;
-      flex:1 1 0;min-height:0;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-    }
-    .detailImages{
-      height:28vh !important;
-      aspect-ratio:auto !important;
-      max-height:none !important;
-      flex:0 0 auto;
-    }
-    .slide img{ object-fit:contain; }
-    body.detail-expanded .detailImages{
-      height:auto !important;
-      max-height:65vh !important;
-    }
-    body.detail-expanded .slide img{ object-fit:cover; }
-    .detailBody{
-      overflow:visible;
-      flex:none;
-    }
+    .detailScroll{display:block;flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+    .detailImages{height:28vh !important;aspect-ratio:auto !important;max-height:none !important;flex:0 0 auto;}
+    .slide img{object-fit:contain;}
+    body.detail-expanded .detailImages{height:auto !important;max-height:65vh !important;}
+    body.detail-expanded .slide img{object-fit:cover;}
+    .detailBody{overflow:visible;flex:none;}
     .slideNav{display:none;}
   }
 </style>
@@ -475,9 +262,9 @@
 </div>
 
 <div id="errorMsg">
-  <div class="ttl">⚠️ データ読み込みに失敗しました</div>
-  <div class="desc">スポットデータを取得できませんでした。ネットワーク接続を確認の上、再読み込みしてください。</div>
-  <button onclick="location.reload()">再読み込み</button>
+  <div class="ttl" id="errTtl">⚠️ Error</div>
+  <div class="desc" id="errDesc">Failed to load.</div>
+  <button id="errBtn" onclick="location.reload()">Reload</button>
 </div>
 
 <div id="map"></div>
@@ -485,21 +272,27 @@
 <header>
   <div class="brand">
     <div class="logo">GRAMAP</div>
-    <div class="subtitle">SNS映えスポットマップ</div>
+    <div class="subtitle" id="subtitle">SNS映えスポットマップ</div>
   </div>
-  <button class="iconBtn" id="searchToggle" aria-label="ハッシュタグ検索">#</button>
+  <div class="hdrRight">
+    <div class="langSwitch">
+      <button data-lang="ja" id="langJa">JP</button>
+      <span class="sep">/</span>
+      <button data-lang="en" id="langEn">EN</button>
+    </div>
+    <button class="iconBtn" id="searchToggle" aria-label="Search">#</button>
+  </div>
 </header>
 
-<!-- ★ 左カラムラッパー：PC では flex column、モバイルでは display:contents で透過 -->
 <aside id="leftColumn">
   <section id="searchIsland" class="island">
     <div class="search">
       <div>
-        <div class="lab">ハッシュタグ</div>
+        <div class="lab" id="searchLab">ハッシュタグ</div>
         <div class="tagrow" id="tags"></div>
       </div>
       <div class="favToggle" id="favToggle">
-        <span>♥ お気に入りのみ表示</span>
+        <span id="favText">♥ お気に入りのみ表示</span>
         <span class="sw"></span>
       </div>
       <button class="clearBtn" id="clearBtn">条件をクリア</button>
@@ -508,9 +301,7 @@
 
   <section id="cardIsland" class="island">
     <div class="sheetHandle" id="sheetHandle">
-      <svg class="chevron" viewBox="0 0 36 12" aria-label="開閉">
-        <polyline points="3,9 18,3 33,9"></polyline>
-      </svg>
+      <svg class="chevron" viewBox="0 0 36 12"><polyline points="3,9 18,3 33,9"></polyline></svg>
       <div class="listHead" id="listHead">スポット一覧</div>
     </div>
     <div class="listScroll">
@@ -520,16 +311,12 @@
 </aside>
 
 <section id="detailIsland" class="island">
-  <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
+  <button class="detailClose" id="detailClose" aria-label="Close">×</button>
   <div class="detailScroll">
     <div class="detailImages" id="detailImages">
       <div class="slidesTrack" id="slidesTrack"></div>
-      <button class="slideNav prev hidden" id="slidePrev" aria-label="前へ">
-        <svg viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"></polyline></svg>
-      </button>
-      <button class="slideNav next hidden" id="slideNext" aria-label="次へ">
-        <svg viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"></polyline></svg>
-      </button>
+      <button class="slideNav prev hidden" id="slidePrev"><svg viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"></polyline></svg></button>
+      <button class="slideNav next hidden" id="slideNext"><svg viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"></polyline></svg></button>
       <div class="slideDots" id="slideDots"></div>
     </div>
     <div class="detailBody" id="detailBody"></div>
@@ -540,20 +327,131 @@
 
 <script>
 (function(){
+  // ====== I18N 辞書 ======
+  var I18N = {
+    ja: {
+      subtitle: 'SNS映えスポットマップ',
+      searchLab: 'ハッシュタグ',
+      favText: '♥ お気に入りのみ表示',
+      clearBtn: '条件をクリア',
+      listHead: 'スポット一覧',
+      visibleCount: '表示範囲 {v} / 全 {t} 件',
+      noSpots: '表示範囲に該当スポットがありません',
+      openGMap: 'Google Mapで開く',
+      addFav: '♡ お気に入り',
+      removeFav: '♥ お気に入り解除',
+      hours: '営業時間',
+      price: '料金',
+      loadingLeaflet: 'Loading Leaflet from {n}...',
+      loadingLeafletFail: '❌ Leaflet読み込み失敗',
+      loadingSpots: 'スポットデータを取得中...',
+      errTtl: '⚠️ データ読み込みに失敗しました',
+      errDesc: 'ネットワーク接続を確認の上、再読み込みしてください。',
+      errBtn: '再読み込み',
+      searchAria: 'ハッシュタグ検索',
+      closeAria: '閉じる',
+      prevAria: '前へ',
+      nextAria: '次へ'
+    },
+    en: {
+      subtitle: 'Instagrammable Spot Map',
+      searchLab: 'Hashtags',
+      favText: '♥ Favorites only',
+      clearBtn: 'Clear filters',
+      listHead: 'Spots',
+      visibleCount: 'Showing {v} of {t}',
+      noSpots: 'No spots in this area',
+      openGMap: 'Open in Google Maps',
+      addFav: '♡ Add favorite',
+      removeFav: '♥ Remove favorite',
+      hours: 'Hours',
+      price: 'Price',
+      loadingLeaflet: 'Loading Leaflet from {n}...',
+      loadingLeafletFail: '❌ Failed to load Leaflet',
+      loadingSpots: 'Loading spots...',
+      errTtl: '⚠️ Failed to load',
+      errDesc: 'Please check your connection and reload.',
+      errBtn: 'Reload',
+      searchAria: 'Search by hashtag',
+      closeAria: 'Close',
+      prevAria: 'Previous',
+      nextAria: 'Next'
+    }
+  };
+
+  function detectLang(){
+    var saved = localStorage.getItem('gramapLang');
+    if (saved && I18N[saved]) return saved;
+    var b = (navigator.language || 'ja').toLowerCase();
+    if (b.indexOf('en') === 0) return 'en';
+    return 'ja';
+  }
+  var currentLang = detectLang();
+
+  function t(key, vars){
+    var dict = I18N[currentLang] || I18N.ja;
+    var s = dict[key] || I18N.ja[key] || key;
+    if (vars){ for (var k in vars){ s = s.replace('{' + k + '}', vars[k]); } }
+    return s;
+  }
+
+  function applyI18nToUI(){
+    document.documentElement.setAttribute('lang', currentLang);
+    var ids = ['subtitle','searchLab','clearBtn','listHead','errTtl','errDesc','errBtn'];
+    for (var i=0;i<ids.length;i++){
+      var el = document.getElementById(ids[i]);
+      if (el) el.textContent = t(ids[i]);
+    }
+    var favText = document.getElementById('favText');
+    if (favText) favText.textContent = t('favText');
+    var st = document.getElementById('searchToggle');
+    if (st && !document.getElementById('searchIsland').classList.contains('open')) st.setAttribute('aria-label', t('searchAria'));
+    var dc = document.getElementById('detailClose');
+    if (dc) dc.setAttribute('aria-label', t('closeAria'));
+    var pa = document.getElementById('slidePrev'); if (pa) pa.setAttribute('aria-label', t('prevAria'));
+    var na = document.getElementById('slideNext'); if (na) na.setAttribute('aria-label', t('nextAria'));
+    // 言語ボタンのアクティブ状態
+    var btns = document.querySelectorAll('.langSwitch button');
+    for (var b=0;b<btns.length;b++){
+      btns[b].classList.toggle('active', btns[b].getAttribute('data-lang') === currentLang);
+    }
+  }
+
+  function setLang(lang){
+    if (!I18N[lang]) return;
+    currentLang = lang;
+    localStorage.setItem('gramapLang', lang);
+    applyI18nToUI();
+    // データ再取得
+    loadSpots(function(success){
+      if (!success) return;
+      // フィルタ状態のタグはクリア（言語が変わって対応するタグがなくなる可能性があるため）
+      state.tags = [];
+      initFilters();
+      applyFilters();
+      // 詳細表示中ならその内容を新言語で更新
+      if (detailSpot){
+        var updated = null;
+        for (var i=0;i<SPOTS.length;i++){
+          if (SPOTS[i].id === detailSpot.id){ updated = SPOTS[i]; break; }
+        }
+        if (updated){ detailSpot = updated; renderDetailBody(updated); }
+      }
+    });
+  }
+
+  // ====== Leaflet 動的読み込み ======
   var loadingEl = document.getElementById('loadingMsg');
   var loadingText = document.getElementById('loadingText');
   var cdns = [
-    { css:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css',
-      js: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js', name:'cdnjs' },
-    { css:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
-      js: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', name:'jsdelivr' },
-    { css:'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-      js: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', name:'unpkg' }
+    { css:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css', js:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js', name:'cdnjs' },
+    { css:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css', js:'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js', name:'jsdelivr' },
+    { css:'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', js:'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', name:'unpkg' }
   ];
   function tryCdn(i){
-    if (i >= cdns.length){ loadingText.textContent = '❌ Leaflet読み込み失敗（全CDN）'; return; }
+    if (i >= cdns.length){ loadingText.textContent = t('loadingLeafletFail'); return; }
     var c = cdns[i];
-    loadingText.textContent = 'Loading Leaflet from ' + c.name + '...';
+    loadingText.textContent = t('loadingLeaflet', {n: c.name});
     var link = document.createElement('link');
     link.rel = 'stylesheet'; link.href = c.css;
     document.head.appendChild(link);
@@ -565,19 +463,18 @@
   }
   tryCdn(0);
 
-  // ========= Google Sheets API設定 =========
+  // ====== Sheets API ======
   var SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbzn2ooVIQcZV_nVR7FuYhlyDZJ1lTUNHRnp-_WRYCu0-d2D4aupjP8I8ayO4KNIN7C4cg/exec';
-  var CACHE_KEY = 'gramapSpotsCache';
-  var CACHE_TIME_KEY = 'gramapSpotsCacheTime';
   var CACHE_TTL = 60 * 60 * 1000;
-
   var SPOTS = [];
 
   function loadSpots(callback){
+    var cacheKey = 'gramapSpotsCache_' + currentLang;
+    var cacheTimeKey = 'gramapSpotsCacheTime_' + currentLang;
     var hasCached = false;
     try {
-      var cached = localStorage.getItem(CACHE_KEY);
-      var cachedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0', 10);
+      var cached = localStorage.getItem(cacheKey);
+      var cachedTime = parseInt(localStorage.getItem(cacheTimeKey) || '0', 10);
       if (cached){
         SPOTS = JSON.parse(cached);
         hasCached = SPOTS.length > 0;
@@ -587,27 +484,25 @@
       }
     } catch(e){}
 
-    fetch(SHEETS_API_URL)
+    fetch(SHEETS_API_URL + '?lang=' + currentLang)
       .then(function(r){ return r.json(); })
       .then(function(data){
-        if (!data || !data.length) throw new Error('Empty data');
+        if (!data || !data.length) throw new Error('Empty');
         SPOTS = data;
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+          localStorage.setItem(cacheTimeKey, String(Date.now()));
         } catch(e){}
         if (callback) callback(true);
       })
       .catch(function(e){
         console.error('Sheets読み込み失敗:', e);
-        if (hasCached){
-          if (callback) callback(true);
-        } else {
-          if (callback) callback(false);
-        }
+        if (hasCached){ if (callback) callback(true); }
+        else { if (callback) callback(false); }
       });
   }
 
+  // ====== 定数 ======
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
   var FIXED_ZOOM_PC = 13;
@@ -616,9 +511,7 @@
   var MIN_ZOOM_MOBILE = 11;
   var MAX_ZOOM = 17;
   var DETAIL_ZOOM = 15;
-  var ISLAND_GAP = 14;
-  var ISLAND_W = 360;
-  var ISLAND_W_EXPANDED = 700;
+  var ISLAND_GAP = 14, ISLAND_W = 360, ISLAND_W_EXPANDED = 700;
   var HDR_H = 56;
   var CARD_COLLAPSED_H = 360;
   var PIN_W = 30, PIN_H = 38;
@@ -633,7 +526,6 @@
   var state = { tags:[], favOnly:false };
   var detailSpot = null;
   var firstImgAspect = null;
-
   var programmaticMove = false;
   var interactingTimer = null;
   var forceHideUI = false;
@@ -663,47 +555,23 @@
   function initMap(){
     var bounds = L.latLngBounds(BOUNDS_ARR);
     map = L.map('map', {
-      zoomControl:false,
-      attributionControl:true,
-      maxBounds: bounds,
-      maxBoundsViscosity:1.0,
-      minZoom: getMinZoom(),
-      maxZoom: MAX_ZOOM,
-      scrollWheelZoom: true,
-      doubleClickZoom: true,
-      touchZoom: true,
-      boxZoom: false,
-      keyboard: true,
-      dragging: true,
-      inertia: true,
-      zoomSnap: 0.5,
-      wheelDebounceTime: 40
+      zoomControl:false, attributionControl:true,
+      maxBounds: bounds, maxBoundsViscosity:1.0,
+      minZoom: getMinZoom(), maxZoom: MAX_ZOOM,
+      scrollWheelZoom: true, doubleClickZoom: true, touchZoom: true,
+      boxZoom: false, keyboard: true, dragging: true, inertia: true,
+      zoomSnap: 0.5, wheelDebounceTime: 40
     }).setView(IMPERIAL, getFixedZoom());
-
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution:'© OpenStreetMap, © CARTO', maxZoom:19, bounds: bounds
     }).addTo(map);
-
-    map.on('movestart', function(){
-      if (programmaticMove) return;
-      setInteracting(true);
-    });
-    map.on('zoomstart', function(){
-      if (programmaticMove) return;
-      setInteracting(true);
-    });
+    map.on('movestart', function(){ if (programmaticMove) return; setInteracting(true); });
+    map.on('zoomstart', function(){ if (programmaticMove) return; setInteracting(true); });
     map.on('moveend', function(){
-      if (!detailSpot){
-        renderMarkers(); renderList();
-      }
-      if (programmaticMove) return;
-      setInteracting(false);
+      if (!detailSpot){ renderMarkers(); renderList(); }
+      if (programmaticMove) return; setInteracting(false);
     });
-    map.on('zoomend', function(){
-      if (programmaticMove) return;
-      setInteracting(false);
-    });
-
+    map.on('zoomend', function(){ if (programmaticMove) return; setInteracting(false); });
     setTimeout(function(){ map.invalidateSize(); }, 100);
     setTimeout(function(){ map.invalidateSize(); }, 500);
     window.addEventListener('load', function(){ map.invalidateSize(); });
@@ -725,10 +593,7 @@
         var b = BOUNDS_ARR;
         var inArea = (lat >= b[0][0] && lat <= b[1][0] && lng >= b[0][1] && lng <= b[1][1]);
         if (!inArea || !map) return;
-        var icon = L.divIcon({
-          className:'', html:'<div class="mePin"></div>',
-          iconSize:[18,18], iconAnchor:[9,9]
-        });
+        var icon = L.divIcon({className:'', html:'<div class="mePin"></div>', iconSize:[18,18], iconAnchor:[9,9]});
         meMarker = L.marker([lat, lng], { icon:icon, interactive:false, zIndexOffset:-100 }).addTo(map);
       } catch(e){}
     }, function(){}, { timeout:8000, enableHighAccuracy:false });
@@ -737,26 +602,18 @@
   function getViewportPads(){
     var size = map.getSize();
     var W = size.x, H = size.y;
-    var topPad = HDR_H;
-    var leftPad = 0, rightPad = 0, bottomPad = 0;
-    if (isDesktop()){
-      leftPad = ISLAND_GAP + ISLAND_W;
-    } else {
-      bottomPad = CARD_COLLAPSED_H;
-    }
+    var topPad = HDR_H, leftPad = 0, rightPad = 0, bottomPad = 0;
+    if (isDesktop()){ leftPad = ISLAND_GAP + ISLAND_W; }
+    else { bottomPad = CARD_COLLAPSED_H; }
     return { W:W, H:H, top:topPad, left:leftPad, right:rightPad, bottom:bottomPad };
   }
 
   function isPinVisible(latlng){
     var p = getViewportPads();
     var px = map.latLngToContainerPoint(latlng);
-    var pinLeft = px.x - PIN_W/2;
-    var pinRight = px.x + PIN_W/2;
-    var pinTop = px.y - PIN_H;
-    var pinBottom = px.y;
-    var vLeft = p.left, vTop = p.top;
-    var vRight = p.W - p.right;
-    var vBottom = p.H - p.bottom;
+    var pinLeft = px.x - PIN_W/2, pinRight = px.x + PIN_W/2;
+    var pinTop = px.y - PIN_H, pinBottom = px.y;
+    var vLeft = p.left, vTop = p.top, vRight = p.W - p.right, vBottom = p.H - p.bottom;
     if (pinRight < vLeft || pinLeft > vRight) return false;
     if (pinBottom < vTop || pinTop > vBottom) return false;
     return true;
@@ -766,9 +623,7 @@
     if (!map) return [];
     var visible = [];
     for (var i=0;i<filtered.length;i++){
-      if (isPinVisible([filtered[i].lat, filtered[i].lng])){
-        visible.push(filtered[i]);
-      }
+      if (isPinVisible([filtered[i].lat, filtered[i].lng])) visible.push(filtered[i]);
     }
     return visible;
   }
@@ -777,19 +632,12 @@
     if (!map) return;
     for (var i=0;i<markers.length;i++) map.removeLayer(markers[i]);
     markers = [];
-
     if (detailSpot){
       var isFav = favs.indexOf(detailSpot.id) >= 0;
-      var icon = L.divIcon({
-        className:'',
-        html:'<div class="bigPinWrap"><div class="bigPin' + (isFav?' fav':'') + '"></div></div>',
-        iconSize:[40,48], iconAnchor:[20,48]
-      });
+      var icon = L.divIcon({className:'', html:'<div class="bigPinWrap"><div class="bigPin' + (isFav?' fav':'') + '"></div></div>', iconSize:[40,48], iconAnchor:[20,48]});
       var mk = L.marker([detailSpot.lat, detailSpot.lng], { icon:icon }).addTo(map);
-      markers.push(mk);
-      return;
+      markers.push(mk); return;
     }
-
     var visible = getVisibleRanked();
     var numMap = {};
     for (var v=0;v<visible.length;v++) numMap[visible[v].id] = v+1;
@@ -800,11 +648,7 @@
         var isVis = num !== undefined;
         var inner = isVis ? '<span>' + num + '</span>' : '<span></span>';
         var cls = 'numPin' + (isFav?' fav':'') + (isVis?'':' dim');
-        var icon = L.divIcon({
-          className:'',
-          html:'<div class="' + cls + '">' + inner + '</div>',
-          iconSize:[30,38], iconAnchor:[15,38]
-        });
+        var icon = L.divIcon({className:'', html:'<div class="' + cls + '">' + inner + '</div>', iconSize:[30,38], iconAnchor:[15,38]});
         var mk = L.marker([s.lat, s.lng], { icon:icon }).addTo(map);
         mk.on('click', function(){ openDetail(s); });
         markers.push(mk);
@@ -830,9 +674,9 @@
     var visible = getVisibleRanked();
     var listEl = document.getElementById('list');
     var headEl = document.getElementById('listHead');
-    headEl.textContent = '表示範囲 ' + visible.length + ' / 全 ' + filtered.length + ' 件';
+    headEl.textContent = t('visibleCount', {v: visible.length, t: filtered.length});
     if (!visible.length){
-      listEl.innerHTML = '<div style="grid-column:1/-1;padding:24px;color:var(--muted);text-align:center;font-size:13px;">表示範囲に該当スポットがありません</div>';
+      listEl.innerHTML = '<div style="grid-column:1/-1;padding:24px;color:var(--muted);text-align:center;font-size:13px;">' + t('noSpots') + '</div>';
       return;
     }
     var html = "";
@@ -890,20 +734,14 @@
     var desktop = isDesktop();
     var isExpanded = document.body.classList.contains('detail-expanded');
     var targetX, targetY;
-
     if (mode === 'detail'){
       if (desktop){
         var w = isExpanded ? ISLAND_W_EXPANDED : ISLAND_W;
         var leftPad = ISLAND_GAP + w + ISLAND_GAP;
         targetX = leftPad + (W - leftPad) / 2;
         targetY = H / 2;
-      } else if (isExpanded){
-        targetX = W / 2;
-        targetY = H / 2;
-      } else {
-        targetX = W / 2;
-        targetY = H * 0.21;
-      }
+      } else if (isExpanded){ targetX = W/2; targetY = H/2; }
+      else { targetX = W/2; targetY = H * 0.21; }
     } else {
       if (desktop){
         var leftPad2 = ISLAND_GAP + ISLAND_W + ISLAND_GAP;
@@ -915,9 +753,7 @@
         targetY = HDR_H + (H - HDR_H - bottomPad) / 2;
       }
     }
-
-    var dx = W/2 - targetX;
-    var dy = H/2 - targetY;
+    var dx = W/2 - targetX, dy = H/2 - targetY;
     var pinPx = map.project(latlng, zoom);
     var newCenterPx = pinPx.add(L.point(dx, dy));
     var newCenter = map.unproject(newCenterPx, zoom);
@@ -934,31 +770,21 @@
     images = images || [];
     currentSlideCount = images.length;
     firstImgAspect = null;
-
     detailImg.style.aspectRatio = '';
     detailImg.style.height = '';
-
     var html = '';
     for (var i=0;i<images.length;i++){
       html += '<div class="slide"><img src="' + driveImg(images[i], 1600) + '" alt=""></div>';
     }
     track.innerHTML = html;
-
     if (images.length > 1){
       var dotsHtml = '';
-      for (var j=0;j<images.length;j++){
-        dotsHtml += '<span' + (j===0?' class="active"':'') + '></span>';
-      }
+      for (var j=0;j<images.length;j++){ dotsHtml += '<span' + (j===0?' class="active"':'') + '></span>'; }
       dotsEl.innerHTML = dotsHtml;
       dotsEl.style.display = 'flex';
-    } else {
-      dotsEl.innerHTML = '';
-      dotsEl.style.display = 'none';
-    }
-
+    } else { dotsEl.innerHTML = ''; dotsEl.style.display = 'none'; }
     track.scrollLeft = 0;
     updateSlideButtons();
-
     var firstImg = track.querySelector('img');
     if (firstImg){
       var onLoad = function(){
@@ -970,24 +796,14 @@
       if (firstImg.complete && firstImg.naturalWidth) onLoad();
       else firstImg.addEventListener('load', onLoad);
     }
-
     track.onscroll = function(){
       var idx = Math.round(track.scrollLeft / track.clientWidth);
       var spans = dotsEl.querySelectorAll('span');
-      for (var k=0;k<spans.length;k++){
-        spans[k].classList.toggle('active', k===idx);
-      }
+      for (var k=0;k<spans.length;k++){ spans[k].classList.toggle('active', k===idx); }
       updateSlideButtons();
     };
-
-    prevBtn.onclick = function(e){
-      e.stopPropagation();
-      track.scrollBy({ left: -track.clientWidth, behavior:'smooth' });
-    };
-    nextBtn.onclick = function(e){
-      e.stopPropagation();
-      track.scrollBy({ left: track.clientWidth, behavior:'smooth' });
-    };
+    prevBtn.onclick = function(e){ e.stopPropagation(); track.scrollBy({ left: -track.clientWidth, behavior:'smooth' }); };
+    nextBtn.onclick = function(e){ e.stopPropagation(); track.scrollBy({ left: track.clientWidth, behavior:'smooth' }); };
   }
 
   function applyImageAspect(){
@@ -1020,13 +836,7 @@
     nextBtn.classList.toggle('hidden', x > maxScroll - 5);
   }
 
-  function openDetail(s){
-    detailSpot = s;
-    document.body.classList.remove('detail-expanded');
-    document.body.classList.remove('map-interacting');
-    if (interactingTimer){ clearTimeout(interactingTimer); interactingTimer = null; }
-    buildSlider(s.images);
-
+  function renderDetailBody(s){
     var bodyEl = document.getElementById('detailBody');
     var tagsHtml = "";
     var stags = s.tags || [];
@@ -1037,15 +847,31 @@
       '<div class="meta">' + (s.pref||'') + ' / ' + (s.area||'') + ' ・ ★ ' + (s.rating||'-') + '</div>' +
       '<div class="desc">' + (s.description||'') + '</div>' +
       '<dl>' +
-        '<dt>営業時間</dt><dd>' + (s.hours||'-') + '</dd>' +
-        '<dt>料金</dt><dd>' + (s.price||'-') + '</dd>' +
+        '<dt>' + t('hours') + '</dt><dd>' + (s.hours||'-') + '</dd>' +
+        '<dt>' + t('price') + '</dt><dd>' + (s.price||'-') + '</dd>' +
       '</dl>' +
       '<div class="tags">' + tagsHtml + '</div>' +
       '<div class="actions">' +
-        '<a class="btn" href="' + (s.mapUrl||'#') + '" target="_blank" rel="noopener">Google Mapで開く</a>' +
-        '<button class="btn ghost" id="favBtn">' + (isFav?'♥ お気に入り解除':'♡ お気に入り') + '</button>' +
+        '<a class="btn" href="' + (s.mapUrl||'#') + '" target="_blank" rel="noopener">' + t('openGMap') + '</a>' +
+        '<button class="btn ghost" id="favBtn">' + (isFav?t('removeFav'):t('addFav')) + '</button>' +
       '</div>';
+    document.getElementById('favBtn').onclick = function(e){
+      e.stopPropagation();
+      var idx = favs.indexOf(s.id);
+      if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
+      localStorage.setItem('favs', JSON.stringify(favs));
+      renderDetailBody(s);
+      applyFilters();
+    };
+  }
 
+  function openDetail(s){
+    detailSpot = s;
+    document.body.classList.remove('detail-expanded');
+    document.body.classList.remove('map-interacting');
+    if (interactingTimer){ clearTimeout(interactingTimer); interactingTimer = null; }
+    buildSlider(s.images);
+    renderDetailBody(s);
     document.body.classList.add('detail-mode');
     if (map){
       setTimeout(function(){
@@ -1055,34 +881,22 @@
         setTimeout(updateSlideButtons, 100);
       }, 150);
     }
-    document.getElementById('favBtn').onclick = function(e){
-      e.stopPropagation();
-      var idx = favs.indexOf(s.id);
-      if (idx >= 0) favs.splice(idx,1); else favs.push(s.id);
-      localStorage.setItem('favs', JSON.stringify(favs));
-      openDetail(s);
-    };
   }
 
   function closeDetail(){
     var spotLatLng = detailSpot ? [detailSpot.lat, detailSpot.lng] : null;
     document.body.classList.remove('detail-mode');
     document.body.classList.remove('detail-expanded');
-    // ★ スマホ：カード一覧を必ず縮小状態に戻す
     var cardIsland = document.getElementById('cardIsland');
     if (cardIsland) cardIsland.classList.remove('expanded');
     detailSpot = null;
-
     forceHideUI = true;
     document.body.classList.add('map-interacting');
     if (interactingTimer){ clearTimeout(interactingTimer); interactingTimer = null; }
-
     if (map){
       setTimeout(function(){
         map.invalidateSize();
-        if (spotLatLng){
-          flyToVisibleCenter(spotLatLng, getFixedZoom(), 'normal');
-        }
+        if (spotLatLng){ flyToVisibleCenter(spotLatLng, getFixedZoom(), 'normal'); }
       }, 150);
       setTimeout(function(){
         applyFilters();
@@ -1099,21 +913,16 @@
   function initDetailTapToggle(){
     var detailIsland = document.getElementById('detailIsland');
     var startX = 0, startY = 0, moved = false;
-
     detailIsland.addEventListener('touchstart', function(e){
       if (!e.touches[0]) return;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      moved = false;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY; moved = false;
     }, { passive:true });
-
     detailIsland.addEventListener('touchmove', function(e){
       if (!e.touches[0]) return;
       var dx = Math.abs(e.touches[0].clientX - startX);
       var dy = Math.abs(e.touches[0].clientY - startY);
       if (dx > 8 || dy > 8) moved = true;
     }, { passive:true });
-
     detailIsland.addEventListener('click', function(e){
       if (moved) return;
       if (e.target.closest('.detailClose')) return;
@@ -1186,7 +995,6 @@
     var backdrop = document.getElementById('backdrop');
     var searchToggle = document.getElementById('searchToggle');
     var sheetHandle = document.getElementById('sheetHandle');
-
     function setSearchOpen(open){
       if (open){
         searchIsland.classList.add('open');
@@ -1202,13 +1010,11 @@
       setSearchOpen(!searchIsland.classList.contains('open'));
     });
     backdrop.addEventListener('click', function(){ setSearchOpen(false); });
-
     function toggleSheet(){
       cardIsland.classList.toggle('expanded');
       setTimeout(function(){ if (map) map.invalidateSize(); }, 400);
     }
     sheetHandle.addEventListener('click', toggleSheet);
-
     window.addEventListener('resize', function(){
       if (isDesktop()){
         setSearchOpen(false);
@@ -1220,26 +1026,32 @@
     });
   }
 
-  function showError(){
-    document.getElementById('errorMsg').classList.add('show');
+  function initLangSwitch(){
+    var btns = document.querySelectorAll('.langSwitch button');
+    for (var i=0;i<btns.length;i++){
+      btns[i].addEventListener('click', function(){
+        var lang = this.getAttribute('data-lang');
+        if (lang !== currentLang) setLang(lang);
+      });
+    }
   }
 
+  function showError(){ document.getElementById('errorMsg').classList.add('show'); }
+
   function startApp(){
-    loadingText.textContent = 'スポットデータを取得中...';
+    applyI18nToUI();
+    loadingText.textContent = t('loadingSpots');
     document.getElementById('detailClose').addEventListener('click', function(e){
       e.stopPropagation();
       closeDetail();
     });
+    initLangSwitch();
     initMap();
     initMobileUI();
     initDetailTapToggle();
     initGeolocation();
-
     loadSpots(function(success){
-      if (!success){
-        showError();
-        return;
-      }
+      if (!success){ showError(); return; }
       loadingEl.style.display = 'none';
       initFilters();
       applyFilters();
