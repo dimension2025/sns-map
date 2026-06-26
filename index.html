@@ -16,7 +16,6 @@
     --island-w-expanded:700px;
     --handle-h:46px;
     --card-collapsed-h:360px;
-    --search-h-pc:38vh;
     --ease:cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box}
@@ -81,19 +80,34 @@
     overflow:hidden;
   }
 
-  /* ===== 検索島（PC） ===== */
-  #searchIsland{
-    position:fixed;top:calc(var(--hdr) + var(--island-gap));
+  /* ===== 左カラム（PC：flexコンテナ／モバイル：透過） ===== */
+  #leftColumn{
+    position:fixed;
+    top:calc(var(--hdr) + var(--island-gap));
+    bottom:var(--island-gap);
     left:var(--island-gap);
     width:var(--island-w);
-    max-height:var(--search-h-pc);
-    z-index:1550;display:flex;flex-direction:column;min-height:0;
+    z-index:1550;
+    display:flex;
+    flex-direction:column;
+    gap:var(--island-gap);
+    pointer-events:none; /* 子要素のみクリック可能に */
     transition:transform .35s var(--ease), opacity .3s var(--ease);
     will-change:transform;
   }
-  body.map-interacting #searchIsland{
-    transform:translateX(-130%);
-    opacity:0;pointer-events:none;
+  body.map-interacting #leftColumn{
+    transform:translateX(calc(-100% - var(--island-gap) - 20px));
+    opacity:0;
+  }
+  body.detail-mode #leftColumn{ display:none; }
+
+  /* ===== 検索島（PC：flex item） ===== */
+  #searchIsland{
+    position:relative;
+    flex:0 0 auto;
+    max-height:38vh;
+    display:flex;flex-direction:column;min-height:0;
+    pointer-events:auto;
   }
   .search{padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
   .lab{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase;}
@@ -116,22 +130,13 @@
   .clearBtn{padding:8px;background:transparent;border:1px solid var(--border);
     border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px;}
 
-  /* ===== カード島（PC：検索島直下から画面下部まで） ===== */
+  /* ===== カード島（PC：flex itemで残りスペース全部） ===== */
   #cardIsland{
-    position:fixed;
-    left:var(--island-gap);
-    bottom:var(--island-gap);
-    width:var(--island-w);
-    /* ★ 検索島の max-height をベースに、検索島直下に配置 */
-    top:calc(var(--hdr) + var(--island-gap) + var(--search-h-pc) + var(--island-gap));
-    z-index:1500;
+    position:relative;
+    flex:1 1 0;
+    min-height:0;
     display:flex;flex-direction:column;
-    transition:transform .35s var(--ease), opacity .3s var(--ease);
-    will-change:transform;
-  }
-  body.map-interacting #cardIsland{
-    transform:translateX(-130%);
-    opacity:0;pointer-events:none;
+    pointer-events:auto;
   }
   .sheetHandle{
     flex:0 0 var(--handle-h);
@@ -242,8 +247,6 @@
                width .4s var(--ease);
   }
   body.detail-mode #detailIsland{display:flex;}
-  body.detail-mode #searchIsland,
-  body.detail-mode #cardIsland{display:none;}
 
   @media (min-width:769px){
     body.detail-mode.detail-expanded #detailIsland{
@@ -369,7 +372,7 @@
     cursor:pointer;font-weight:600;font-size:13px;margin-top:8px;
   }
 
-  /* ===== モバイル ===== */
+  /* ===== モバイル：leftColumnを透過してそれぞれ独自配置に戻す ===== */
   @media (max-width:768px){
     :root{
       --island-w:auto;
@@ -380,11 +383,24 @@
     .listHead{display:none;}
     .sheetHandle{justify-content:center;}
 
+    /* leftColumnは「枠」をなくして子要素を独立配置 */
+    #leftColumn{
+      position:static;
+      display:contents;
+      transform:none !important;
+      opacity:1 !important;
+      pointer-events:auto;
+      transition:none;
+    }
+
+    /* 検索島：モバイル独自のスライドダウン */
     #searchIsland{
+      position:fixed;
       top:calc(var(--hdr) + var(--island-gap));
       left:var(--island-gap);right:var(--island-gap);width:auto;
       max-height:65vh;
       z-index:1650;
+      flex:none;
       transform:translateY(-130%);
       opacity:0;
       transition:transform .3s var(--ease), opacity .25s var(--ease);
@@ -395,10 +411,13 @@
       opacity:0;
     }
 
+    /* カード島：モバイル独自のボトムシート */
     #cardIsland{
+      position:fixed;
       left:var(--island-gap);right:var(--island-gap);
       bottom:var(--island-gap);
       width:auto;
+      flex:none;
       top:calc(100vh - var(--card-collapsed-h) - var(--island-gap));
       z-index:1500;
       transition:top .38s var(--ease), transform .38s var(--ease), opacity .3s var(--ease);
@@ -419,12 +438,8 @@
       left:var(--island-gap);right:var(--island-gap);bottom:var(--island-gap);
       width:auto;
     }
-    body.detail-mode #detailIsland{
-      top:42vh;
-    }
-    body.detail-mode.detail-expanded #detailIsland{
-      top:var(--island-gap);
-    }
+    body.detail-mode #detailIsland{ top:42vh; }
+    body.detail-mode.detail-expanded #detailIsland{ top:var(--island-gap); }
     body.detail-mode .iconBtn{display:none;}
 
     .detailScroll{
@@ -475,31 +490,34 @@
   <button class="iconBtn" id="searchToggle" aria-label="ハッシュタグ検索">#</button>
 </header>
 
-<section id="searchIsland" class="island">
-  <div class="search">
-    <div>
-      <div class="lab">ハッシュタグ</div>
-      <div class="tagrow" id="tags"></div>
+<!-- ★ 左カラムラッパー：PC では flex column、モバイルでは display:contents で透過 -->
+<aside id="leftColumn">
+  <section id="searchIsland" class="island">
+    <div class="search">
+      <div>
+        <div class="lab">ハッシュタグ</div>
+        <div class="tagrow" id="tags"></div>
+      </div>
+      <div class="favToggle" id="favToggle">
+        <span>♥ お気に入りのみ表示</span>
+        <span class="sw"></span>
+      </div>
+      <button class="clearBtn" id="clearBtn">条件をクリア</button>
     </div>
-    <div class="favToggle" id="favToggle">
-      <span>♥ お気に入りのみ表示</span>
-      <span class="sw"></span>
-    </div>
-    <button class="clearBtn" id="clearBtn">条件をクリア</button>
-  </div>
-</section>
+  </section>
 
-<section id="cardIsland" class="island">
-  <div class="sheetHandle" id="sheetHandle">
-    <svg class="chevron" viewBox="0 0 36 12" aria-label="開閉">
-      <polyline points="3,9 18,3 33,9"></polyline>
-    </svg>
-    <div class="listHead" id="listHead">スポット一覧</div>
-  </div>
-  <div class="listScroll">
-    <div class="list" id="list"></div>
-  </div>
-</section>
+  <section id="cardIsland" class="island">
+    <div class="sheetHandle" id="sheetHandle">
+      <svg class="chevron" viewBox="0 0 36 12" aria-label="開閉">
+        <polyline points="3,9 18,3 33,9"></polyline>
+      </svg>
+      <div class="listHead" id="listHead">スポット一覧</div>
+    </div>
+    <div class="listScroll">
+      <div class="list" id="list"></div>
+    </div>
+  </section>
+</aside>
 
 <section id="detailIsland" class="island">
   <button class="detailClose" id="detailClose" aria-label="閉じる">×</button>
@@ -592,7 +610,6 @@
 
   var IMPERIAL = [35.6852, 139.7528];
   var BOUNDS_ARR = [[35.235, 139.197], [36.135, 140.309]];
-  // ★ PCとモバイルで異なるFIXED_ZOOM
   var FIXED_ZOOM_PC = 13;
   var FIXED_ZOOM_MOBILE = 12;
   var MIN_ZOOM_PC = 12;
@@ -1064,7 +1081,6 @@
       setTimeout(function(){
         map.invalidateSize();
         if (spotLatLng){
-          // ★ FIXED_ZOOM は環境別
           flyToVisibleCenter(spotLatLng, getFixedZoom(), 'normal');
         }
       }, 150);
